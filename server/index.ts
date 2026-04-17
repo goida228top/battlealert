@@ -153,7 +153,7 @@ async function startServer() {
             io.to(id).emit('room_update', room);
           }
           const roomsList = Array.from(rooms.values()).map(r => ({
-            id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 2
+            id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
           }));
           io.emit('rooms_list', roomsList);
         }

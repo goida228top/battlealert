@@ -115,6 +115,10 @@ export class GameEngine {
            const slot = slots[index % slots.length];
            this.state.playerMappings![p.id] = slot;
            this.state.playerColors![slot] = p.color;
+           if (p.isBot) {
+               if (!this.state.botSlots) this.state.botSlots = [];
+               this.state.botSlots.push(slot);
+           }
            if (socket && p.id === socket.id) {
                this.localPlayerId = slot as any;
            }
@@ -173,7 +177,8 @@ export class GameEngine {
                    power: this.state.power,
                    powerConsumption: this.state.powerConsumption,
                    playerMappings: this.state.playerMappings,
-                   playerColors: this.state.playerColors
+                   playerColors: this.state.playerColors,
+                   botSlots: this.state.botSlots
                 };
                 this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
             }

@@ -6,6 +6,5 @@ const SERVER_URL = '';
 
 export const socket: Socket = io(SERVER_URL, {
   autoConnect: false,
-  // Removed "transports: ['websocket']" because Render/Nginx proxies 
-  // often require the initial polling handshake before upgrading to WS.
+  transports: ['websocket'],
 });

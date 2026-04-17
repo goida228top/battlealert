@@ -2,9 +2,9 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function updateAI(this: GameEngine, timestamp: number): void {
-  const bots = Object.keys(this.state.playerMappings || {}).filter(k => this.state.playerMappings![k] === 'AI' || this.state.playerMappings![k] === 'BOT');
-  // Fallback if mappings not ready
-  if (bots.length === 0) bots.push('AI');
+  let bots = this.state.botSlots || [];
+  // Fallback if no bot slots set (e.g. singleplayer skirmish)
+  if (bots.length === 0) bots = ['AI'];
   
   // Create state objects if they don't exist
   if (!this.aiStates) this.aiStates = {};

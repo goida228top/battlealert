@@ -110,13 +110,13 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
             {rooms.map((room) => (
               <div 
                 key={room.id}
-                className={`grid grid-cols-5 gap-4 p-4 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 rounded transition-colors items-center group ${room.players >= 2 ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
-                onClick={() => room.players < 2 && handleJoin(room.id)}
+                className={`grid grid-cols-5 gap-4 p-4 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 rounded transition-colors items-center group ${room.players >= room.maxPlayers ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                onClick={() => room.players < room.maxPlayers && handleJoin(room.id)}
               >
                 <div className="col-span-2 font-bold text-lg group-hover:text-red-400">{room.name}</div>
                 <div className="text-zinc-300">{room.map}</div>
                 <div className="flex items-center gap-2 text-zinc-300">
-                  <Users size={16} className={room.players >= 2 ? "text-red-500" : "text-green-500"} /> {room.players}/{room.maxPlayers}
+                  <Users size={16} className={room.players >= room.maxPlayers ? "text-red-500" : "text-green-500"} /> {room.players}/{room.maxPlayers}
                 </div>
                 <div className="text-green-500">{"< 50ms (Relay)"}</div>
               </div>
