@@ -99,18 +99,43 @@ export class GameEngine {
     return calculatePath.call(this, start, end);
   }
 
-  public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any) {
+  public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, p2Faction?: Faction, p2Country?: Country) {
     this.role = role;
     this.roomId = roomId;
     this.socket = socket;
     this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI'; // AI slots is effectively player 2
 
+    // Set correct MCV type for player 2 based on lobby selection if provided
+    if (this.role === 'HOST' && p2Faction && this.state.entities) {
+       const mcv2 = this.state.entities.find(e => e.id === 'ai-mcv');
+       if (mcv2) {
+           mcv2.subType = p2Faction === 'COALITION' ? 'ALLIED_MCV' : 'MCV';
+       }
+    }
+
     if (this.role === 'HOST') {
         setInterval(() => {
             if (this.state) {
-                this.socket.emit('host_state_update', { roomId: this.roomId, state: this.state });
+                // EXTREMELY IMPORTANT: Do NOT send the massive `map`, `camera`, or UI selections over the network.
+                // Sending the full state object causes massive lag (MB/s) and socket disconnects.
+                const syncState = {
+                   entities: this.state.entities,
+                   credits: this.state.credits,
+                   aiCredits: this.state.aiCredits,
+                   productionQueue: this.state.productionQueue,
+                   aiProductionQueue: this.state.aiProductionQueue,
+                   effects: this.state.effects,
+                   projectiles: this.state.projectiles,
+                   crates: this.state.crates,
+                   ironCurtainActive: this.state.ironCurtainActive,
+                   specialAbilities: this.state.specialAbilities,
+                   aiSpecialAbilities: this.state.aiSpecialAbilities,
+                   power: this.state.power,
+                   powerConsumption: this.state.powerConsumption
+                };
+                this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
             }
-        }, 33); // 30 updates per second
+        }, 50); // 20 updates per second is much smoother and lighter on bandwidth than 30fps full sync
 
         this.socket.on('remote_command', (cmd: any) => {
             this.executeRemoteCommand(cmd);

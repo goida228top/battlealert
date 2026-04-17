@@ -6,4 +6,5 @@ const SERVER_URL = '';
 
 export const socket: Socket = io(SERVER_URL, {
   autoConnect: false,
+  transports: ['websocket'], // Force websocket mode
 });

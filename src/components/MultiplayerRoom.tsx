@@ -45,19 +45,24 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       const role = isHost ? 'HOST' : 'CLIENT';
       
       const hostP = players.find(p => p.isHost);
+      const clientP = players.find(p => !p.isHost);
+
       const hostFaction = hostP?.faction || selectedFaction;
       const hostCountry = hostP?.country || selectedCountry;
       
-      // Let engine configure map based on host's choices
+      const clientFaction = clientP?.faction || selectedFaction;
+      const clientCountry = clientP?.country || selectedCountry;
+
+      // Both instances must reset with EXACTLY the same host baseline
       engineRef.current.resetGame(hostFaction, hostCountry, roomInfo?.map || selectedMap);
       
-      // We will init AI to take place of disconnected players natively handling offline, but here we inject proper network mode.
-      engineRef.current.initMultiplayer(role, roomInfo?.id, socket);
+      // Inject network mode and proper second player identities
+      engineRef.current.initMultiplayer(role, roomInfo?.id, socket, clientFaction, clientCountry);
       
-      // Override local faction/country for client
+      // Assign the local variables correctly based on role
       if (role === 'CLIENT') {
-          engineRef.current.state.playerFaction = selectedFaction;
-          engineRef.current.state.playerCountry = selectedCountry;
+          engineRef.current.playerFaction = clientFaction;
+          engineRef.current.playerCountry = clientCountry;
       }
       
       setGameState(engineRef.current.state);
