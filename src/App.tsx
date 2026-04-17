@@ -1165,6 +1165,7 @@ export default function App() {
           selectedMap={selectedMap}
           setSelectedMap={setSelectedMap}
           setAppState={setAppState}
+          setRoomId={setActiveRoomId}
         />
       )}
 

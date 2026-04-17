@@ -10,6 +10,7 @@ interface MultiplayerCreateRoomProps {
   selectedMap: string;
   setSelectedMap: (map: string) => void;
   setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM') => void;
+  setRoomId: (id: string) => void;
 }
 
 export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
@@ -19,9 +20,21 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
   setSelectedCountry,
   selectedMap,
   setSelectedMap,
-  setAppState
+  setAppState,
+  setRoomId
 }) => {
   const [roomName, setRoomName] = useState('Моя игра');
+
+  React.useEffect(() => {
+    const onRoomUpdate = (room: any) => {
+      setRoomId(room.id);
+      setAppState('MULTIPLAYER_ROOM');
+    };
+    socket.on('room_update', onRoomUpdate);
+    return () => {
+      socket.off('room_update', onRoomUpdate);
+    };
+  }, [setAppState, setRoomId]);
 
   const handleCreate = () => {
     socket.emit('create_room', {
