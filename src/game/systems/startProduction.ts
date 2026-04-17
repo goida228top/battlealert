@@ -1,7 +1,7 @@
 
 import { UnitType, BuildingType } from '../types';
 
-export function startProduction(this: any, subType: UnitType | BuildingType, owner: 'PLAYER' | 'AI' = 'PLAYER') {
+export function startProduction(this: any, subType: UnitType | BuildingType, owner: string = 'PLAYER') {
   if (this.role === 'CLIENT' && owner === this.localPlayerId) {
       this.socket.emit('client_command', {
           roomId: this.roomId,
@@ -11,8 +11,15 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
   }
 
   const category = this.getCategory(subType);
-  const queue = owner === 'PLAYER' ? this.state.productionQueue : this.state.aiProductionQueue;
-  const credits = owner === 'PLAYER' ? this.state.credits : this.state.aiCredits;
+  const queue = owner === 'PLAYER' ? this.state.productionQueue : 
+                owner === 'AI' ? this.state.aiProductionQueue : 
+                owner === 'PLAYER_3' ? (this.state.p3ProductionQueue = this.state.p3ProductionQueue || []) : 
+                (this.state.p4ProductionQueue = this.state.p4ProductionQueue || []);
+                
+  const credits = owner === 'PLAYER' ? this.state.credits : 
+                  owner === 'AI' ? this.state.aiCredits : 
+                  owner === 'PLAYER_3' ? (this.state.p3Credits = this.state.p3Credits || 10000) : 
+                  (this.state.p4Credits = this.state.p4Credits || 10000);
   
   const queuedCount = queue.filter((q: any) => this.getCategory(q.subType) === category).length;
   
@@ -36,8 +43,12 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
   if (credits >= cost && this.isUnlocked(subType, owner)) {
     if (owner === 'PLAYER') {
       this.state.credits -= cost;
-    } else {
+    } else if (owner === 'AI') {
       this.state.aiCredits -= cost;
+    } else if (owner === 'PLAYER_3') {
+      this.state.p3Credits! -= cost;
+    } else if (owner === 'PLAYER_4') {
+      this.state.p4Credits! -= cost;
     }
     
     queue.push({
@@ -51,3 +62,4 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
     });
   }
 }
+

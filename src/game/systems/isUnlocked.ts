@@ -1,5 +1,5 @@
 
-export function isUnlocked(this: any, type: string, owner: 'PLAYER' | 'AI'): boolean {
+export function isUnlocked(this: any, type: string, owner: string): boolean {
   // Construction Yard is always "unlocked" in the sense that it's the starting point,
   // but it's not usually "bought" from the sidebar (MCV is bought).
   if (type === 'CONSTRUCTION_YARD' || type === 'ALLIED_CONSTRUCTION_YARD') return true;

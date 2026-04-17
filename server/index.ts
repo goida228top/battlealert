@@ -19,7 +19,7 @@ async function startServer() {
   io.on('connection', (socket) => {
     socket.on('get_rooms', () => {
       const roomsList = Array.from(rooms.values()).map(r => ({
-        id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 2
+        id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
       }));
       socket.emit('rooms_list', roomsList);
     });
@@ -31,6 +31,14 @@ async function startServer() {
       }
     });
 
+    const assignColor = (players: any[]) => {
+      const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
+      for (const color of colors) {
+        if (!players.find(p => p.color === color)) return color;
+      }
+      return 'RED'; // fallback
+    };
+
     socket.on('create_room', (data) => {
       const roomId = Math.random().toString(36).substring(7);
       const room = {
@@ -38,31 +46,75 @@ async function startServer() {
         name: data.name || 'Game Room',
         map: data.map,
         hostId: socket.id,
-        players: [{ ...data.player, id: socket.id, ready: true, isHost: true }]
+        botCount: 0,
+        players: [{ ...data.player, id: socket.id, ready: true, isHost: true, color: 'RED' }]
       };
       rooms.set(roomId, room);
       socket.join(roomId);
       socket.emit('room_update', room);
       
       const roomsList = Array.from(rooms.values()).map(r => ({
-        id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 2
+        id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
       }));
       io.emit('rooms_list', roomsList);
     });
 
     socket.on('join_room', (data) => {
       const room = rooms.get(data.roomId);
-      if (room && room.players.length < 2) {
-        room.players.push({ ...data.player, id: socket.id, ready: true, isHost: false });
+      if (room && room.players.length < 4) {
+        const color = assignColor(room.players);
+        room.players.push({ ...data.player, id: socket.id, ready: true, isHost: false, color });
         socket.join(room.id);
         io.to(room.id).emit('room_update', room);
         
         const roomsList = Array.from(rooms.values()).map(r => ({
-          id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 2
+          id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
         }));
         io.emit('rooms_list', roomsList);
       } else {
         socket.emit('room_error', 'Комната полна или не существует.');
+      }
+    });
+
+    socket.on('update_player', (data) => {
+      const room = rooms.get(data.roomId);
+      if (room) {
+        const player = room.players.find((p: any) => p.id === socket.id);
+        if (player) {
+          player.faction = data.faction || player.faction;
+          player.country = data.country || player.country;
+          io.to(room.id).emit('room_update', room);
+        }
+      }
+    });
+
+    socket.on('add_bot', (roomId) => {
+      const room = rooms.get(roomId);
+      if (room && room.hostId === socket.id && room.players.length < 4) {
+        const color = assignColor(room.players);
+        room.botCount++;
+        room.players.push({
+           name: `Бот ${room.botCount}`,
+           id: `bot-${Math.random().toString(36).substring(7)}`,
+           isHost: false,
+           ready: true,
+           faction: Math.random() > 0.5 ? 'FEDERATION' : 'COALITION',
+           country: 'RUSSIA', // default
+           color,
+           isBot: true
+        });
+        io.to(room.id).emit('room_update', room);
+      }
+    });
+
+    socket.on('remove_bot', (data) => {
+      const room = rooms.get(data.roomId);
+      if (room && room.hostId === socket.id) {
+        const idx = room.players.findIndex((p: any) => p.id === data.botId && p.isBot);
+        if (idx !== -1) {
+          room.players.splice(idx, 1);
+          io.to(room.id).emit('room_update', room);
+        }
       }
     });
 

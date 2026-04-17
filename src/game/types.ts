@@ -18,7 +18,7 @@ export interface Entity {
   targetPosition?: Vector2;
   health: number;
   maxHealth: number;
-  owner: 'PLAYER' | 'AI' | 'NEUTRAL';
+  owner: string; // Used to be 'PLAYER' | 'AI' | 'NEUTRAL', now supports socket IDs and bot IDs
   selected?: boolean;
   size: number; // radius or square size
   speed?: number;
@@ -76,7 +76,7 @@ export interface ProductionItem {
   cost: number;
   time: number; // total time in ms
   startTime: number;
-  owner?: 'PLAYER' | 'AI';
+  owner?: string;
 }
 
 export interface CombatEffect {
@@ -103,7 +103,7 @@ export interface Projectile {
   targetPosition?: Vector2;
   speed: number;
   damage: number;
-  owner: 'PLAYER' | 'AI' | 'NEUTRAL';
+  owner: string;
   sourceId: string;
 }
 
@@ -115,6 +115,8 @@ export interface GameState {
   crates: Crate[];
   credits: number;
   aiCredits: number;
+  p3Credits?: number;
+  p4Credits?: number;
   power: number;
   powerConsumption: number;
   selectionBox: { start: Vector2; end: Vector2 } | null;
@@ -123,6 +125,8 @@ export interface GameState {
   interactionMode: 'DEFAULT' | 'SELL' | 'REPAIR' | 'ATTACK_MOVE' | 'USE_IRON_CURTAIN' | 'USE_NUCLEAR_STRIKE' | 'USE_SPY_PLANE' | 'USE_PARATROOPERS' | 'USE_CHRONOSPHERE' | 'USE_WEATHER_STORM';
   productionQueue: ProductionItem[];
   aiProductionQueue: ProductionItem[];
+  p3ProductionQueue?: ProductionItem[];
+  p4ProductionQueue?: ProductionItem[];
   camera: {
     x: number;
     y: number;
@@ -156,4 +160,22 @@ export interface GameState {
     CHRONOSPHERE: { ready: boolean; lastUsed: number; cooldown: number };
     WEATHER_DEVICE: { ready: boolean; lastUsed: number; cooldown: number };
   };
+  p3SpecialAbilities?: {
+    IRON_CURTAIN: { ready: boolean; lastUsed: number; cooldown: number };
+    NUCLEAR_SILO: { ready: boolean; lastUsed: number; cooldown: number };
+    SPY_PLANE: { ready: boolean; lastUsed: number; cooldown: number };
+    PARATROOPERS: { ready: boolean; lastUsed: number; cooldown: number };
+    CHRONOSPHERE: { ready: boolean; lastUsed: number; cooldown: number };
+    WEATHER_DEVICE: { ready: boolean; lastUsed: number; cooldown: number };
+  };
+  p4SpecialAbilities?: {
+    IRON_CURTAIN: { ready: boolean; lastUsed: number; cooldown: number };
+    NUCLEAR_SILO: { ready: boolean; lastUsed: number; cooldown: number };
+    SPY_PLANE: { ready: boolean; lastUsed: number; cooldown: number };
+    PARATROOPERS: { ready: boolean; lastUsed: number; cooldown: number };
+    CHRONOSPHERE: { ready: boolean; lastUsed: number; cooldown: number };
+    WEATHER_DEVICE: { ready: boolean; lastUsed: number; cooldown: number };
+  };
+  playerMappings?: Record<string, string>; // Maps socket/bot IDs to 'PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'
+  playerColors?: Record<string, string>; // Maps internal slot ID ('PLAYER', etc) to color ('RED', etc)
 }

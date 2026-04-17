@@ -23,7 +23,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('SOVIET_WALL')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'SOVIET_WALL')?.progress}
                     active={gameState.placingBuilding === 'SOVIET_WALL'}
-                    locked={!engineRef.current.isUnlocked('SOVIET_WALL', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('SOVIET_WALL', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'SOVIET_WALL');
                       if (item && item.progress >= 100) {
@@ -41,7 +41,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('SENTRY_GUN')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'SENTRY_GUN')?.progress}
                     active={gameState.placingBuilding === 'SENTRY_GUN'}
-                    locked={!engineRef.current.isUnlocked('SENTRY_GUN', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('SENTRY_GUN', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'SENTRY_GUN');
                       if (item && item.progress >= 100) {
@@ -59,7 +59,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('FLAK_CANNON')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'FLAK_CANNON')?.progress}
                     active={gameState.placingBuilding === 'FLAK_CANNON'}
-                    locked={!engineRef.current.isUnlocked('FLAK_CANNON', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('FLAK_CANNON', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'FLAK_CANNON');
                       if (item && item.progress >= 100) {
@@ -77,7 +77,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('TESLA_COIL')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'TESLA_COIL')?.progress}
                     active={gameState.placingBuilding === 'TESLA_COIL'}
-                    locked={!engineRef.current.isUnlocked('TESLA_COIL', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('TESLA_COIL', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'TESLA_COIL');
                       if (item && item.progress >= 100) {
@@ -95,7 +95,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('PSYCHIC_SENSOR')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'PSYCHIC_SENSOR')?.progress}
                     active={gameState.placingBuilding === 'PSYCHIC_SENSOR'}
-                    locked={!engineRef.current.isUnlocked('PSYCHIC_SENSOR', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('PSYCHIC_SENSOR', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'PSYCHIC_SENSOR');
                       if (item && item.progress >= 100) {
@@ -113,7 +113,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('IRON_CURTAIN')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'IRON_CURTAIN')?.progress}
                     active={gameState.placingBuilding === 'IRON_CURTAIN'}
-                    locked={!engineRef.current.isUnlocked('IRON_CURTAIN', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('IRON_CURTAIN', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'IRON_CURTAIN');
                       if (item && item.progress >= 100) {
@@ -131,7 +131,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('NUCLEAR_SILO')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'NUCLEAR_SILO')?.progress}
                     active={gameState.placingBuilding === 'NUCLEAR_SILO'}
-                    locked={!engineRef.current.isUnlocked('NUCLEAR_SILO', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('NUCLEAR_SILO', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'NUCLEAR_SILO');
                       if (item && item.progress >= 100) {
@@ -169,7 +169,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       cost={engineRef.current.getCost('GRAND_CANNON')} 
                       progress={gameState.productionQueue.find(q => q.subType === 'GRAND_CANNON')?.progress}
                       active={gameState.placingBuilding === 'GRAND_CANNON'}
-                      locked={!engineRef.current.isUnlocked('GRAND_CANNON', 'PLAYER')}
+                      locked={!engineRef.current.isUnlocked('GRAND_CANNON', engineRef.current.localPlayerId)}
                       onClick={() => {
                         const item = gameState.productionQueue.find(q => q.subType === 'GRAND_CANNON');
                         if (item && item.progress >= 100) {
@@ -188,7 +188,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('PILLBOX')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'PILLBOX')?.progress}
                     active={gameState.placingBuilding === 'PILLBOX'}
-                    locked={!engineRef.current.isUnlocked('PILLBOX', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('PILLBOX', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'PILLBOX');
                       if (item && item.progress >= 100) {
@@ -206,7 +206,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('PATRIOT_MISSILE')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'PATRIOT_MISSILE')?.progress}
                     active={gameState.placingBuilding === 'PATRIOT_MISSILE'}
-                    locked={!engineRef.current.isUnlocked('PATRIOT_MISSILE', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('PATRIOT_MISSILE', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'PATRIOT_MISSILE');
                       if (item && item.progress >= 100) {
@@ -224,7 +224,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('PRISM_TOWER')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'PRISM_TOWER')?.progress}
                     active={gameState.placingBuilding === 'PRISM_TOWER'}
-                    locked={!engineRef.current.isUnlocked('PRISM_TOWER', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('PRISM_TOWER', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'PRISM_TOWER');
                       if (item && item.progress >= 100) {
@@ -242,7 +242,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('CHRONOSPHERE')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'CHRONOSPHERE')?.progress}
                     active={gameState.placingBuilding === 'CHRONOSPHERE'}
-                    locked={!engineRef.current.isUnlocked('CHRONOSPHERE', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('CHRONOSPHERE', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'CHRONOSPHERE');
                       if (item && item.progress >= 100) {
@@ -260,7 +260,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('WEATHER_DEVICE')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'WEATHER_DEVICE')?.progress}
                     active={gameState.placingBuilding === 'WEATHER_DEVICE'}
-                    locked={!engineRef.current.isUnlocked('WEATHER_DEVICE', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('WEATHER_DEVICE', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'WEATHER_DEVICE');
                       if (item && item.progress >= 100) {
@@ -278,7 +278,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('GAP_GENERATOR')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'GAP_GENERATOR')?.progress}
                     active={gameState.placingBuilding === 'GAP_GENERATOR'}
-                    locked={!engineRef.current.isUnlocked('GAP_GENERATOR', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('GAP_GENERATOR', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'GAP_GENERATOR');
                       if (item && item.progress >= 100) {
@@ -296,7 +296,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('SPY_SATELLITE')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'SPY_SATELLITE')?.progress}
                     active={gameState.placingBuilding === 'SPY_SATELLITE'}
-                    locked={!engineRef.current.isUnlocked('SPY_SATELLITE', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('SPY_SATELLITE', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'SPY_SATELLITE');
                       if (item && item.progress >= 100) {
@@ -314,7 +314,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     cost={engineRef.current.getCost('ALLIED_WALL')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_WALL')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_WALL'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_WALL', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_WALL', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_WALL');
                       if (item && item.progress >= 100) {

@@ -55,7 +55,7 @@ export class GameEngine {
   public role: 'HOST' | 'CLIENT' | 'OFFLINE' = 'OFFLINE';
   public roomId: string | null = null;
   public socket: any = null;
-  public localPlayerId: 'PLAYER' | 'AI' = 'PLAYER';
+  public localPlayerId: string = 'PLAYER';
 
   private lastUpdate: number = 0;
   private aiBuildOrder: BuildingType[] = [
@@ -67,6 +67,7 @@ export class GameEngine {
   ];
   public aiNextBuildTime: number = 0;
   public aiAttackTime: number = 0;
+  public aiStates: any;
 
   public aiKnownPlayerBase: Vector2 | null = null;
   public aiScoutTime: number = 0;
@@ -99,18 +100,57 @@ export class GameEngine {
     return calculatePath.call(this, start, end);
   }
 
-  public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, p2Faction?: Faction, p2Country?: Country) {
+  public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, roomInfo: any) {
     this.role = role;
     this.roomId = roomId;
     this.socket = socket;
-    this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI'; // AI slots is effectively player 2
+    
+    // Assign structural slots
+    if (roomInfo && roomInfo.players) {
+       this.state.playerMappings = {};
+       this.state.playerColors = {};
+       
+       const slots = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
+       roomInfo.players.forEach((p: any, index: number) => {
+           const slot = slots[index % slots.length];
+           this.state.playerMappings![p.id] = slot;
+           this.state.playerColors![slot] = p.color;
+           if (socket && p.id === socket.id) {
+               this.localPlayerId = slot as any;
+           }
+       });
 
-    // Set correct MCV type for player 2 based on lobby selection if provided
-    if (this.role === 'HOST' && p2Faction && this.state.entities) {
-       const mcv2 = this.state.entities.find(e => e.id === 'ai-mcv');
-       if (mcv2) {
-           mcv2.subType = p2Faction === 'COALITION' ? 'ALLIED_MCV' : 'MCV';
+       if (this.role === 'HOST') {
+           const mapWidth = this.state.map.width;
+           const mapHeight = this.state.map.height;
+           const corners = [
+               { x: 10 * 40, y: 10 * 40 }, // Top-Left
+               { x: (mapWidth - 10) * 40, y: (mapHeight - 10) * 40 }, // Bottom-Right
+               { x: (mapWidth - 10) * 40, y: 10 * 40 }, // Top-Right
+               { x: 10 * 40, y: (mapHeight - 10) * 40 }, // Bottom-Left
+           ];
+
+           this.state.entities = this.state.entities.filter(e => e.type !== 'UNIT' || (e.subType !== 'MCV' && e.subType !== 'ALLIED_MCV'));
+
+           roomInfo.players.forEach((p: any, index: number) => {
+               const slot = this.state.playerMappings![p.id];
+               const isAllied = p.faction === 'COALITION';
+               this.state.entities.push({
+                   id: `mcv-${p.id}`,
+                   type: 'UNIT',
+                   subType: isAllied ? 'ALLIED_MCV' : 'MCV',
+                   position: corners[index % corners.length],
+                   health: 3000,
+                   maxHealth: 3000,
+                   owner: slot, // Directly assign slot string
+                   size: 40,
+                   speed: 1.5,
+                   rotation: 0,
+               });
+           });
        }
+    } else {
+       this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI';
     }
 
     if (this.role === 'HOST') {
@@ -131,7 +171,9 @@ export class GameEngine {
                    specialAbilities: this.state.specialAbilities,
                    aiSpecialAbilities: this.state.aiSpecialAbilities,
                    power: this.state.power,
-                   powerConsumption: this.state.powerConsumption
+                   powerConsumption: this.state.powerConsumption,
+                   playerMappings: this.state.playerMappings,
+                   playerColors: this.state.playerColors
                 };
                 this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
             }
@@ -157,6 +199,8 @@ export class GameEngine {
                this.state.aiSpecialAbilities = newState.aiSpecialAbilities;
                this.state.power = newState.power;
                this.state.powerConsumption = newState.powerConsumption;
+               this.state.playerMappings = newState.playerMappings;
+               this.state.playerColors = newState.playerColors;
             }
         });
     }
@@ -291,11 +335,11 @@ export class GameEngine {
     return getPrerequisites.call(this, type);
   }
 
-  public isUnlocked(type: string, owner: 'PLAYER' | 'AI'): boolean {
+  public isUnlocked(type: string, owner: string): boolean {
     return isUnlocked.call(this, type, owner);
   }
 
-  public startProduction(subType: UnitType | BuildingType, owner: 'PLAYER' | 'AI' = 'PLAYER') {
+  public startProduction(subType: UnitType | BuildingType, owner: string = 'PLAYER') {
     return startProduction.call(this, subType, owner);
   }
 

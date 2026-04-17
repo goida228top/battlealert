@@ -2,7 +2,54 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function updateAI(this: GameEngine, timestamp: number): void {
-const aiEntities = this.state.entities.filter(e => e.owner === 'AI');
+  const bots = Object.keys(this.state.playerMappings || {}).filter(k => this.state.playerMappings![k] === 'AI' || this.state.playerMappings![k] === 'BOT');
+  // Fallback if mappings not ready
+  if (bots.length === 0) bots.push('AI');
+  
+  // Create state objects if they don't exist
+  if (!this.aiStates) this.aiStates = {};
+
+  bots.forEach(botOwner => {
+     let aiId = botOwner;
+     if (!this.aiStates[aiId]) {
+        this.aiStates[aiId] = {
+           knownPlayerBase: null,
+           nextBuildTime: 0,
+           scoutTime: 0,
+           attackTime: 0
+        };
+     }
+     const botState = this.aiStates[aiId];
+
+     // Use helper functions or directly map to the owner string
+     // owner inside this function refers to botOwner
+     const setCredits = (amount) => {
+         if (botOwner === 'AI') this.state.aiCredits += amount;
+         else if (botOwner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + amount;
+         else if (botOwner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + amount;
+     };
+     const getCredits = () => {
+         if (botOwner === 'AI') return getCredits();
+         if (botOwner === 'PLAYER_3') return this.state.p3Credits || 0;
+         if (botOwner === 'PLAYER_4') return this.state.p4Credits || 0;
+         return 0;
+     };
+     const getQueue = () => {
+         if (botOwner === 'AI') return getQueue();
+         if (botOwner === 'PLAYER_3') return this.state.p3ProductionQueue || [];
+         if (botOwner === 'PLAYER_4') return this.state.p4ProductionQueue || [];
+         return [];
+     };
+     const getSpecial = () => {
+         if (botOwner === 'AI') return getSpecial();
+         if (botOwner === 'PLAYER_3') return this.state.p3SpecialAbilities;
+         if (botOwner === 'PLAYER_4') return this.state.p4SpecialAbilities;
+         return getSpecial();
+     };
+
+     // The core logic starts here:
+
+const aiEntities = this.state.entities.filter(e => e.owner === botOwner);
 const aiMCV = aiEntities.find(e => e.subType === 'MCV' || e.subType === 'ALLIED_MCV');
 
 if (aiMCV && !aiEntities.some(e => e.subType === 'CONSTRUCTION_YARD' || e.subType === 'ALLIED_CONSTRUCTION_YARD')) {
@@ -10,24 +57,24 @@ if (aiMCV && !aiEntities.some(e => e.subType === 'CONSTRUCTION_YARD' || e.subTyp
 }
 
 // AI Cheat Income to keep up with players (Passive 5 credits per tick ~ 300 per sec)
-this.state.aiCredits += 5;
+setCredits(5);
 
 // Vision Check
-if (!this.aiKnownPlayerBase) {
+if (!botState.knownPlayerBase) {
   const playerBuildings = this.state.entities.filter(e => e.owner === 'PLAYER' && e.type === 'BUILDING');
   for (const aiUnit of aiEntities) {
     for (const pb of playerBuildings) {
       const dist = Math.hypot(aiUnit.position.x - pb.position.x, aiUnit.position.y - pb.position.y);
       if (dist < 400) { // AI vision range
-        this.aiKnownPlayerBase = { ...pb.position };
+        botState.knownPlayerBase = { ...pb.position };
         break;
       }
     }
-    if (this.aiKnownPlayerBase) break;
+    if (botState.knownPlayerBase) break;
   }
 }
 
-if (timestamp > this.aiNextBuildTime) {
+if (timestamp > botState.nextBuildTime) {
   const yard = aiEntities.find(e => e.subType === 'CONSTRUCTION_YARD' || e.subType === 'ALLIED_CONSTRUCTION_YARD');
   if (yard) {
     // Determine AI faction based on yard type
@@ -52,7 +99,7 @@ if (timestamp > this.aiNextBuildTime) {
     for (const type of currentBuildOrder) {
       const neededCount = currentBuildOrder.filter(t => t === type).length;
       const currentCount = aiEntities.filter(e => e.subType === type).length;
-      const queuedCount = this.state.aiProductionQueue.filter(q => q.subType === type).length;
+      const queuedCount = getQueue().filter(q => q.subType === type).length;
       if (currentCount + queuedCount < neededCount) {
         nextToBuild = type;
         break;
@@ -84,10 +131,10 @@ if (timestamp > this.aiNextBuildTime) {
 
     if (nextToBuild) {
         const cost = this.getCost(nextToBuild);
-        if (this.state.aiCredits >= cost && this.state.aiProductionQueue.filter(q => ['BUILDINGS', 'DEFENSE'].includes(this.getCategory(q.subType))).length === 0) {
-            this.startProduction(nextToBuild, 'AI');
+        if (getCredits() >= cost && getQueue().filter(q => ['BUILDINGS', 'DEFENSE'].includes(this.getCategory(q.subType))).length === 0) {
+            this.startProduction(nextToBuild, botOwner);
         }
-        this.aiNextBuildTime = timestamp + 6000;
+        botState.nextBuildTime = timestamp + 6000;
     }
   }
 }
@@ -96,56 +143,56 @@ if (timestamp > this.aiNextBuildTime) {
 const aiBarracks = aiEntities.find(e => e.subType === 'BARRACKS' || e.subType === 'ALLIED_BARRACKS');
   if (aiBarracks && timestamp > 15000) { // AI starts producing units very early (15s)
     if (aiEntities.filter(e => e.subType === 'SOLDIER' || e.subType === 'GI').length < 15) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'GI' : 'SOLDIER', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'FLAK_TROOPER' || e.subType === 'ROCKETEER').length < 6 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'ROCKETEER' : 'FLAK_TROOPER', 'AI')) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'ROCKETEER' : 'FLAK_TROOPER', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'TESLA_TROOPER' || e.subType === 'NAVY_SEAL').length < 4 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'NAVY_SEAL' : 'TESLA_TROOPER', 'AI')) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'NAVY_SEAL' : 'TESLA_TROOPER', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'DESOLATOR' || e.subType === 'CHRONO_LEGIONNAIRE').length < 3 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR', 'AI')) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'TERRORIST' || e.subType === 'SNIPER').length < 5 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'SNIPER' : 'TERRORIST', 'AI')) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'SNIPER' : 'TERRORIST', 'AI');
+      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'GI' : 'SOLDIER', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'FLAK_TROOPER' || e.subType === 'ROCKETEER').length < 6 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'ROCKETEER' : 'FLAK_TROOPER', botOwner)) {
+      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'ROCKETEER' : 'FLAK_TROOPER', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'TESLA_TROOPER' || e.subType === 'NAVY_SEAL').length < 4 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'NAVY_SEAL' : 'TESLA_TROOPER', botOwner)) {
+      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'NAVY_SEAL' : 'TESLA_TROOPER', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'DESOLATOR' || e.subType === 'CHRONO_LEGIONNAIRE').length < 3 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR', botOwner)) {
+      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'TERRORIST' || e.subType === 'SNIPER').length < 5 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'SNIPER' : 'TERRORIST', botOwner)) {
+      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'SNIPER' : 'TERRORIST', botOwner);
     }
   }
 
   const aiFactory = aiEntities.find(e => e.subType === 'WAR_FACTORY' || e.subType === 'ALLIED_WAR_FACTORY');
   if (aiFactory && timestamp > 30000) { // AI starts producing vehicles at 30s
     if (aiEntities.filter(e => e.subType === 'HARVESTER' || e.subType === 'CHRONO_MINER').length < 4) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'CHRONO_MINER' : 'HARVESTER', 'AI');
+      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'CHRONO_MINER' : 'HARVESTER', botOwner);
     } else if (aiEntities.filter(e => e.subType === 'TANK' || e.subType === 'GRIZZLY_TANK').length < 10) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'GRIZZLY_TANK' : 'TANK', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'RHINO_TANK' || e.subType === 'IFV').length < 8 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'IFV' : 'RHINO_TANK', 'AI')) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'IFV' : 'RHINO_TANK', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'TESLA_TANK' || e.subType === 'MIRAGE_TANK').length < 5 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'MIRAGE_TANK' : 'TESLA_TANK', 'AI')) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'MIRAGE_TANK' : 'TESLA_TANK', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'APOCALYPSE_TANK' || e.subType === 'BATTLE_FORTRESS').length < 4 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK', 'AI')) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK', 'AI');
+      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'GRIZZLY_TANK' : 'TANK', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'RHINO_TANK' || e.subType === 'IFV').length < 8 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'IFV' : 'RHINO_TANK', botOwner)) {
+      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'IFV' : 'RHINO_TANK', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'TESLA_TANK' || e.subType === 'MIRAGE_TANK').length < 5 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'MIRAGE_TANK' : 'TESLA_TANK', botOwner)) {
+      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'MIRAGE_TANK' : 'TESLA_TANK', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'APOCALYPSE_TANK' || e.subType === 'BATTLE_FORTRESS').length < 4 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK', botOwner)) {
+      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK', botOwner);
     }
   }
 
   const aiNavalYard = aiEntities.find(e => e.subType === 'NAVAL_YARD' || e.subType === 'ALLIED_NAVAL_YARD');
   if (aiNavalYard && timestamp > 120000) { // AI starts producing ships after 2 minutes
     if (aiEntities.filter(e => e.subType === 'TYPHOON_SUB' || e.subType === 'DESTROYER').length < 3) {
-      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'DESTROYER' : 'TYPHOON_SUB', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'SEA_SCORPION' || e.subType === 'AEGIS_CRUISER').length < 2 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AEGIS_CRUISER' : 'SEA_SCORPION', 'AI')) {
-      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AEGIS_CRUISER' : 'SEA_SCORPION', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'GIANT_SQUID' || e.subType === 'DOLPHIN').length < 2 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'DOLPHIN' : 'GIANT_SQUID', 'AI')) {
-      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'DOLPHIN' : 'GIANT_SQUID', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'DREADNOUGHT' || e.subType === 'AIRCRAFT_CARRIER').length < 2 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AIRCRAFT_CARRIER' : 'DREADNOUGHT', 'AI')) {
-      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AIRCRAFT_CARRIER' : 'DREADNOUGHT', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'HOVER_TRANSPORT' || e.subType === 'AMPHIBIOUS_TRANSPORT').length < 1 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AMPHIBIOUS_TRANSPORT' : 'HOVER_TRANSPORT', 'AI')) {
-      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AMPHIBIOUS_TRANSPORT' : 'HOVER_TRANSPORT', 'AI');
+      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'DESTROYER' : 'TYPHOON_SUB', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'SEA_SCORPION' || e.subType === 'AEGIS_CRUISER').length < 2 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AEGIS_CRUISER' : 'SEA_SCORPION', botOwner)) {
+      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AEGIS_CRUISER' : 'SEA_SCORPION', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'GIANT_SQUID' || e.subType === 'DOLPHIN').length < 2 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'DOLPHIN' : 'GIANT_SQUID', botOwner)) {
+      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'DOLPHIN' : 'GIANT_SQUID', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'DREADNOUGHT' || e.subType === 'AIRCRAFT_CARRIER').length < 2 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AIRCRAFT_CARRIER' : 'DREADNOUGHT', botOwner)) {
+      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AIRCRAFT_CARRIER' : 'DREADNOUGHT', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'HOVER_TRANSPORT' || e.subType === 'AMPHIBIOUS_TRANSPORT').length < 1 && this.isUnlocked(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AMPHIBIOUS_TRANSPORT' : 'HOVER_TRANSPORT', botOwner)) {
+      this.startProduction(aiNavalYard.subType === 'ALLIED_NAVAL_YARD' ? 'AMPHIBIOUS_TRANSPORT' : 'HOVER_TRANSPORT', botOwner);
     }
   }
   
   const aiAirForce = aiEntities.find(e => e.subType === 'AIR_FORCE_COMMAND');
   if (aiAirForce && timestamp > 120000) {
-    if (aiEntities.filter(e => e.subType === 'HARRIER').length < 4 && this.isUnlocked('HARRIER', 'AI')) {
-      this.startProduction('HARRIER', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'BLACK_EAGLE').length < 4 && this.isUnlocked('BLACK_EAGLE', 'AI')) {
-      this.startProduction('BLACK_EAGLE', 'AI');
-    } else if (aiEntities.filter(e => e.subType === 'NIGHT_HAWK_TRANSPORT').length < 1 && this.isUnlocked('NIGHT_HAWK_TRANSPORT', 'AI')) {
-      this.startProduction('NIGHT_HAWK_TRANSPORT', 'AI');
+    if (aiEntities.filter(e => e.subType === 'HARRIER').length < 4 && this.isUnlocked('HARRIER', botOwner)) {
+      this.startProduction('HARRIER', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'BLACK_EAGLE').length < 4 && this.isUnlocked('BLACK_EAGLE', botOwner)) {
+      this.startProduction('BLACK_EAGLE', botOwner);
+    } else if (aiEntities.filter(e => e.subType === 'NIGHT_HAWK_TRANSPORT').length < 1 && this.isUnlocked('NIGHT_HAWK_TRANSPORT', botOwner)) {
+      this.startProduction('NIGHT_HAWK_TRANSPORT', botOwner);
     }
   }
 
@@ -161,24 +208,24 @@ const combatUnits = aiEntities.filter(e => [
   'DESTROYER', 'AEGIS_CRUISER', 'AIRCRAFT_CARRIER', 'DOLPHIN'
 ].includes(e.subType || ''));
 
-if (!this.aiKnownPlayerBase && combatUnits.length >= 5 && timestamp > this.aiScoutTime) {
+if (!botState.knownPlayerBase && combatUnits.length >= 5 && timestamp > botState.scoutTime) {
   // Send a scout to find the player
   const scout = combatUnits.find(u => !u.targetPosition);
   if (scout) {
     const scoutTarget = { x: Math.random() * 800 + 100, y: Math.random() * 1200 + 100 };
     scout.path = this.calculatePath(scout.position, scoutTarget);
     scout.targetPosition = scout.path[0];
-    this.aiScoutTime = timestamp + 15000; // Increased scout delay
+    botState.scoutTime = timestamp + 15000; // Increased scout delay
   }
 }
 
-if (this.aiKnownPlayerBase && combatUnits.length >= 8 && timestamp > this.aiAttackTime) {
+if (botState.knownPlayerBase && combatUnits.length >= 8 && timestamp > botState.attackTime) {
   combatUnits.forEach(u => {
-    u.path = this.calculatePath(u.position, this.aiKnownPlayerBase!);
+    u.path = this.calculatePath(u.position, botState.knownPlayerBase!);
     u.targetPosition = u.path[0];
     u.targetId = undefined;
   });
-  this.aiAttackTime = timestamp + 45000; // Attack every 45s
+  botState.attackTime = timestamp + 45000; // Attack every 45s
 }
 
 // Crate Seeking Logic
@@ -222,46 +269,47 @@ if (aiEngineers.length > 0) {
 }
 
 // Superweapon Logic
-if (this.state.aiSpecialAbilities?.IRON_CURTAIN?.ready && aiEntities.some(e => e.subType === 'IRON_CURTAIN')) {
+if (getSpecial()?.IRON_CURTAIN?.ready && aiEntities.some(e => e.subType === 'IRON_CURTAIN')) {
   const tanks = combatUnits.filter(u => u.subType === 'RHINO_TANK' || u.subType === 'APOCALYPSE_TANK');
   if (tanks.length > 0) {
     this.useIronCurtainAI(tanks[0].position);
   }
 }
 
-if (this.state.aiSpecialAbilities?.NUCLEAR_SILO?.ready && aiEntities.some(e => e.subType === 'NUCLEAR_SILO')) {
-  if (this.aiKnownPlayerBase) {
-    this.useNuclearStrikeAI(this.aiKnownPlayerBase);
+if (getSpecial()?.NUCLEAR_SILO?.ready && aiEntities.some(e => e.subType === 'NUCLEAR_SILO')) {
+  if (botState.knownPlayerBase) {
+    this.useNuclearStrikeAI(botState.knownPlayerBase);
   }
 }
 
-if (this.state.aiSpecialAbilities?.CHRONOSPHERE?.ready && aiEntities.some(e => e.subType === 'CHRONOSPHERE')) {
+if (getSpecial()?.CHRONOSPHERE?.ready && aiEntities.some(e => e.subType === 'CHRONOSPHERE')) {
   const tanks = combatUnits.filter(u => u.subType === 'GRIZZLY_TANK' || u.subType === 'PRISM_TANK' || u.subType === 'MIRAGE_TANK');
-  if (tanks.length > 0 && this.aiKnownPlayerBase) {
+  if (tanks.length > 0 && botState.knownPlayerBase) {
     // For AI, we can just use the Chronosphere directly on their tanks to teleport to player base
     // Wait, useChronosphereAI might not exist. Let's check if it does. If not, we'll just teleport them.
     tanks.slice(0, 9).forEach(t => {
-      t.position = { x: this.aiKnownPlayerBase!.x + (Math.random() - 0.5) * 200, y: this.aiKnownPlayerBase!.y + (Math.random() - 0.5) * 200 };
+      t.position = { x: botState.knownPlayerBase!.x + (Math.random() - 0.5) * 200, y: botState.knownPlayerBase!.y + (Math.random() - 0.5) * 200 };
       t.path = [];
       t.targetPosition = undefined;
     });
-    this.state.aiSpecialAbilities.CHRONOSPHERE.ready = false;
-    this.state.aiSpecialAbilities.CHRONOSPHERE.lastUsed = timestamp;
+    getSpecial().CHRONOSPHERE.ready = false;
+    getSpecial().CHRONOSPHERE.lastUsed = timestamp;
   }
 }
 
-if (this.state.aiSpecialAbilities?.WEATHER_DEVICE?.ready && aiEntities.some(e => e.subType === 'WEATHER_DEVICE')) {
-  if (this.aiKnownPlayerBase) {
+if (getSpecial()?.WEATHER_DEVICE?.ready && aiEntities.some(e => e.subType === 'WEATHER_DEVICE')) {
+  if (botState.knownPlayerBase) {
     // Assuming useWeatherStormAI exists or we can just call useWeatherStorm
     // Let's check if useWeatherStormAI exists, if not we'll just use the player's one but maybe it doesn't matter who uses it
     if ((this as any).useWeatherStormAI) {
-      (this as any).useWeatherStormAI(this.aiKnownPlayerBase);
+      (this as any).useWeatherStormAI(botState.knownPlayerBase);
     } else {
-      this.useWeatherStorm(this.aiKnownPlayerBase);
-      this.state.aiSpecialAbilities.WEATHER_DEVICE.ready = false;
-      this.state.aiSpecialAbilities.WEATHER_DEVICE.lastUsed = timestamp;
+      this.useWeatherStorm(botState.knownPlayerBase);
+      getSpecial().WEATHER_DEVICE.ready = false;
+      getSpecial().WEATHER_DEVICE.lastUsed = timestamp;
     }
   }
 }
 
+  });
 }

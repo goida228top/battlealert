@@ -3,11 +3,14 @@ import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function updateProduction(this: GameEngine, timestamp: number, dt: number): void {
   const categories = ['BUILDINGS', 'DEFENSE', 'INFANTRY', 'VEHICLES'];
-  const owners: ('PLAYER' | 'AI')[] = ['PLAYER', 'AI'];
+  const owners: string[] = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
 
   owners.forEach(owner => {
-    const queue = owner === 'PLAYER' ? this.state.productionQueue : this.state.aiProductionQueue;
-    if (queue.length === 0) return;
+    const queue = owner === 'PLAYER' ? this.state.productionQueue : 
+                  owner === 'AI' ? this.state.aiProductionQueue : 
+                  owner === 'PLAYER_3' ? (this.state.p3ProductionQueue = this.state.p3ProductionQueue || []) : 
+                  (this.state.p4ProductionQueue = this.state.p4ProductionQueue || []);
+    if (!queue || queue.length === 0) return;
 
     categories.forEach(category => {
       const item = queue.find(q => this.getCategory(q.subType) === category);
@@ -78,11 +81,15 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
           const factory = this.state.entities.find(e => factoryTypes.includes(e.subType || '') && e.owner === owner);
           
           if (factory) {
-            this.produceUnitAt(factory, item.subType as UnitType, owner);
+            this.produceUnitAt(factory, item.subType as UnitType, owner as any);
             if (owner === 'PLAYER') {
               this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== item.id);
-            } else {
+            } else if (owner === 'AI') {
               this.state.aiProductionQueue = this.state.aiProductionQueue.filter(q => q.id !== item.id);
+            } else if (owner === 'PLAYER_3') {
+              this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
+            } else if (owner === 'PLAYER_4') {
+              this.state.p4ProductionQueue = this.state.p4ProductionQueue!.filter(q => q.id !== item.id);
             }
           }
           return;

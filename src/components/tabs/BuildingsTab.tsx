@@ -23,7 +23,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('POWER_PLANT')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'POWER_PLANT')?.progress}
                     active={gameState.placingBuilding === 'POWER_PLANT'}
-                    locked={!engineRef.current.isUnlocked('POWER_PLANT', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('POWER_PLANT', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'POWER_PLANT');
                       if (item && item.progress >= 100) {
@@ -41,7 +41,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ORE_REFINERY')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ORE_REFINERY')?.progress}
                     active={gameState.placingBuilding === 'ORE_REFINERY'}
-                    locked={!engineRef.current.isUnlocked('ORE_REFINERY', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ORE_REFINERY', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ORE_REFINERY');
                       if (item && item.progress >= 100) {
@@ -59,7 +59,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('BARRACKS')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'BARRACKS')?.progress}
                     active={gameState.placingBuilding === 'BARRACKS'}
-                    locked={!engineRef.current.isUnlocked('BARRACKS', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('BARRACKS', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'BARRACKS');
                       if (item && item.progress >= 100) {
@@ -77,7 +77,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('WAR_FACTORY')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'WAR_FACTORY')?.progress}
                     active={gameState.placingBuilding === 'WAR_FACTORY'}
-                    locked={!engineRef.current.isUnlocked('WAR_FACTORY', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('WAR_FACTORY', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'WAR_FACTORY');
                       if (item && item.progress >= 100) {
@@ -95,7 +95,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('NAVAL_YARD')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'NAVAL_YARD')?.progress}
                     active={gameState.placingBuilding === 'NAVAL_YARD'}
-                    locked={!engineRef.current.isUnlocked('NAVAL_YARD', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('NAVAL_YARD', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'NAVAL_YARD');
                       if (item && item.progress >= 100) {
@@ -113,7 +113,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('RADAR')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'RADAR')?.progress}
                     active={gameState.placingBuilding === 'RADAR'}
-                    locked={!engineRef.current.isUnlocked('RADAR', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('RADAR', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'RADAR');
                       if (item && item.progress >= 100) {
@@ -131,7 +131,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('SERVICE_DEPOT')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'SERVICE_DEPOT')?.progress}
                     active={gameState.placingBuilding === 'SERVICE_DEPOT'}
-                    locked={!engineRef.current.isUnlocked('SERVICE_DEPOT', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('SERVICE_DEPOT', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'SERVICE_DEPOT');
                       if (item && item.progress >= 100) {
@@ -149,7 +149,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('BATTLE_LAB')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'BATTLE_LAB')?.progress}
                     active={gameState.placingBuilding === 'BATTLE_LAB'}
-                    locked={!engineRef.current.isUnlocked('BATTLE_LAB', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('BATTLE_LAB', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'BATTLE_LAB');
                       if (item && item.progress >= 100) {
@@ -167,7 +167,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('NUCLEAR_REACTOR')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'NUCLEAR_REACTOR')?.progress}
                     active={gameState.placingBuilding === 'NUCLEAR_REACTOR'}
-                    locked={!engineRef.current.isUnlocked('NUCLEAR_REACTOR', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('NUCLEAR_REACTOR', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'NUCLEAR_REACTOR');
                       if (item && item.progress >= 100) {
@@ -185,7 +185,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('CLONING_VATS')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'CLONING_VATS')?.progress}
                     active={gameState.placingBuilding === 'CLONING_VATS'}
-                    locked={!engineRef.current.isUnlocked('CLONING_VATS', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('CLONING_VATS', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'CLONING_VATS');
                       if (item && item.progress >= 100) {
@@ -206,7 +206,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_POWER_PLANT')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_POWER_PLANT')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_POWER_PLANT'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_POWER_PLANT', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_POWER_PLANT', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_POWER_PLANT');
                       if (item && item.progress >= 100) {
@@ -224,7 +224,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_ORE_REFINERY')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_ORE_REFINERY')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_ORE_REFINERY'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_ORE_REFINERY', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_ORE_REFINERY', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_ORE_REFINERY');
                       if (item && item.progress >= 100) {
@@ -242,7 +242,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_BARRACKS')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_BARRACKS')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_BARRACKS'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_BARRACKS', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_BARRACKS', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_BARRACKS');
                       if (item && item.progress >= 100) {
@@ -260,7 +260,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_WAR_FACTORY')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_WAR_FACTORY')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_WAR_FACTORY'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_WAR_FACTORY', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_WAR_FACTORY', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_WAR_FACTORY');
                       if (item && item.progress >= 100) {
@@ -278,7 +278,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('AIR_FORCE_COMMAND')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'AIR_FORCE_COMMAND')?.progress}
                     active={gameState.placingBuilding === 'AIR_FORCE_COMMAND'}
-                    locked={!engineRef.current.isUnlocked('AIR_FORCE_COMMAND', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('AIR_FORCE_COMMAND', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'AIR_FORCE_COMMAND');
                       if (item && item.progress >= 100) {
@@ -296,7 +296,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_BATTLE_LAB')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_BATTLE_LAB')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_BATTLE_LAB'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_BATTLE_LAB', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_BATTLE_LAB', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_BATTLE_LAB');
                       if (item && item.progress >= 100) {
@@ -314,7 +314,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('SERVICE_DEPOT')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'SERVICE_DEPOT')?.progress}
                     active={gameState.placingBuilding === 'SERVICE_DEPOT'}
-                    locked={!engineRef.current.isUnlocked('SERVICE_DEPOT', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('SERVICE_DEPOT', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'SERVICE_DEPOT');
                       if (item && item.progress >= 100) {
@@ -332,7 +332,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_ORE_PURIFIER')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_ORE_PURIFIER')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_ORE_PURIFIER'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_ORE_PURIFIER', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_ORE_PURIFIER', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_ORE_PURIFIER');
                       if (item && item.progress >= 100) {
@@ -350,7 +350,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ROBOT_CONTROL_CENTER')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ROBOT_CONTROL_CENTER')?.progress}
                     active={gameState.placingBuilding === 'ROBOT_CONTROL_CENTER'}
-                    locked={!engineRef.current.isUnlocked('ROBOT_CONTROL_CENTER', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ROBOT_CONTROL_CENTER', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ROBOT_CONTROL_CENTER');
                       if (item && item.progress >= 100) {
@@ -368,7 +368,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                     cost={engineRef.current.getCost('ALLIED_NAVAL_YARD')} 
                     progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_NAVAL_YARD')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_NAVAL_YARD'}
-                    locked={!engineRef.current.isUnlocked('ALLIED_NAVAL_YARD', 'PLAYER')}
+                    locked={!engineRef.current.isUnlocked('ALLIED_NAVAL_YARD', engineRef.current.localPlayerId)}
                     onClick={() => {
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_NAVAL_YARD');
                       if (item && item.progress >= 100) {

@@ -22,12 +22,15 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
   useEffect(() => {
     const updateCredits = () => {
       setDisplayedCredits(prev => {
-        if (prev === gameState.credits) return prev;
-        const diff = gameState.credits - prev;
+        const owner = engineRef.current.localPlayerId;
+        const currentCredits = owner === 'AI' ? gameState.aiCredits : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits;
+
+        if (prev === currentCredits) return prev;
+        const diff = currentCredits - prev;
         const step = Math.sign(diff) * Math.max(1, Math.floor(Math.abs(diff) * 0.1));
         
         if (Math.abs(diff) <= Math.abs(step)) {
-          return gameState.credits;
+          return currentCredits;
         }
         return prev + step;
       });
@@ -38,7 +41,15 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [gameState.credits]);
+  }, [gameState.credits, gameState.aiCredits, gameState.p3Credits, gameState.p4Credits, engineRef]);
+
+  const owner = engineRef.current.localPlayerId;
+  const localGameState = {
+     ...gameState,
+     credits: owner === 'AI' ? gameState.aiCredits : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits,
+     productionQueue: owner === 'AI' ? gameState.aiProductionQueue : owner === 'PLAYER_3' ? (gameState.p3ProductionQueue || []) : owner === 'PLAYER_4' ? (gameState.p4ProductionQueue || []) : gameState.productionQueue,
+     specialAbilities: owner === 'AI' ? gameState.aiSpecialAbilities : owner === 'PLAYER_3' ? (gameState.p3SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_4' ? (gameState.p4SpecialAbilities || gameState.specialAbilities) : gameState.specialAbilities
+  };
 
   return (
     <div className="w-[280px] bg-zinc-950 border-l-2 border-zinc-800 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)] relative z-20 overflow-hidden">
@@ -47,9 +58,9 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
       
       {/* Minimap Section (Top) */}
       <div className="p-2 bg-zinc-900/50 border-b border-zinc-800 aspect-square flex items-center justify-center relative overflow-hidden">
-        {gameState.entities.some(e => e.type === 'BUILDING' && e.owner === 'PLAYER' && (e.subType === 'RADAR' || e.subType === 'AIR_FORCE_COMMAND')) ? (
+        {localGameState.entities.some(e => e.type === 'BUILDING' && e.owner === engineRef.current.localPlayerId && (e.subType === 'RADAR' || e.subType === 'AIR_FORCE_COMMAND')) ? (
           <Minimap 
-            gameState={gameState} 
+            gameState={localGameState} 
             onMinimapClick={(pos) => {
               const canvas = document.querySelector('canvas'); // Main game canvas
               if (!canvas) return;
@@ -244,10 +255,10 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
 
         {/* Build Grid */}
         <div className="flex-1 p-2 overflow-y-auto custom-scrollbar">
-          {gameState.sidebarTab === 'BUILDINGS' && <BuildingsTab gameState={gameState} engineRef={engineRef} />}
-          {gameState.sidebarTab === 'INFANTRY' && <InfantryTab gameState={gameState} engineRef={engineRef} />}
-          {gameState.sidebarTab === 'VEHICLES' && <VehiclesTab gameState={gameState} engineRef={engineRef} />}
-          {gameState.sidebarTab === 'DEFENSE' && <DefenseTab gameState={gameState} engineRef={engineRef} />}
+          {localGameState.sidebarTab === 'BUILDINGS' && <BuildingsTab gameState={localGameState} engineRef={engineRef} />}
+          {localGameState.sidebarTab === 'INFANTRY' && <InfantryTab gameState={localGameState} engineRef={engineRef} />}
+          {localGameState.sidebarTab === 'VEHICLES' && <VehiclesTab gameState={localGameState} engineRef={engineRef} />}
+          {localGameState.sidebarTab === 'DEFENSE' && <DefenseTab gameState={localGameState} engineRef={engineRef} />}
         </div>
       </div>
     </div>

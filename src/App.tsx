@@ -383,7 +383,15 @@ export default function App() {
           ctx.drawImage(unitTexture, -entity.size/2, -entity.size/2, entity.size, entity.size);
         } else {
           // Fallback
-          ctx.fillStyle = entity.owner === 'PLAYER' ? '#3b82f6' : (entity.owner === 'AI' ? '#ef4444' : '#6b7280');
+          const engineColors = engineRef.current?.state?.playerColors;
+          let color = '#6b7280'; // neutral
+          if (entity.owner && engineColors && engineColors[entity.owner]) {
+             const cStr = engineColors[entity.owner];
+             color = cStr === 'RED' ? '#ef4444' : cStr === 'BLUE' ? '#3b82f6' : cStr === 'GREEN' ? '#22c55e' : cStr === 'YELLOW' ? '#eab308' : '#3b82f6';
+          } else {
+             color = entity.owner === engineRef.current.localPlayerId ? '#3b82f6' : (entity.owner === 'AI' ? '#ef4444' : '#6b7280');
+          }
+          ctx.fillStyle = color;
           ctx.fillRect(-entity.size/2, -entity.size/2, entity.size, entity.size);
           
           if (entity.subType === 'TANK' || entity.subType === 'RHINO_TANK') {
@@ -572,7 +580,15 @@ export default function App() {
         if (bldgTexture && bldgTexture.width > 0) {
           ctx.drawImage(bldgTexture, -width/2, -height/2, width, height);
         } else {
-          ctx.fillStyle = entity.owner === 'PLAYER' ? '#1e40af' : (entity.owner === 'AI' ? '#991b1b' : '#4b5563');
+            const engineColors = engineRef.current?.state?.playerColors;
+            let darkColor = '#4b5563'; // neutral
+            if (entity.owner && engineColors && engineColors[entity.owner]) {
+               const cStr = engineColors[entity.owner];
+               darkColor = cStr === 'RED' ? '#991b1b' : cStr === 'BLUE' ? '#1e40af' : cStr === 'GREEN' ? '#166534' : cStr === 'YELLOW' ? '#ca8a04' : '#1e40af';
+            } else {
+               darkColor = entity.owner === engineRef.current.localPlayerId ? '#1e40af' : (entity.owner === 'AI' ? '#991b1b' : '#4b5563');
+            }
+            ctx.fillStyle = darkColor;
           if (entity.subType === 'SOVIET_WALL') ctx.fillStyle = '#4b5563';
           if (entity.subType === 'BATTLE_BUNKER') ctx.fillStyle = '#3f3f46';
           ctx.fillRect(-width/2, -height/2, width, height);
@@ -848,7 +864,7 @@ export default function App() {
 
       if (isValid) {
         // Proximity Check
-        const friendlyBuildings = gameState.entities.filter(e => e.type === 'BUILDING' && e.owner === 'PLAYER');
+        const friendlyBuildings = gameState.entities.filter(e => e.type === 'BUILDING' && e.owner === engineRef.current.localPlayerId);
         if (friendlyBuildings.length > 0) {
           const nearBuilding = friendlyBuildings.find(b => {
             const dist = Math.hypot(b.position.x - snappedX, b.position.y - snappedY);
@@ -1034,7 +1050,7 @@ export default function App() {
         ctx.fillRect(mousePosRef.current.x + 15, mousePosRef.current.y + 15, textWidth + 20, 30);
         ctx.strokeRect(mousePosRef.current.x + 15, mousePosRef.current.y + 15, textWidth + 20, 30);
         
-        ctx.fillStyle = hovered.owner === 'PLAYER' ? '#4ade80' : '#f87171';
+        ctx.fillStyle = hovered.owner === engineRef.current.localPlayerId ? '#4ade80' : '#f87171';
         ctx.font = '12px sans-serif';
         ctx.fillText(text, mousePosRef.current.x + 25, mousePosRef.current.y + 35);
       }
@@ -1052,7 +1068,7 @@ export default function App() {
       if (e.key.toLowerCase() === 's') {
         // Stop command
         engineRef.current.state.entities.forEach(entity => {
-          if (entity.selected && entity.owner === 'PLAYER') {
+          if (entity.selected && entity.owner === engineRef.current.localPlayerId) {
             entity.targetPosition = undefined;
             entity.targetId = undefined;
             entity.path = undefined;
@@ -1063,7 +1079,7 @@ export default function App() {
       if (e.key.toLowerCase() === 'd') {
         // Deploy command
         engineRef.current.state.entities.forEach(entity => {
-          if (entity.selected && entity.owner === 'PLAYER') {
+          if (entity.selected && entity.owner === engineRef.current.localPlayerId) {
             if (entity.subType === 'GI' || entity.subType === 'SIEGE_CHOPPER' || entity.subType === 'DESOLATOR') {
               entity.isDeployed = !entity.isDeployed;
               entity.targetPosition = undefined;
@@ -1078,7 +1094,7 @@ export default function App() {
       if (e.key.toLowerCase() === 'x') {
         // Scatter command
         engineRef.current.state.entities.forEach(entity => {
-          if (entity.selected && entity.owner === 'PLAYER' && entity.type === 'UNIT' && !entity.isDeployed) {
+          if (entity.selected && entity.owner === engineRef.current.localPlayerId && entity.type === 'UNIT' && !entity.isDeployed) {
             const angle = Math.random() * Math.PI * 2;
             const distance = 30 + Math.random() * 50;
             entity.targetPosition = {
@@ -1218,7 +1234,7 @@ export default function App() {
       <GameHUD gameState={gameState} engineRef={engineRef} setGameState={setGameState} />
 
       {/* Emergency Credits */}
-      {gameState.credits < 500 && !gameState.entities.some(e => e.owner === 'PLAYER' && e.subType === 'HARVESTER') && (
+      {gameState.credits < 500 && !gameState.entities.some(e => e.owner === engineRef.current.localPlayerId && e.subType === 'HARVESTER') && (
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 z-50 animate-bounce">
           <button 
             onClick={() => {
