@@ -23,7 +23,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState }) => {
             onClick={() => setAppState('SKIRMISH_SETUP')}
             className="w-full py-4 px-6 text-left font-black uppercase tracking-widest text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-l-4 border-transparent hover:border-red-500 transition-all"
           >
-            Сражение
+            Сражение (С Ботами)
           </button>
           <button 
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
