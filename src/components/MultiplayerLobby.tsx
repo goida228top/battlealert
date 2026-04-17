@@ -23,8 +23,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
   useEffect(() => {
     socket.connect();
     
+    const handleRoomsList = (list: Room[]) => {
+      setRooms(list);
+    };
+
     socket.on('connect', () => {
-      setStatus('Подключение к серверу установлено (v 1.1.0)');
+      setStatus('Подключение к серверу установлено (v 1.2.0)');
       socket.emit('get_rooms');
     });
 
@@ -32,9 +36,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
       setStatus('Подключение разорвано. Ожидание сети...');
     });
 
-    socket.on('rooms_list', (list: Room[]) => {
-      setRooms(list);
-    });
+    socket.on('rooms_list', handleRoomsList);
 
     const onRoomUpdate = (room: any) => {
        setRoomId(room.id);
@@ -42,15 +44,24 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     };
     socket.on('room_update', onRoomUpdate);
 
+    // Initial check and request
     if (socket.connected) {
-      setStatus('Подключение к серверу установлено (v 1.1.0)');
+      setStatus('Подключение к серверу установлено (v 1.2.0)');
       socket.emit('get_rooms');
     }
 
+    // Polling as a fallback to ensure visibility
+    const interval = setInterval(() => {
+      if (socket.connected) {
+        socket.emit('get_rooms');
+      }
+    }, 3000);
+
     return () => {
+      clearInterval(interval);
       socket.off('connect');
       socket.off('disconnect');
-      socket.off('rooms_list');
+      socket.off('rooms_list', handleRoomsList);
       socket.off('room_update', onRoomUpdate);
     };
   }, [setAppState, setRoomId]);

@@ -11,17 +11,24 @@ async function startServer() {
   const httpServer = http.createServer(app);
 
   const io = new Server(httpServer, {
-    cors: { origin: "*" }
+    cors: { origin: "*" },
+    transports: ['websocket', 'polling']
   });
 
   const rooms = new Map();
 
+  const getRoomsList = () => {
+    return Array.from(rooms.values()).map(r => ({
+      id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
+    }));
+  };
+
   io.on('connection', (socket) => {
+    // Immediately send current rooms to the new client
+    socket.emit('rooms_list', getRoomsList());
+
     socket.on('get_rooms', () => {
-      const roomsList = Array.from(rooms.values()).map(r => ({
-        id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
-      }));
-      socket.emit('rooms_list', roomsList);
+      socket.emit('rooms_list', getRoomsList());
     });
 
     socket.on('get_room_info', (roomId) => {
@@ -53,10 +60,7 @@ async function startServer() {
       socket.join(roomId);
       socket.emit('room_update', room);
       
-      const roomsList = Array.from(rooms.values()).map(r => ({
-        id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
-      }));
-      io.emit('rooms_list', roomsList);
+      io.emit('rooms_list', getRoomsList());
     });
 
     socket.on('join_room', (data) => {
@@ -67,10 +71,7 @@ async function startServer() {
         socket.join(room.id);
         io.to(room.id).emit('room_update', room);
         
-        const roomsList = Array.from(rooms.values()).map(r => ({
-          id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
-        }));
-        io.emit('rooms_list', roomsList);
+        io.emit('rooms_list', getRoomsList());
       } else {
         socket.emit('room_error', 'Комната полна или не существует.');
       }
@@ -152,10 +153,7 @@ async function startServer() {
             }
             io.to(id).emit('room_update', room);
           }
-          const roomsList = Array.from(rooms.values()).map(r => ({
-            id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
-          }));
-          io.emit('rooms_list', roomsList);
+          io.emit('rooms_list', getRoomsList());
         }
       }
     });
