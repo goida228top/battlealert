@@ -13,9 +13,10 @@ interface Room {
 interface MultiplayerLobbyProps {
   setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM') => void;
   setRoomId: (id: string) => void;
+  playerName: string;
 }
 
-export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState, setRoomId }) => {
+export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState, setRoomId, playerName }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [status, setStatus] = useState<string>('Подключение...');
 
@@ -35,10 +36,11 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
       setRooms(list);
     });
 
-    socket.on('room_update', (room: any) => {
+    const onRoomUpdate = (room: any) => {
        setRoomId(room.id);
        setAppState('MULTIPLAYER_ROOM');
-    });
+    };
+    socket.on('room_update', onRoomUpdate);
 
     if (socket.connected) {
       setStatus('Подключение к серверу установлено (v 1.1.0)');
@@ -49,14 +51,14 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
       socket.off('connect');
       socket.off('disconnect');
       socket.off('rooms_list');
-      socket.off('room_update');
+      socket.off('room_update', onRoomUpdate);
     };
-  }, []);
+  }, [setAppState, setRoomId]);
 
   const handleJoin = (id: string) => {
       socket.emit('join_room', { 
          roomId: id,
-         player: { name: `Игрок_${Math.floor(Math.random()*1000)}`, faction: 'COALITION', country: 'AMERICA' } 
+         player: { name: playerName, faction: 'COALITION', country: 'AMERICA' } 
       });
   };
 

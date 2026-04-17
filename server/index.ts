@@ -24,6 +24,13 @@ async function startServer() {
       socket.emit('rooms_list', roomsList);
     });
 
+    socket.on('get_room_info', (roomId) => {
+      const room = rooms.get(roomId);
+      if (room) {
+        socket.emit('room_update', room);
+      }
+    });
+
     socket.on('create_room', (data) => {
       const roomId = Math.random().toString(36).substring(7);
       const room = {

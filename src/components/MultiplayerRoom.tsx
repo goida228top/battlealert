@@ -12,6 +12,7 @@ interface MultiplayerRoomProps {
   engineRef: React.MutableRefObject<GameEngine>;
   setGameState: (state: any) => void;
   roomId?: string; // We expect roomId to be passed or derived
+  playerName: string;
 }
 
 export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
@@ -21,7 +22,8 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   setAppState,
   engineRef,
   setGameState,
-  roomId
+  roomId,
+  playerName
 }) => {
   const [players, setPlayers] = useState<any[]>([]);
   const [roomInfo, setRoomInfo] = useState<any>(null);
@@ -41,7 +43,6 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     socket.on('game_started', () => {
       const isHost = players.find(p => p.id === socket.id)?.isHost;
       const role = isHost ? 'HOST' : 'CLIENT';
-      const p2 = players.find(p => p.id !== socket.id);
       
       const hostP = players.find(p => p.isHost);
       const hostFaction = hostP?.faction || selectedFaction;
@@ -68,7 +69,13 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       socket.off('game_started');
       socket.off('chat_message');
     };
-  }, [players, roomInfo]);
+  }, [players, roomInfo, selectedCountry, selectedFaction, selectedMap, setAppState, setGameState, engineRef]);
+
+  useEffect(() => {
+    if (roomId) {
+      socket.emit('get_room_info', roomId);
+    }
+  }, [roomId]);
 
   const handleStart = () => {
     if (roomInfo) {
@@ -78,7 +85,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
 
   const sendChatMessage = () => {
     if (messageInput.trim() && roomInfo) {
-      socket.emit('chat_message', { roomId: roomInfo.id, text: messageInput.trim(), sender: players.find(p => p.id === socket.id)?.name || 'Игрок' });
+      socket.emit('chat_message', { roomId: roomInfo.id, text: messageInput.trim(), sender: playerName });
       setMessageInput('');
     }
   };

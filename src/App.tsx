@@ -37,6 +37,7 @@ export default function App() {
   const [selectedCountry, setSelectedCountry] = useState<'RUSSIA' | 'CUBA' | 'LIBYA' | 'IRAQ' | 'AMERICA' | 'BRITAIN' | 'FRANCE' | 'GERMANY' | 'KOREA'>('RUSSIA');
   const [selectedMap, setSelectedMap] = useState<string>('RIVER_DIVIDE');
   const [activeRoomId, setActiveRoomId] = useState<string | undefined>(undefined);
+  const [playerName, setPlayerName] = useState<string>('Командир_' + Math.floor(Math.random() * 100));
   const mousePosRef = useRef<Vector2 | null>(null);
 
   useEffect(() => {
@@ -1149,11 +1150,11 @@ export default function App() {
   return (
     <div className="flex h-screen bg-black overflow-hidden font-sans text-white select-none">
       {appState === 'MENU' && (
-        <MainMenu setAppState={setAppState} />
+        <MainMenu setAppState={setAppState} playerName={playerName} setPlayerName={setPlayerName} />
       )}
 
       {appState === 'MULTIPLAYER_LOBBY' && (
-        <MultiplayerLobby setAppState={setAppState} setRoomId={setActiveRoomId} />
+        <MultiplayerLobby setAppState={setAppState} setRoomId={setActiveRoomId} playerName={playerName} />
       )}
 
       {appState === 'MULTIPLAYER_CREATE' && (
@@ -1166,6 +1167,7 @@ export default function App() {
           setSelectedMap={setSelectedMap}
           setAppState={setAppState}
           setRoomId={setActiveRoomId}
+          playerName={playerName}
         />
       )}
 
@@ -1178,6 +1180,7 @@ export default function App() {
           engineRef={engineRef}
           setGameState={setGameState}
           roomId={activeRoomId}
+          playerName={playerName}
         />
       )}
 
