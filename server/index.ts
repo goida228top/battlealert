@@ -145,7 +145,7 @@ async function startServer() {
     };
 
     socket.on('create_room', (data) => {
-      const pId = socket.data.playerId || socket.id;
+      const pId = data.playerId || socket.data.playerId || socket.id;
       console.log(`[CREATE] ${pId} -> ${data.name}`);
       leaveAllRooms(); 
       const roomId = Math.random().toString(36).substring(7);
@@ -166,14 +166,37 @@ async function startServer() {
     });
 
     socket.on('join_room', (data) => {
-      const pId = socket.data.playerId || socket.id;
+      const pId = data.playerId || socket.data.playerId || socket.id;
       console.log(`[JOIN_ROOM] ${pId} -> ${data.roomId}`);
       leaveAllRooms(); 
       const room = rooms.get(data.roomId);
       if (room) {
+        // Проверяем, нет ли уже такого игрока (реконнект)
+        const existingPlayer = room.players.find((p: any) => p.id === pId);
+        if (existingPlayer) {
+          existingPlayer.socketId = socket.id;
+          socket.join(room.id);
+          io.to(room.id).emit('room_update', room);
+          return;
+        }
+
         if (room.players.length < 4) {
           const color = assignColor(room.players);
-          room.players.push({ ...data.player, id: pId, ready: true, isAdmin: false, color });
+          // Если в комнате нет админа (старый вышел), назначаем этого
+          const shouldBeAdmin = !room.players.find((p: any) => p.isAdmin && !p.isBot);
+          
+          room.players.push({ 
+            ...data.player, 
+            id: pId, 
+            ready: true, 
+            isAdmin: shouldBeAdmin, 
+            color 
+          });
+          
+          if (shouldBeAdmin) {
+            room.adminId = pId;
+          }
+
           socket.join(room.id);
           io.to(room.id).emit('room_update', room);
           io.sockets.emit('rooms_list', getRoomsList());
@@ -289,8 +312,22 @@ async function startServer() {
 
     socket.on('disconnect', () => {
       console.log(`[Socket] Disconnect: ${socket.id}`);
-      leaveAllRooms();
-      io.emit('rooms_list', getRoomsList());
+      // Нам не нужно сразу удалять игрока при дисконнекте, 
+      // чтобы он мог переподключиться в течение 10 секунд
+      const pId = socket.data.playerId;
+      if (pId) {
+        setTimeout(() => {
+          // Проверяем, не переподключился ли игрок за это время с новым сокетом
+          const activeSocket = Array.from(io.sockets.sockets.values()).find(s => s.data.playerId === pId);
+          if (!activeSocket) {
+             leaveAllRooms();
+             io.emit('rooms_list', getRoomsList());
+          }
+        }, 10000);
+      } else {
+        leaveAllRooms();
+        io.emit('rooms_list', getRoomsList());
+      }
     });
   });
 

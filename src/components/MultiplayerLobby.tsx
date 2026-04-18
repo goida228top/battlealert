@@ -83,6 +83,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
   const handleJoin = (id: string) => {
       socket.emit('join_room', { 
          roomId: id,
+         playerId: PLAYER_ID,
          player: { name: playerName, faction: 'COALITION', country: 'AMERICA' } 
       });
   };

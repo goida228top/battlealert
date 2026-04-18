@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 // Если деплоим на Render, можно оставить пустым для текущего хоста
 const SERVER_URL = '';
 
-export const BUILD_VERSION = 'v1.3.4-ULTRA';
+export const BUILD_VERSION = 'v1.3.5-ALPHALAB';
 
 // Persistent player ID to survive reconnections
 const getPersistentId = () => {

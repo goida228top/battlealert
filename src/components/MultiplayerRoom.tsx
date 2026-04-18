@@ -97,7 +97,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       
       engineRef.current.initMultiplayer(role, roomInfo?.id, socket, roomInfo);
       
-      const me = players.find(p => p.id === socket.id);
+      const me = players.find(p => p.id === PLAYER_ID);
       if (me) {
           engineRef.current.playerFaction = me.faction;
           engineRef.current.playerCountry = me.country;
@@ -145,8 +145,8 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     socket.emit('update_player', { roomId: roomInfo?.id, faction, country });
   };
 
-  const isAdmin = players.find(p => p.id === socket.id)?.isAdmin;
-  const me = players.find(p => p.id === socket.id);
+  const isAdmin = players.find(p => p.id === PLAYER_ID)?.isAdmin;
+  const me = players.find(p => p.id === PLAYER_ID);
 
   return (
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white">

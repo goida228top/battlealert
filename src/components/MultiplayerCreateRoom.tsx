@@ -43,6 +43,7 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
     socket.emit('create_room', {
       name: roomName,
       map: selectedMap,
+      playerId: PLAYER_ID,
       player: {
         name: playerName,
         faction: selectedFaction,
