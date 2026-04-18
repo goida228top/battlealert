@@ -51,19 +51,13 @@ export class FogOfWar {
         const idx = (y * fW + x) * 4;
         
         if (vis === 0) {
-          // Unexplored: Translucent gray to see terrain underneath a bit
+          // Unexplored (Shroud): Translucent black
           data[idx] = 10;
           data[idx + 1] = 10;
           data[idx + 2] = 10;
-          data[idx + 3] = 200; // Semi-transparent
-        } else if (vis === 1) {
-          // Explored but not in vision
-          data[idx] = 10;
-          data[idx + 1] = 10;
-          data[idx + 2] = 10;
-          data[idx + 3] = 100;
+          data[idx + 3] = 220; 
         } else {
-          // Visible: Fully transparent
+          // Explored or Visible: Fully transparent (No fog of war, only shroud)
           data[idx] = 0;
           data[idx + 1] = 0;
           data[idx + 2] = 0;

@@ -317,7 +317,7 @@ export default function App() {
     }
 
     // Render highly optimized Fog of War
-    if (!gameState.map.debugFogDisabled) {
+    if (!gameState.debugFlags?.disableFog) {
       fogOfWarRef.current.render(ctx, visibility, map);
     }
 

@@ -164,6 +164,8 @@ export function initGame(this: any, mapId: string = 'RIVER_DIVIDE') {
     projectiles: [],
     credits: 10000,
     aiCredits: 10000,
+    p3Credits: 10000,
+    p4Credits: 10000,
     effects: [],
     moveMarkers: [],
     crates: [],

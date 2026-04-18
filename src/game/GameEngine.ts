@@ -122,7 +122,9 @@ export class GameEngine {
            
            if (socket && p.id === socket.id) {
                this.localPlayerId = slot as any;
-               console.log(`[GameEngine] I am ${this.localPlayerId} (Slot ${slot})`);
+               this.playerFaction = p.faction;
+               this.playerCountry = p.country;
+               console.log(`[GameEngine] I am ${this.localPlayerId} (Slot ${slot}), Faction: ${this.playerFaction}`);
            }
        });
 
@@ -175,44 +177,45 @@ export class GameEngine {
                 // EXTREMELY IMPORTANT: Do NOT send the massive `map`, `camera`, or UI selections over the network.
                 // Sending the full state object causes massive lag (MB/s) and socket disconnects.
                 const syncState = {
-                  entities: this.state.entities.map(e => ({
-                      id: e.id,
-                      type: e.type,
-                      subType: e.subType,
-                      position: e.position,
-                      health: e.health,
-                      maxHealth: e.maxHealth,
-                      owner: e.owner,
-                      rotation: e.rotation,
-                      size: e.size,
-                      speed: e.speed,
-                      targetId: e.targetId,
-                      targetPosition: e.targetPosition,
-                      isDeployed: e.isDeployed,
-                      rank: e.rank,
-                      isRepairing: e.isRepairing,
-                  })),
-                   credits: this.state.credits,
-                   aiCredits: this.state.aiCredits,
-                   p3Credits: this.state.p3Credits,
-                   p4Credits: this.state.p4Credits,
-                   productionQueue: this.state.productionQueue,
-                   aiProductionQueue: this.state.aiProductionQueue,
-                   p3ProductionQueue: this.state.p3ProductionQueue,
-                   p4ProductionQueue: this.state.p4ProductionQueue,
-                   effects: this.state.effects,
-                   projectiles: this.state.projectiles,
-                   crates: this.state.crates,
-                   ironCurtainActive: this.state.ironCurtainActive,
-                   specialAbilities: this.state.specialAbilities,
-                   aiSpecialAbilities: this.state.aiSpecialAbilities,
-                   p3SpecialAbilities: this.state.p3SpecialAbilities,
-                   p4SpecialAbilities: this.state.p4SpecialAbilities,
-                   power: this.state.power,
-                   powerConsumption: this.state.powerConsumption,
-                   playerMappings: this.state.playerMappings,
-                   playerColors: this.state.playerColors,
-                   botSlots: this.state.botSlots
+                    entities: this.state.entities.map(e => ({
+                        id: e.id,
+                        type: e.type,
+                        subType: e.subType,
+                        position: e.position,
+                        health: e.health,
+                        maxHealth: e.maxHealth,
+                        owner: e.owner,
+                        rotation: e.rotation,
+                        size: e.size,
+                        speed: e.speed,
+                        targetId: e.targetId,
+                        targetPosition: e.targetPosition,
+                        isDeployed: e.isDeployed,
+                        rank: e.rank,
+                        isRepairing: e.isRepairing,
+                    })),
+                    credits: this.state.credits,
+                    aiCredits: this.state.aiCredits,
+                    p3Credits: this.state.p3Credits,
+                    p4Credits: this.state.p4Credits,
+                    productionQueue: this.state.productionQueue,
+                    aiProductionQueue: this.state.aiProductionQueue,
+                    p3ProductionQueue: this.state.p3ProductionQueue,
+                    p4ProductionQueue: this.state.p4ProductionQueue,
+                    effects: this.state.effects,
+                    projectiles: this.state.projectiles,
+                    crates: this.state.crates,
+                    ironCurtainActive: this.state.ironCurtainActive,
+                    specialAbilities: this.state.specialAbilities,
+                    aiSpecialAbilities: this.state.aiSpecialAbilities,
+                    p3SpecialAbilities: this.state.p3SpecialAbilities,
+                    p4SpecialAbilities: this.state.p4SpecialAbilities,
+                    power: this.state.power,
+                    powerConsumption: this.state.powerConsumption,
+                    playerMappings: this.state.playerMappings,
+                    playerColors: this.state.playerColors,
+                    botSlots: this.state.botSlots,
+                    gameOver: this.state.gameOver
                 };
                 this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
             }
@@ -280,6 +283,7 @@ export class GameEngine {
                 this.state.powerConsumption = newState.powerConsumption;
                 this.state.playerMappings = newState.playerMappings;
                 this.state.playerColors = newState.playerColors;
+                this.state.gameOver = newState.gameOver;
             }
         });
     }
@@ -626,6 +630,10 @@ export class GameEngine {
         });
         return;
     }
+    // Destroy all entities except mine and neutral
     this.state.entities = this.state.entities.filter(e => e.owner === this.localPlayerId || e.owner === 'NEUTRAL');
+    
+    // Force win check immediately
+    this.checkWinLoss();
   }
 }
