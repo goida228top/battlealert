@@ -30,9 +30,11 @@ export function placeBuilding(this: GameEngine, pos: Vector2): void {
         return; // Cannot build on water or ore
       }
       
+      /* 
       if (visibility === 0) {
         return; // Cannot build in the dark (unexplored area)
       }
+      */
     }
   }
 
@@ -130,7 +132,7 @@ export function placeBuilding(this: GameEngine, pos: Vector2): void {
     position: snappedPos,
     health,
     maxHealth: health,
-    owner: this.localPlayerId as 'PLAYER' | 'AI',
+    owner: this.localPlayerId,
     size,
     constructionStartTime: performance.now(),
   };
@@ -139,10 +141,10 @@ export function placeBuilding(this: GameEngine, pos: Vector2): void {
 this.state.entities.push(entity);
 this.state.placingBuilding = null;
 
-// RA2 Mechanic: ORE_REFINERY comes with a HARVESTER
+  // RA2 Mechanic: ORE_REFINERY comes with a HARVESTER
 if (type === 'ORE_REFINERY') {
-  this.produceUnitAt(entity, 'HARVESTER', this.localPlayerId as 'PLAYER'|'AI');
+  this.produceUnitAt(entity, 'HARVESTER', this.localPlayerId);
 } else if (type === 'ALLIED_ORE_REFINERY') {
-  this.produceUnitAt(entity, 'CHRONO_MINER', this.localPlayerId as 'PLAYER'|'AI');
+  this.produceUnitAt(entity, 'CHRONO_MINER', this.localPlayerId);
 }
 }

@@ -1101,7 +1101,14 @@ export default function App() {
               entity.targetPosition = undefined;
               entity.path = undefined;
             } else if (entity.subType === 'MCV' || entity.subType === 'ALLIED_MCV') {
-              engineRef.current.deployMCV(entity.id);
+              if (engineRef.current.role === 'CLIENT') {
+                engineRef.current.socket.emit('client_command', {
+                  roomId: engineRef.current.roomId,
+                  command: { type: 'DEPLOY_MCV', mcvId: entity.id }
+                });
+              } else {
+                engineRef.current.deployMCV(entity.id);
+              }
             }
           }
         });

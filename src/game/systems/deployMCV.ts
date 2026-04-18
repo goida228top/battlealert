@@ -31,7 +31,7 @@ export function deployMCV(this: any, mcvId: string) {
       const tileType = this.state.map.tiles[curY][curX];
       const visibility = this.state.map.visibility[curY][curX];
       
-      if (tileType !== 'GRASS' || visibility === 0) return; // Must be on clean grass and visible/explored
+      if (tileType !== 'GRASS') return; // Must be on clean grass
     }
   }
 
