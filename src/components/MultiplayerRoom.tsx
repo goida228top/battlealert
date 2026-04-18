@@ -253,6 +253,9 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
         <div className="mt-8 flex justify-between items-center w-full">
           <button 
             onClick={() => {
+              if (roomInfo) {
+                socket.emit('leave_room', roomInfo.id);
+              }
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}

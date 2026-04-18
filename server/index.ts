@@ -72,8 +72,32 @@ async function startServer() {
       return 'RED'; // fallback
     };
 
+    const leaveAllRooms = () => {
+      for (const [id, room] of rooms.entries()) {
+        const initialCount = room.players.length;
+        room.players = room.players.filter((p: any) => p.id !== socket.id);
+        
+        if (room.players.length !== initialCount) {
+          socket.leave(id);
+          if (room.players.length === 0) {
+            rooms.delete(id);
+          } else {
+            if (socket.id === room.adminId) {
+              const newAdmin = room.players.find((p: any) => !p.isBot);
+              if (newAdmin) {
+                room.adminId = newAdmin.id;
+                newAdmin.isAdmin = true;
+              }
+            }
+            io.to(id).emit('room_update', room);
+          }
+        }
+      }
+    };
+
     socket.on('create_room', (data) => {
       console.log(`[CREATE] ${socket.id} -> ${data.name}`);
+      leaveAllRooms(); // Чистим старые привязки
       const roomId = Math.random().toString(36).substring(7);
       const room = {
         id: roomId,
@@ -93,15 +117,20 @@ async function startServer() {
 
     socket.on('join_room', (data) => {
       console.log(`[JOIN_ROOM] ${socket.id} -> ${data.roomId}`);
+      leaveAllRooms(); // Сначала выходим из всех старых комнат
       const room = rooms.get(data.roomId);
-      if (room && room.players.length < 4) {
-        const color = assignColor(room.players);
-        room.players.push({ ...data.player, id: socket.id, ready: true, isAdmin: false, color });
-        socket.join(room.id);
-        io.to(room.id).emit('room_update', room);
-        io.sockets.emit('rooms_list', getRoomsList());
+      if (room) {
+        if (room.players.length < 4) {
+          const color = assignColor(room.players);
+          room.players.push({ ...data.player, id: socket.id, ready: true, isAdmin: false, color });
+          socket.join(room.id);
+          io.to(room.id).emit('room_update', room);
+          io.sockets.emit('rooms_list', getRoomsList());
+        } else {
+          socket.emit('room_error', 'Комната полна.');
+        }
       } else {
-        socket.emit('room_error', 'Комната полна или не существует.');
+        socket.emit('room_error', 'Комната не существует.');
       }
     });
 
@@ -187,27 +216,16 @@ async function startServer() {
       io.to(data.roomId).emit('chat_message', { sender: data.sender, text: data.text });
     });
 
+    socket.on('leave_room', (roomId) => {
+      console.log(`[LEAVE_ROOM] ${socket.id}`);
+      leaveAllRooms();
+      io.sockets.emit('rooms_list', getRoomsList());
+    });
+
     socket.on('disconnect', () => {
       console.log(`[Socket] Disconnect: ${socket.id}`);
-      for (const [id, room] of rooms.entries()) {
-        const pIndex = room.players.findIndex((p: any) => p.id === socket.id);
-        if (pIndex !== -1) {
-          room.players.splice(pIndex, 1);
-          if (room.players.length === 0) {
-            rooms.delete(id);
-          } else {
-            if (socket.id === room.adminId && room.players.length > 0) {
-              const newAdmin = room.players.find((p: any) => !p.isBot);
-              if (newAdmin) {
-                room.adminId = newAdmin.id;
-                newAdmin.isAdmin = true;
-              }
-            }
-            io.to(id).emit('room_update', room);
-          }
-          io.emit('rooms_list', getRoomsList());
-        }
-      }
+      leaveAllRooms();
+      io.emit('rooms_list', getRoomsList());
     });
   });
 
