@@ -1,10 +1,11 @@
 import { io, Socket } from 'socket.io-client';
 
-// If deployed on Render, change the URL here, e.g., 'https://my-ra2-server.onrender.com'
-// Empty string means it will connect to the same host natively (works for dev proxy)
+// Если деплоим на Render, можно оставить пустым для текущего хоста
 const SERVER_URL = '';
+
+export const BUILD_VERSION = 'v1.3.2-STABLE';
 
 export const socket: Socket = io(SERVER_URL, {
   autoConnect: false,
-  transports: ['websocket', 'polling'],
+  transports: ['polling', 'websocket'],
 });

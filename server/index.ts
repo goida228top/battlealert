@@ -21,7 +21,7 @@ async function startServer() {
 
   const io = new Server(httpServer, {
     cors: { origin: "*" },
-    transports: ['websocket', 'polling'],
+    transports: ['polling', 'websocket'],
     pingInterval: 10000,
     pingTimeout: 20000
   });

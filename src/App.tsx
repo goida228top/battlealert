@@ -13,6 +13,7 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { BuildButton } from './components/BuildButton';
 import { GameHUD } from './components/GameHUD';
 import { DebugMenu } from './components/DebugMenu';
+import { BUILD_VERSION } from './game/network';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -1287,6 +1288,11 @@ export default function App() {
       <GameOverScreen gameState={gameState} />
         </>
       )}
+
+      {/* Version Watermark */}
+      <div className="absolute bottom-1 right-1 z-[1000] pointer-events-none opacity-20 text-[10px] font-mono text-white select-none">
+        {BUILD_VERSION}
+      </div>
     </div>
   );
 }
