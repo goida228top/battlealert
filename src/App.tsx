@@ -1290,8 +1290,8 @@ export default function App() {
       )}
 
       {/* Version Watermark */}
-      <div className="absolute bottom-1 right-1 z-[1000] pointer-events-none opacity-20 text-[10px] font-mono text-white select-none">
-        {BUILD_VERSION}
+      <div className="absolute bottom-2 right-2 z-[1000] pointer-events-none opacity-50 text-sm font-mono text-white select-none bg-black/50 px-2 py-1 rounded border border-white/20">
+        BUILD: {BUILD_VERSION}
       </div>
     </div>
   );

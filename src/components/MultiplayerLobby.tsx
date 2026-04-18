@@ -33,7 +33,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     };
 
     socket.on('connect', () => {
-      setStatus(`v 1.3.0 | ID: ${socket.id?.substring(0, 5)}`);
+      setStatus(`${BUILD_VERSION} | ID: ${socket.id?.substring(0, 5)}`);
       socket.emit('get_rooms');
     });
 
