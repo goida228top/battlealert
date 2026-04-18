@@ -99,6 +99,11 @@ async function startServer() {
       }
     });
 
+    socket.on('register_id', (playerId) => {
+      socket.data.playerId = playerId;
+      console.log(`[REGISTER] Socket ${socket.id} -> Player ${playerId}`);
+    });
+
     const assignColor = (players: any[]) => {
       const colors = ['RED', 'BLUE', 'GREEN', 'YELLOW'];
       for (const color of colors) {
@@ -108,25 +113,30 @@ async function startServer() {
     };
 
     const leaveAllRooms = () => {
+      const pId = socket.data.playerId || socket.id;
       for (const [id, room] of rooms.entries()) {
         const initialCount = room.players.length;
-        room.players = room.players.filter((p: any) => p.id !== socket.id);
+        room.players = room.players.filter((p: any) => p.id !== pId);
         
         if (room.players.length !== initialCount) {
           socket.leave(id);
           
-          // Проверяем наличие реальных игроков (не ботов)
           const humanPlayers = room.players.filter((p: any) => !p.isBot);
           
           if (humanPlayers.length === 0) {
-            console.log(`[ROOM] Deleting empty room ${id}`);
-            rooms.delete(id);
+            // Delay deletion to allow for reconnections
+            setTimeout(() => {
+                const currentRoom = rooms.get(id);
+                if (currentRoom && currentRoom.players.filter((p: any) => !p.isBot).length === 0) {
+                    console.log(`[ROOM] Deleting empty room ${id} after timeout`);
+                    rooms.delete(id);
+                }
+            }, 5000); 
           } else {
-            if (socket.id === room.adminId) {
+            if (pId === room.adminId) {
               const newAdmin = humanPlayers[0];
               room.adminId = newAdmin.id;
               newAdmin.isAdmin = true;
-              console.log(`[ROOM] Admin transferred to ${newAdmin.name} in room ${id}`);
             }
             io.to(id).emit('room_update', room);
           }
@@ -135,16 +145,17 @@ async function startServer() {
     };
 
     socket.on('create_room', (data) => {
-      console.log(`[CREATE] ${socket.id} -> ${data.name}`);
-      leaveAllRooms(); // Чистим старые привязки
+      const pId = socket.data.playerId || socket.id;
+      console.log(`[CREATE] ${pId} -> ${data.name}`);
+      leaveAllRooms(); 
       const roomId = Math.random().toString(36).substring(7);
       const room = {
         id: roomId,
         name: data.name || 'Название комнаты',
         map: data.map,
-        adminId: socket.id,
+        adminId: pId,
         botCount: 0,
-        players: [{ ...data.player, id: socket.id, ready: true, isAdmin: true, color: 'RED' }],
+        players: [{ ...data.player, id: pId, ready: true, isAdmin: true, color: 'RED' }],
         gameStarted: false,
         engine: null
       };
@@ -155,13 +166,14 @@ async function startServer() {
     });
 
     socket.on('join_room', (data) => {
-      console.log(`[JOIN_ROOM] ${socket.id} -> ${data.roomId}`);
-      leaveAllRooms(); // Сначала выходим из всех старых комнат
+      const pId = socket.data.playerId || socket.id;
+      console.log(`[JOIN_ROOM] ${pId} -> ${data.roomId}`);
+      leaveAllRooms(); 
       const room = rooms.get(data.roomId);
       if (room) {
         if (room.players.length < 4) {
           const color = assignColor(room.players);
-          room.players.push({ ...data.player, id: socket.id, ready: true, isAdmin: false, color });
+          room.players.push({ ...data.player, id: pId, ready: true, isAdmin: false, color });
           socket.join(room.id);
           io.to(room.id).emit('room_update', room);
           io.sockets.emit('rooms_list', getRoomsList());
@@ -174,9 +186,10 @@ async function startServer() {
     });
 
     socket.on('update_player', (data) => {
+      const pId = socket.data.playerId || socket.id;
       const room = rooms.get(data.roomId);
       if (room) {
-        const player = room.players.find((p: any) => p.id === socket.id);
+        const player = room.players.find((p: any) => p.id === pId);
         if (player) {
           player.faction = data.faction || player.faction;
           player.country = data.country || player.country;
@@ -186,8 +199,9 @@ async function startServer() {
     });
 
     socket.on('add_bot', (roomId) => {
+      const pId = socket.data.playerId || socket.id;
       const room = rooms.get(roomId);
-      if (room && room.adminId === socket.id && room.players.length < 4) {
+      if (room && room.adminId === pId && room.players.length < 4) {
         const color = assignColor(room.players);
         room.botCount++;
         room.players.push({
@@ -205,8 +219,9 @@ async function startServer() {
     });
 
     socket.on('remove_bot', (data) => {
+      const pId = socket.data.playerId || socket.id;
       const room = rooms.get(data.roomId);
-      if (room && room.adminId === socket.id) {
+      if (room && room.adminId === pId) {
         const idx = room.players.findIndex((p: any) => p.id === data.botId && p.isBot);
         if (idx !== -1) {
           room.players.splice(idx, 1);
@@ -216,15 +231,16 @@ async function startServer() {
     });
 
     socket.on('start_game', (roomId) => {
+      const pId = socket.data.playerId || socket.id;
       const room = rooms.get(roomId);
       if (!room) {
         socket.emit('room_error', 'Комната не найдена.');
         return;
       }
       
-      console.log(`[START_REQ] Room: ${roomId}, Req: ${socket.id}, Admin: ${room.adminId}`);
+      console.log(`[START_REQ] Room: ${roomId}, Req: ${pId}, Admin: ${room.adminId}`);
       
-      if (room.adminId === socket.id) {
+      if (room.adminId === pId) {
         console.log(`[START_SUCCESS] Game in room ${roomId}`);
         room.gameStarted = true;
         

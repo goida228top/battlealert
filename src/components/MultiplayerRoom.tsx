@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Faction, Country } from '../game/types';
 import { GameEngine } from '../game/GameEngine';
 import { User, Anchor, AlertCircle, ArrowLeft, Bot, Trash2 } from 'lucide-react';
-import { socket } from '../game/network';
+import { socket, PLAYER_ID } from '../game/network';
 
 interface MultiplayerRoomProps {
   selectedFaction: Faction;
@@ -66,6 +66,15 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   const [messageInput, setMessageInput] = useState('');
 
   useEffect(() => {
+    const onConnect = () => {
+      socket.emit('register_id', PLAYER_ID);
+      if (roomId) {
+        socket.emit('get_room_info', roomId);
+      }
+    };
+
+    socket.on('connect', onConnect);
+
     socket.on('room_update', (room) => {
       setRoomInfo(room);
       setPlayers(room.players);
@@ -106,6 +115,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     });
 
     return () => {
+      socket.off('connect', onConnect);
       socket.off('room_update');
       socket.off('game_started');
       socket.off('chat_message');
@@ -143,10 +153,20 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
       <div className="relative z-10 flex flex-col h-full p-8 max-w-6xl mx-auto w-full">
-        <h1 className="text-4xl font-black text-red-600 mb-2 uppercase tracking-tighter font-display">
-          Игровая Комната {roomInfo ? `- ${roomInfo.name}` : ''}
-        </h1>
-        <p className="text-zinc-400 mb-8 font-bold">Карта: {roomInfo ? roomInfo.map : selectedMap}</p>
+        <div className="flex items-center justify-between mb-2">
+          <h1 className="text-4xl font-black text-red-600 uppercase tracking-tighter font-display">
+            Игровая Комната {roomInfo ? `- ${roomInfo.name}` : ''}
+          </h1>
+          {!socket.connected && (
+             <div className="bg-red-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse">
+               СОЕДИНЕНИЕ ПОТЕРЯНО
+             </div>
+          )}
+        </div>
+        <div className="flex items-center gap-4 mb-8">
+           <p className="text-zinc-400 font-bold">Карта: {roomInfo ? roomInfo.map : selectedMap}</p>
+           <p className="text-zinc-500 text-xs font-mono">ID: {roomId}</p>
+        </div>
 
         <div className="flex-1 flex gap-8">
           {/* Players List */}
