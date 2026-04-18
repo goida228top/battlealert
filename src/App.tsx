@@ -71,7 +71,9 @@ export default function App() {
     loadTexture('ROAD_CORNER', '/assets/sandugol.png');
     loadTexture('ORE', '/assets/goldore.png');
     loadTexture('SOVIET_MCV', '/assets/soviet_mcv.png');
+    loadTexture('ALLIED_MCV', '/assets/allied_mcv.png');
     loadTexture('SOVIET_BASE', '/assets/soviet_base.png');
+    loadTexture('ALLIED_BASE', '/assets/allied_base.png');
     loadTexture('POWER_PLANT', '/assets/power_plant.png');
     loadTexture('ORE_REFINERY', '/assets/refinery.png');
     loadTexture('BARRACKS', '/assets/barracks.png');
@@ -385,7 +387,7 @@ export default function App() {
           ctx.rotate(entity.rotation + Math.PI / 2); // Adjust for tank facing up by default
         }
 
-        const textureKey = entity.subType === 'MCV' ? 'SOVIET_MCV' : entity.subType;
+        const textureKey = entity.subType === 'MCV' ? 'SOVIET_MCV' : entity.subType === 'ALLIED_MCV' ? 'ALLIED_MCV' : entity.subType;
         const unitTexture = texturesRef.current[textureKey];
         if (unitTexture && unitTexture.width > 0) {
           ctx.drawImage(unitTexture, -entity.size/2, -entity.size/2, entity.size, entity.size);
@@ -584,7 +586,7 @@ export default function App() {
         const width = dims.w * mapTileSize;
         const height = dims.h * mapTileSize;
         
-        const bldgTexture = texturesRef.current[entity.subType === 'CONSTRUCTION_YARD' ? 'SOVIET_BASE' : entity.subType];
+        const bldgTexture = texturesRef.current[entity.subType === 'CONSTRUCTION_YARD' ? 'SOVIET_BASE' : entity.subType === 'ALLIED_CONSTRUCTION_YARD' ? 'ALLIED_BASE' : entity.subType];
         if (bldgTexture && bldgTexture.width > 0) {
           ctx.drawImage(bldgTexture, -width/2, -height/2, width, height);
         } else {

@@ -1,7 +1,7 @@
 import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
-export function produceUnitAt(this: GameEngine, producer: Entity, type: UnitType, owner: 'PLAYER' | 'AI'): void {
+export function produceUnitAt(this: GameEngine, producer: Entity, type: UnitType, owner: string): void {
 let health = 100;
 let size = 15;
 let speed = 1.5;

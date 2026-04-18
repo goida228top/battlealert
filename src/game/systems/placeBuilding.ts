@@ -73,7 +73,7 @@ export function placeBuilding(this: GameEngine, pos: Vector2): void {
   if (collision) return;
 
   // 3. Proximity Check (Build range)
-  const friendlyBuildings = this.state.entities.filter(e => e.type === 'BUILDING' && e.owner === 'PLAYER');
+  const friendlyBuildings = this.state.entities.filter(e => e.type === 'BUILDING' && e.owner === this.localPlayerId);
   if (friendlyBuildings.length > 0) {
     const nearBuilding = friendlyBuildings.find(b => {
       const dist = Math.hypot(b.position.x - snappedPos.x, b.position.y - snappedPos.y);

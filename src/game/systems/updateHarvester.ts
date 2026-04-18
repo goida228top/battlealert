@@ -156,6 +156,15 @@ if (harvester.harvestState === 'UNLOADING') {
       
       if (harvester.owner === 'PLAYER') {
         this.state.credits += income;
+      } else if (harvester.owner === 'AI') {
+        this.state.aiCredits += income;
+      } else if (harvester.owner === 'PLAYER_3') {
+        this.state.p3Credits = (this.state.p3Credits || 0) + income;
+      } else if (harvester.owner === 'PLAYER_4') {
+        this.state.p4Credits = (this.state.p4Credits || 0) + income;
+      }
+      
+      if (harvester.owner === this.localPlayerId) {
         this.state.effects.push({
           id: `money-${Date.now()}-${Math.random()}`,
           type: 'MONEY_FLOAT',

@@ -11,7 +11,7 @@ export function handleMouseUp(this: any) {
     const timestamp = performance.now();
 
     this.state.entities.forEach((entity: any) => {
-      if (entity.owner === 'PLAYER' && entity.type === 'UNIT') {
+      if (entity.owner === this.localPlayerId && entity.type === 'UNIT') {
         let newlySelected = false;
         if (isSingleClick) {
           const dx = entity.position.x - start.x;

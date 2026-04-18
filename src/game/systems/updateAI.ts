@@ -23,28 +23,28 @@ export function updateAI(this: GameEngine, timestamp: number): void {
 
      // Use helper functions or directly map to the owner string
      // owner inside this function refers to botOwner
-     const setCredits = (amount) => {
+     const addCredits = (amount: number) => {
          if (botOwner === 'AI') this.state.aiCredits += amount;
          else if (botOwner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + amount;
          else if (botOwner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + amount;
      };
-     const getCredits = () => {
-         if (botOwner === 'AI') return getCredits();
+     const getCreditsLocal = () => {
+         if (botOwner === 'AI') return this.state.aiCredits;
          if (botOwner === 'PLAYER_3') return this.state.p3Credits || 0;
          if (botOwner === 'PLAYER_4') return this.state.p4Credits || 0;
          return 0;
      };
-     const getQueue = () => {
-         if (botOwner === 'AI') return getQueue();
+     const getQueueLocal = () => {
+         if (botOwner === 'AI') return this.state.aiProductionQueue;
          if (botOwner === 'PLAYER_3') return this.state.p3ProductionQueue || [];
          if (botOwner === 'PLAYER_4') return this.state.p4ProductionQueue || [];
          return [];
      };
-     const getSpecial = () => {
-         if (botOwner === 'AI') return getSpecial();
+     const getSpecialLocal = () => {
+         if (botOwner === 'AI') return this.state.aiSpecialAbilities;
          if (botOwner === 'PLAYER_3') return this.state.p3SpecialAbilities;
          if (botOwner === 'PLAYER_4') return this.state.p4SpecialAbilities;
-         return getSpecial();
+         return undefined;
      };
 
      // The core logic starts here:
@@ -57,7 +57,7 @@ if (aiMCV && !aiEntities.some(e => e.subType === 'CONSTRUCTION_YARD' || e.subTyp
 }
 
 // AI Cheat Income to keep up with players (Passive 5 credits per tick ~ 300 per sec)
-setCredits(5);
+addCredits(5);
 
 // Vision Check
 if (!botState.knownPlayerBase) {
@@ -99,7 +99,7 @@ if (timestamp > botState.nextBuildTime) {
     for (const type of currentBuildOrder) {
       const neededCount = currentBuildOrder.filter(t => t === type).length;
       const currentCount = aiEntities.filter(e => e.subType === type).length;
-      const queuedCount = getQueue().filter(q => q.subType === type).length;
+      const queuedCount = getQueueLocal().filter(q => q.subType === type).length;
       if (currentCount + queuedCount < neededCount) {
         nextToBuild = type;
         break;
@@ -131,7 +131,7 @@ if (timestamp > botState.nextBuildTime) {
 
     if (nextToBuild) {
         const cost = this.getCost(nextToBuild);
-        if (getCredits() >= cost && getQueue().filter(q => ['BUILDINGS', 'DEFENSE'].includes(this.getCategory(q.subType))).length === 0) {
+        if (getCreditsLocal() >= cost && getQueueLocal().filter(q => ['BUILDINGS', 'DEFENSE'].includes(this.getCategory(q.subType))).length === 0) {
             this.startProduction(nextToBuild, botOwner);
         }
         botState.nextBuildTime = timestamp + 6000;
@@ -269,20 +269,20 @@ if (aiEngineers.length > 0) {
 }
 
 // Superweapon Logic
-if (getSpecial()?.IRON_CURTAIN?.ready && aiEntities.some(e => e.subType === 'IRON_CURTAIN')) {
+if (getSpecialLocal()?.IRON_CURTAIN?.ready && aiEntities.some(e => e.subType === 'IRON_CURTAIN')) {
   const tanks = combatUnits.filter(u => u.subType === 'RHINO_TANK' || u.subType === 'APOCALYPSE_TANK');
   if (tanks.length > 0) {
     this.useIronCurtainAI(tanks[0].position);
   }
 }
 
-if (getSpecial()?.NUCLEAR_SILO?.ready && aiEntities.some(e => e.subType === 'NUCLEAR_SILO')) {
+if (getSpecialLocal()?.NUCLEAR_SILO?.ready && aiEntities.some(e => e.subType === 'NUCLEAR_SILO')) {
   if (botState.knownPlayerBase) {
     this.useNuclearStrikeAI(botState.knownPlayerBase);
   }
 }
 
-if (getSpecial()?.CHRONOSPHERE?.ready && aiEntities.some(e => e.subType === 'CHRONOSPHERE')) {
+if (getSpecialLocal()?.CHRONOSPHERE?.ready && aiEntities.some(e => e.subType === 'CHRONOSPHERE')) {
   const tanks = combatUnits.filter(u => u.subType === 'GRIZZLY_TANK' || u.subType === 'PRISM_TANK' || u.subType === 'MIRAGE_TANK');
   if (tanks.length > 0 && botState.knownPlayerBase) {
     // For AI, we can just use the Chronosphere directly on their tanks to teleport to player base
@@ -292,12 +292,12 @@ if (getSpecial()?.CHRONOSPHERE?.ready && aiEntities.some(e => e.subType === 'CHR
       t.path = [];
       t.targetPosition = undefined;
     });
-    getSpecial().CHRONOSPHERE.ready = false;
-    getSpecial().CHRONOSPHERE.lastUsed = timestamp;
+    getSpecialLocal().CHRONOSPHERE.ready = false;
+    getSpecialLocal().CHRONOSPHERE.lastUsed = timestamp;
   }
 }
 
-if (getSpecial()?.WEATHER_DEVICE?.ready && aiEntities.some(e => e.subType === 'WEATHER_DEVICE')) {
+if (getSpecialLocal()?.WEATHER_DEVICE?.ready && aiEntities.some(e => e.subType === 'WEATHER_DEVICE')) {
   if (botState.knownPlayerBase) {
     // Assuming useWeatherStormAI exists or we can just call useWeatherStorm
     // Let's check if useWeatherStormAI exists, if not we'll just use the player's one but maybe it doesn't matter who uses it
@@ -305,8 +305,8 @@ if (getSpecial()?.WEATHER_DEVICE?.ready && aiEntities.some(e => e.subType === 'W
       (this as any).useWeatherStormAI(botState.knownPlayerBase);
     } else {
       this.useWeatherStorm(botState.knownPlayerBase);
-      getSpecial().WEATHER_DEVICE.ready = false;
-      getSpecial().WEATHER_DEVICE.lastUsed = timestamp;
+      getSpecialLocal().WEATHER_DEVICE.ready = false;
+      getSpecialLocal().WEATHER_DEVICE.lastUsed = timestamp;
     }
   }
 }

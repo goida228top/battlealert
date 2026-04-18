@@ -178,14 +178,20 @@ export class GameEngine {
                    entities: this.state.entities,
                    credits: this.state.credits,
                    aiCredits: this.state.aiCredits,
+                   p3Credits: this.state.p3Credits,
+                   p4Credits: this.state.p4Credits,
                    productionQueue: this.state.productionQueue,
                    aiProductionQueue: this.state.aiProductionQueue,
+                   p3ProductionQueue: this.state.p3ProductionQueue,
+                   p4ProductionQueue: this.state.p4ProductionQueue,
                    effects: this.state.effects,
                    projectiles: this.state.projectiles,
                    crates: this.state.crates,
                    ironCurtainActive: this.state.ironCurtainActive,
                    specialAbilities: this.state.specialAbilities,
                    aiSpecialAbilities: this.state.aiSpecialAbilities,
+                   p3SpecialAbilities: this.state.p3SpecialAbilities,
+                   p4SpecialAbilities: this.state.p4SpecialAbilities,
                    power: this.state.power,
                    powerConsumption: this.state.powerConsumption,
                    playerMappings: this.state.playerMappings,
@@ -202,18 +208,43 @@ export class GameEngine {
     } else if (this.role === 'CLIENT') {
         this.socket.on('game_state_update', (newState: any) => {
             if (newState && this.state) {
+               // Preserve UI states for entities (selected, selectionResponse, etc)
+               const localUiStates = new Map();
+               this.state.entities.forEach(e => {
+                  if (e.selected || e.selectionResponse) {
+                     localUiStates.set(e.id, { 
+                        selected: e.selected, 
+                        selectionResponse: e.selectionResponse, 
+                        selectionResponseTime: e.selectionResponseTime 
+                     });
+                  }
+               });
+
                // Hard sync state for client
-               this.state.entities = newState.entities;
+               this.state.entities = newState.entities.map((e: any) => {
+                  const uiState = localUiStates.get(e.id);
+                  if (uiState) {
+                      return { ...e, ...uiState };
+                  }
+                  return e;
+               });
+
                this.state.credits = newState.credits;
                this.state.aiCredits = newState.aiCredits;
+               this.state.p3Credits = newState.p3Credits;
+               this.state.p4Credits = newState.p4Credits;
                this.state.productionQueue = newState.productionQueue;
                this.state.aiProductionQueue = newState.aiProductionQueue;
+               this.state.p3ProductionQueue = newState.p3ProductionQueue;
+               this.state.p4ProductionQueue = newState.p4ProductionQueue;
                this.state.effects = newState.effects;
                this.state.projectiles = newState.projectiles;
                this.state.crates = newState.crates;
                this.state.ironCurtainActive = newState.ironCurtainActive;
                this.state.specialAbilities = newState.specialAbilities;
                this.state.aiSpecialAbilities = newState.aiSpecialAbilities;
+               this.state.p3SpecialAbilities = newState.p3SpecialAbilities;
+               this.state.p4SpecialAbilities = newState.p4SpecialAbilities;
                this.state.power = newState.power;
                this.state.powerConsumption = newState.powerConsumption;
                this.state.playerMappings = newState.playerMappings;
@@ -384,11 +415,11 @@ export class GameEngine {
     return updateAI.call(this, timestamp);
   }
 
-  public placeBuildingAt(pos: Vector2, type: BuildingType, owner: 'PLAYER' | 'AI') {
+  public placeBuildingAt(pos: Vector2, type: BuildingType, owner: string) {
     return placeBuildingAt.call(this, pos, type, owner);
   }
 
-  public produceUnitAt(producer: Entity, type: UnitType, owner: 'PLAYER' | 'AI') {
+  public produceUnitAt(producer: Entity, type: UnitType, owner: string) {
     return produceUnitAt.call(this, producer, type, owner);
   }
 
@@ -442,6 +473,13 @@ export class GameEngine {
 
   public placeBuilding(pos: Vector2) {
     return placeBuilding.call(this, pos);
+  }
+
+  public removeFromQueue(itemId: string) {
+    this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== itemId);
+    this.state.aiProductionQueue = this.state.aiProductionQueue.filter(q => q.id !== itemId);
+    if (this.state.p3ProductionQueue) this.state.p3ProductionQueue = this.state.p3ProductionQueue.filter(q => q.id !== itemId);
+    if (this.state.p4ProductionQueue) this.state.p4ProductionQueue = this.state.p4ProductionQueue.filter(q => q.id !== itemId);
   }
 
   // Helper methods for other systems

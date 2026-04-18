@@ -28,7 +28,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'POWER_PLANT');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('POWER_PLANT');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('POWER_PLANT');
                       }
@@ -46,7 +46,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ORE_REFINERY');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ORE_REFINERY');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ORE_REFINERY');
                       }
@@ -64,7 +64,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'BARRACKS');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('BARRACKS');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('BARRACKS');
                       }
@@ -82,7 +82,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'WAR_FACTORY');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('WAR_FACTORY');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('WAR_FACTORY');
                       }
@@ -100,7 +100,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'NAVAL_YARD');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('NAVAL_YARD');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('NAVAL_YARD');
                       }
@@ -118,7 +118,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'RADAR');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('RADAR');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('RADAR');
                       }
@@ -136,7 +136,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'SERVICE_DEPOT');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('SERVICE_DEPOT');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('SERVICE_DEPOT');
                       }
@@ -154,7 +154,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'BATTLE_LAB');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('BATTLE_LAB');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('BATTLE_LAB');
                       }
@@ -172,7 +172,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'NUCLEAR_REACTOR');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('NUCLEAR_REACTOR');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('NUCLEAR_REACTOR');
                       }
@@ -190,7 +190,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'CLONING_VATS');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('CLONING_VATS');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('CLONING_VATS');
                       }
@@ -211,7 +211,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_POWER_PLANT');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_POWER_PLANT');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_POWER_PLANT');
                       }
@@ -229,7 +229,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_ORE_REFINERY');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_ORE_REFINERY');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_ORE_REFINERY');
                       }
@@ -247,7 +247,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_BARRACKS');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_BARRACKS');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_BARRACKS');
                       }
@@ -265,7 +265,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_WAR_FACTORY');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_WAR_FACTORY');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_WAR_FACTORY');
                       }
@@ -283,7 +283,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'AIR_FORCE_COMMAND');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('AIR_FORCE_COMMAND');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('AIR_FORCE_COMMAND');
                       }
@@ -301,7 +301,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_BATTLE_LAB');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_BATTLE_LAB');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_BATTLE_LAB');
                       }
@@ -319,7 +319,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'SERVICE_DEPOT');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('SERVICE_DEPOT');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('SERVICE_DEPOT');
                       }
@@ -337,7 +337,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_ORE_PURIFIER');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_ORE_PURIFIER');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_ORE_PURIFIER');
                       }
@@ -355,7 +355,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ROBOT_CONTROL_CENTER');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ROBOT_CONTROL_CENTER');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ROBOT_CONTROL_CENTER');
                       }
@@ -373,7 +373,7 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_NAVAL_YARD');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_NAVAL_YARD');
-                        engineRef.current.state.productionQueue = engineRef.current.state.productionQueue.filter(q => q.id !== item.id);
+                        engineRef.current.removeFromQueue(item.id);
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_NAVAL_YARD');
                       }
