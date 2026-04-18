@@ -3,7 +3,7 @@ import { io, Socket } from 'socket.io-client';
 // Если деплоим на Render, можно оставить пустым для текущего хоста
 const SERVER_URL = '';
 
-export const BUILD_VERSION = 'v1.3.5-ALPHALAB';
+export const BUILD_VERSION = 'v1.3.7-FORCE-STABLE';
 
 // Persistent player ID to survive reconnections
 const getPersistentId = () => {
@@ -19,5 +19,11 @@ export const PLAYER_ID = getPersistentId();
 
 export const socket: Socket = io(SERVER_URL, {
   autoConnect: false,
-  transports: ['polling', 'websocket'],
+  transports: ['websocket', 'polling'], // Prefer websocket
+  reconnection: true,
+  reconnectionAttempts: Infinity,
+  reconnectionDelay: 500,
+  reconnectionDelayMax: 2000,
+  timeout: 10000,
+  randomizationFactor: 0.5
 });

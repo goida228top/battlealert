@@ -88,6 +88,13 @@ async function startServer() {
     
     socket.emit('rooms_list', getRoomsList());
 
+    // Helper to always get persistent pId
+    const getPId = (data: any) => {
+        const pId = (data && data.playerId) || socket.data.playerId || socket.id;
+        if (data && data.playerId) socket.data.playerId = data.playerId;
+        return pId;
+    };
+
     socket.on('get_rooms', () => {
       socket.emit('rooms_list', getRoomsList());
     });
@@ -112,18 +119,23 @@ async function startServer() {
       return 'RED'; // fallback
     };
 
-    const leaveAllRooms = () => {
+    const leaveAllRooms = (forceUpdate = false) => {
       const pId = socket.data.playerId || socket.id;
       for (const [id, room] of rooms.entries()) {
-        const initialCount = room.players.length;
-        room.players = room.players.filter((p: any) => p.id !== pId);
+        const player = room.players.find((p: any) => p.id === pId);
+        if (player) {
+           if (forceUpdate) {
+               room.players = room.players.filter((p: any) => p.id !== pId);
+               socket.leave(id);
+           } else {
+               player.status = 'AWAY';
+               io.to(id).emit('room_update', room);
+               return; // Just mark away for now
+           }
+        }
         
-        if (room.players.length !== initialCount) {
-          socket.leave(id);
-          
-          const humanPlayers = room.players.filter((p: any) => !p.isBot);
-          
-          if (humanPlayers.length === 0) {
+        const humanPlayers = room.players.filter((p: any) => !p.isBot);
+        if (humanPlayers.length === 0) {
             // Delay deletion to allow for reconnections
             setTimeout(() => {
                 const currentRoom = rooms.get(id);
@@ -131,23 +143,24 @@ async function startServer() {
                     console.log(`[ROOM] Deleting empty room ${id} after timeout`);
                     rooms.delete(id);
                 }
-            }, 5000); 
-          } else {
-            if (pId === room.adminId) {
-              const newAdmin = humanPlayers[0];
-              room.adminId = newAdmin.id;
-              newAdmin.isAdmin = true;
+            }, 10000); 
+        } else {
+            const hasAdmin = humanPlayers.find(p => p.isAdmin);
+            if (!hasAdmin && humanPlayers.length > 0) {
+               const newAdmin = humanPlayers[0];
+               room.adminId = newAdmin.id;
+               newAdmin.isAdmin = true;
+               console.log(`[RECOVERY] Assigned new admin ${newAdmin.name} in room ${id}`);
             }
             io.to(id).emit('room_update', room);
-          }
         }
       }
     };
 
     socket.on('create_room', (data) => {
-      const pId = data.playerId || socket.data.playerId || socket.id;
+      const pId = getPId(data);
       console.log(`[CREATE] ${pId} -> ${data.name}`);
-      leaveAllRooms(); 
+      leaveAllRooms(true); // Force leave other rooms if creating new
       const roomId = Math.random().toString(36).substring(7);
       const room = {
         id: roomId,
@@ -155,7 +168,7 @@ async function startServer() {
         map: data.map,
         adminId: pId,
         botCount: 0,
-        players: [{ ...data.player, id: pId, ready: true, isAdmin: true, color: 'RED' }],
+        players: [{ ...data.player, id: pId, socketId: socket.id, ready: true, isAdmin: true, color: 'RED', status: 'ACTIVE' }],
         gameStarted: false,
         engine: null
       };
@@ -166,31 +179,32 @@ async function startServer() {
     });
 
     socket.on('join_room', (data) => {
-      const pId = data.playerId || socket.data.playerId || socket.id;
+      const pId = getPId(data);
       console.log(`[JOIN_ROOM] ${pId} -> ${data.roomId}`);
-      leaveAllRooms(); 
       const room = rooms.get(data.roomId);
       if (room) {
-        // Проверяем, нет ли уже такого игрока (реконнект)
         const existingPlayer = room.players.find((p: any) => p.id === pId);
         if (existingPlayer) {
           existingPlayer.socketId = socket.id;
+          existingPlayer.status = 'ACTIVE';
           socket.join(room.id);
           io.to(room.id).emit('room_update', room);
+          console.log(`[REJOIN] ${pId} returned to ${data.roomId}`);
           return;
         }
 
         if (room.players.length < 4) {
           const color = assignColor(room.players);
-          // Если в комнате нет админа (старый вышел), назначаем этого
           const shouldBeAdmin = !room.players.find((p: any) => p.isAdmin && !p.isBot);
           
           room.players.push({ 
             ...data.player, 
             id: pId, 
+            socketId: socket.id,
             ready: true, 
             isAdmin: shouldBeAdmin, 
-            color 
+            color,
+            status: 'ACTIVE'
           });
           
           if (shouldBeAdmin) {
@@ -253,8 +267,11 @@ async function startServer() {
       }
     });
 
-    socket.on('start_game', (roomId) => {
-      const pId = socket.data.playerId || socket.id;
+    socket.on('start_game', (data) => {
+      const roomId = typeof data === 'string' ? data : data.roomId;
+      const pId = (data && data.playerId) || socket.data.playerId || socket.id;
+      if (data && data.playerId) socket.data.playerId = data.playerId;
+      
       const room = rooms.get(roomId);
       if (!room) {
         socket.emit('room_error', 'Комната не найдена.');
@@ -312,20 +329,21 @@ async function startServer() {
 
     socket.on('disconnect', () => {
       console.log(`[Socket] Disconnect: ${socket.id}`);
-      // Нам не нужно сразу удалять игрока при дисконнекте, 
-      // чтобы он мог переподключиться в течение 10 секунд
       const pId = socket.data.playerId;
       if (pId) {
+        leaveAllRooms(false); // Mark as AWAY
+        
         setTimeout(() => {
-          // Проверяем, не переподключился ли игрок за это время с новым сокетом
+          // Check if player returned
           const activeSocket = Array.from(io.sockets.sockets.values()).find(s => s.data.playerId === pId);
           if (!activeSocket) {
-             leaveAllRooms();
+             console.log(`[TIMEOUT] Removing player ${pId} after grace period`);
+             leaveAllRooms(true); // Actual removal
              io.emit('rooms_list', getRoomsList());
           }
-        }, 10000);
+        }, 45000); // 45 seconds grace period
       } else {
-        leaveAllRooms();
+        leaveAllRooms(true);
         io.emit('rooms_list', getRoomsList());
       }
     });

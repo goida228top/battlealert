@@ -66,6 +66,9 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   const [messageInput, setMessageInput] = useState('');
 
   useEffect(() => {
+    // Proactive registration
+    socket.emit('register_id', PLAYER_ID);
+
     const onConnect = () => {
       socket.emit('register_id', PLAYER_ID);
       if (roomId) {
@@ -130,7 +133,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
 
   const handleStart = () => {
     if (roomInfo && players.length >= 2) {
-      socket.emit('start_game', roomInfo.id);
+      socket.emit('start_game', { roomId: roomInfo.id, playerId: PLAYER_ID });
     }
   };
 
