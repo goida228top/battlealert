@@ -9,6 +9,37 @@ export function update(this: any, timestamp: number) {
   if (dt > 5) return; // Prevent huge jumps
 
   if (this.role === 'CLIENT') {
+      // Плавная интерполяция серверных позиций на клиенте
+      this.state.entities.forEach((entity: Entity) => {
+          const sePos = (entity as any).serverPosition;
+          if (sePos) {
+              const dx = sePos.x - entity.position.x;
+              const dy = sePos.y - entity.position.y;
+              const dist = Math.sqrt(dx * dx + dy * dy);
+              
+              if (dist > 200) {
+                  // Телепорт, если разрыв слишком большой (например, после создания)
+                  entity.position.x = sePos.x;
+                  entity.position.y = sePos.y;
+              } else if (dist > 0.1) {
+                  // Мягкое подтягивание к реальной позиции сервера
+                  entity.position.x += dx * 0.2 * dt;
+                  entity.position.y += dy * 0.2 * dt;
+              }
+          }
+
+          // Локальное движение для мгновенного отклика при управлении своими юнитами
+          if (entity.type === 'UNIT' && entity.targetPosition && entity.speed && !entity.isDeployed) {
+              const dx = entity.targetPosition.x - entity.position.x;
+              const dy = entity.targetPosition.y - entity.position.y;
+              const distance = Math.sqrt(dx * dx + dy * dy);
+              if (distance > 1) {
+                  entity.position.x += (dx / distance) * entity.speed * dt;
+                  entity.position.y += (dy / distance) * entity.speed * dt;
+              }
+          }
+      });
+
       this.updateEffects(dt);
       this.updateVisibility();
       return;

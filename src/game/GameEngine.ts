@@ -175,7 +175,23 @@ export class GameEngine {
                 // EXTREMELY IMPORTANT: Do NOT send the massive `map`, `camera`, or UI selections over the network.
                 // Sending the full state object causes massive lag (MB/s) and socket disconnects.
                 const syncState = {
-                   entities: this.state.entities,
+                  entities: this.state.entities.map(e => ({
+                      id: e.id,
+                      type: e.type,
+                      subType: e.subType,
+                      position: e.position,
+                      health: e.health,
+                      maxHealth: e.maxHealth,
+                      owner: e.owner,
+                      rotation: e.rotation,
+                      size: e.size,
+                      speed: e.speed,
+                      targetId: e.targetId,
+                      targetPosition: e.targetPosition,
+                      isDeployed: e.isDeployed,
+                      rank: e.rank,
+                      isRepairing: e.isRepairing,
+                  })),
                    credits: this.state.credits,
                    aiCredits: this.state.aiCredits,
                    p3Credits: this.state.p3Credits,
@@ -200,7 +216,7 @@ export class GameEngine {
                 };
                 this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
             }
-        }, 50); // 20 updates per second is much smoother and lighter on bandwidth than 30fps full sync
+        }, 60); 
 
         this.socket.on('remote_command', (cmd: any) => {
             this.executeRemoteCommand(cmd);
@@ -208,47 +224,62 @@ export class GameEngine {
     } else if (this.role === 'CLIENT') {
         this.socket.on('game_state_update', (newState: any) => {
             if (newState && this.state) {
-               // Preserve UI states for entities (selected, selectionResponse, etc)
-               const localUiStates = new Map();
-               this.state.entities.forEach(e => {
-                  if (e.selected || e.selectionResponse) {
-                     localUiStates.set(e.id, { 
-                        selected: e.selected, 
-                        selectionResponse: e.selectionResponse, 
-                        selectionResponseTime: e.selectionResponseTime 
-                     });
-                  }
-               });
+                // Мягкая синхронизация сущностей: обновляем существующие, удаляем пропавшие, добавляем новые
+                const serverEntitiesMap = new Map();
+                newState.entities.forEach((se: any) => serverEntitiesMap.set(se.id, se));
 
-               // Hard sync state for client
-               this.state.entities = newState.entities.map((e: any) => {
-                  const uiState = localUiStates.get(e.id);
-                  if (uiState) {
-                      return { ...e, ...uiState };
-                  }
-                  return e;
-               });
+                // 1. Обновляем существующие и удаляем лишние
+                this.state.entities = this.state.entities.filter(le => {
+                    const se = serverEntitiesMap.get(le.id);
+                    if (!se) return false;
 
-               this.state.credits = newState.credits;
-               this.state.aiCredits = newState.aiCredits;
-               this.state.p3Credits = newState.p3Credits;
-               this.state.p4Credits = newState.p4Credits;
-               this.state.productionQueue = newState.productionQueue;
-               this.state.aiProductionQueue = newState.aiProductionQueue;
-               this.state.p3ProductionQueue = newState.p3ProductionQueue;
-               this.state.p4ProductionQueue = newState.p4ProductionQueue;
-               this.state.effects = newState.effects;
-               this.state.projectiles = newState.projectiles;
-               this.state.crates = newState.crates;
-               this.state.ironCurtainActive = newState.ironCurtainActive;
-               this.state.specialAbilities = newState.specialAbilities;
-               this.state.aiSpecialAbilities = newState.aiSpecialAbilities;
-               this.state.p3SpecialAbilities = newState.p3SpecialAbilities;
-               this.state.p4SpecialAbilities = newState.p4SpecialAbilities;
-               this.state.power = newState.power;
-               this.state.powerConsumption = newState.powerConsumption;
-               this.state.playerMappings = newState.playerMappings;
-               this.state.playerColors = newState.playerColors;
+                    le.health = se.health;
+                    le.maxHealth = se.maxHealth;
+                    le.owner = se.owner;
+                    le.subType = se.subType;
+                    le.type = se.type;
+                    le.size = se.size;
+                    le.speed = se.speed;
+                    le.isDeployed = se.isDeployed;
+                    le.targetPosition = se.targetPosition;
+                    le.targetId = se.targetId;
+                    le.rank = se.rank;
+                    le.isRepairing = se.isRepairing;
+                    le.rotation = se.rotation;
+
+                    // Сохраняем серверную позицию для интерполяции в update.ts
+                    (le as any).serverPosition = se.position;
+
+                    return true;
+                });
+
+                // 2. Добавляем новые
+                newState.entities.forEach((se: any) => {
+                    if (!this.state.entities.some(le => le.id === se.id)) {
+                        this.state.entities.push({ ...se });
+                    }
+                });
+
+                this.state.credits = newState.credits;
+                this.state.aiCredits = newState.aiCredits;
+                this.state.p3Credits = newState.p3Credits;
+                this.state.p4Credits = newState.p4Credits;
+                this.state.productionQueue = newState.productionQueue;
+                this.state.aiProductionQueue = newState.aiProductionQueue;
+                this.state.p3ProductionQueue = newState.p3ProductionQueue;
+                this.state.p4ProductionQueue = newState.p4ProductionQueue;
+                this.state.effects = newState.effects;
+                this.state.projectiles = newState.projectiles;
+                this.state.crates = newState.crates;
+                this.state.ironCurtainActive = newState.ironCurtainActive;
+                this.state.specialAbilities = newState.specialAbilities;
+                this.state.aiSpecialAbilities = newState.aiSpecialAbilities;
+                this.state.p3SpecialAbilities = newState.p3SpecialAbilities;
+                this.state.p4SpecialAbilities = newState.p4SpecialAbilities;
+                this.state.power = newState.power;
+                this.state.powerConsumption = newState.powerConsumption;
+                this.state.playerMappings = newState.playerMappings;
+                this.state.playerColors = newState.playerColors;
             }
         });
     }
