@@ -98,6 +98,13 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       setAppState('PLAYING');
     });
 
+    socket.on('room_error', (err) => {
+      alert(`Ошибка: ${err}`);
+      if (err.includes('не существует')) {
+        setAppState('MULTIPLAYER_LOBBY');
+      }
+    });
+
     return () => {
       socket.off('room_update');
       socket.off('game_started');

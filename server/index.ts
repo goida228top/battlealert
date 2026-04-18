@@ -22,16 +22,51 @@ async function startServer() {
   const io = new Server(httpServer, {
     cors: { origin: "*" },
     transports: ['websocket', 'polling'],
-    pingInterval: 5000,
-    pingTimeout: 10000
+    pingInterval: 10000,
+    pingTimeout: 20000
   });
 
   // Server-side Game Loop
   setInterval(() => {
     rooms.forEach(room => {
       if (room.gameStarted && room.engine) {
-        room.engine.update(Date.now());
-        io.to(room.id).emit('game_state_update', room.engine.state);
+        try {
+          room.engine.update(Date.now());
+          
+          // Strip heavy/static data before sync (especially map.grid which can be 10k+ objects)
+          // Also skip syncing if no human players left? 
+          // (Wait, we should have already deleted the room if no humans)
+          
+          const syncState = {
+            entities: room.engine.state.entities,
+            credits: room.engine.state.credits,
+            aiCredits: room.engine.state.aiCredits,
+            p3Credits: room.engine.state.p3Credits,
+            p4Credits: room.engine.state.p4Credits,
+            productionQueue: room.engine.state.productionQueue,
+            aiProductionQueue: room.engine.state.aiProductionQueue,
+            p3ProductionQueue: room.engine.state.p3ProductionQueue,
+            p4ProductionQueue: room.engine.state.p4ProductionQueue,
+            effects: room.engine.state.effects,
+            projectiles: room.engine.state.projectiles,
+            crates: room.engine.state.crates,
+            ironCurtainActive: room.engine.state.ironCurtainActive,
+            specialAbilities: room.engine.state.specialAbilities,
+            aiSpecialAbilities: room.engine.state.aiSpecialAbilities,
+            p3SpecialAbilities: room.engine.state.p3SpecialAbilities,
+            p4SpecialAbilities: room.engine.state.p4SpecialAbilities,
+            power: room.engine.state.power,
+            powerConsumption: room.engine.state.powerConsumption,
+            playerMappings: room.engine.state.playerMappings,
+            playerColors: room.engine.state.playerColors,
+            botSlots: room.engine.state.botSlots
+          };
+          
+          io.to(room.id).emit('game_state_update', syncState);
+        } catch (e) {
+          console.error(`[ENGINE_ERROR] Room ${room.id}:`, e);
+          room.gameStarted = false; // Stop the loop on error
+        }
       }
     });
   }, 50); // ~20 ticks per second is enough for state sync, engine dt handles smoothing
@@ -79,15 +114,19 @@ async function startServer() {
         
         if (room.players.length !== initialCount) {
           socket.leave(id);
-          if (room.players.length === 0) {
+          
+          // Проверяем наличие реальных игроков (не ботов)
+          const humanPlayers = room.players.filter((p: any) => !p.isBot);
+          
+          if (humanPlayers.length === 0) {
+            console.log(`[ROOM] Deleting empty room ${id}`);
             rooms.delete(id);
           } else {
             if (socket.id === room.adminId) {
-              const newAdmin = room.players.find((p: any) => !p.isBot);
-              if (newAdmin) {
-                room.adminId = newAdmin.id;
-                newAdmin.isAdmin = true;
-              }
+              const newAdmin = humanPlayers[0];
+              room.adminId = newAdmin.id;
+              newAdmin.isAdmin = true;
+              console.log(`[ROOM] Admin transferred to ${newAdmin.name} in room ${id}`);
             }
             io.to(id).emit('room_update', room);
           }
@@ -178,8 +217,15 @@ async function startServer() {
 
     socket.on('start_game', (roomId) => {
       const room = rooms.get(roomId);
-      if (room && room.adminId === socket.id) {
-        console.log(`[START] Game in room ${roomId}`);
+      if (!room) {
+        socket.emit('room_error', 'Комната не найдена.');
+        return;
+      }
+      
+      console.log(`[START_REQ] Room: ${roomId}, Req: ${socket.id}, Admin: ${room.adminId}`);
+      
+      if (room.adminId === socket.id) {
+        console.log(`[START_SUCCESS] Game in room ${roomId}`);
         room.gameStarted = true;
         
         // Initialize Server Game Engine
@@ -201,6 +247,9 @@ async function startServer() {
         room.engine = engine;
         
         io.to(roomId).emit('game_started');
+      } else {
+        console.warn(`[START_FAILED] ${socket.id} is not admin ${room.adminId}`);
+        socket.emit('room_error', 'Только создатель может запустить игру.');
       }
     });
 

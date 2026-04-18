@@ -50,6 +50,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     };
     socket.on('room_update', onRoomUpdate);
 
+    socket.on('room_error', (msg) => {
+       alert(msg);
+    });
+
     // Initial check and request
     if (socket.connected) {
       setStatus(`v 1.3.0 | ID: ${socket.id?.substring(0, 5)}`);
