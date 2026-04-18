@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Users, Server, ArrowLeft, PlusSquare } from 'lucide-react';
-import { socket, BUILD_VERSION, PLAYER_ID } from '../game/network';
+import { socket } from '../game/network';
 
 interface Room {
   id: string;
@@ -33,8 +33,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     };
 
     socket.on('connect', () => {
-      socket.emit('register_id', PLAYER_ID);
-      setStatus(`${BUILD_VERSION} | ID: ${socket.id?.substring(0, 5)}`);
+      setStatus(`v 1.3.0 | ID: ${socket.id?.substring(0, 5)}`);
       socket.emit('get_rooms');
     });
 
@@ -51,16 +50,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     };
     socket.on('room_update', onRoomUpdate);
 
-    socket.on('room_error', (msg) => {
-       alert(msg);
-    });
-
     // Initial check and request
     if (socket.connected) {
-      setStatus(`${BUILD_VERSION} | ID: ${socket.id?.substring(0, 5)}`);
+      setStatus(`v 1.3.0 | ID: ${socket.id?.substring(0, 5)}`);
       socket.emit('get_rooms');
-    } else {
-      socket.connect();
     }
 
     // Polling as a fallback to ensure visibility
@@ -83,7 +76,6 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
   const handleJoin = (id: string) => {
       socket.emit('join_room', { 
          roomId: id,
-         playerId: PLAYER_ID,
          player: { name: playerName, faction: 'COALITION', country: 'AMERICA' } 
       });
   };

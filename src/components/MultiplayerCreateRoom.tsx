@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Faction, Country } from '../game/types';
-import { socket, PLAYER_ID } from '../game/network';
+import { socket } from '../game/network';
 
 interface MultiplayerCreateRoomProps {
   selectedFaction: Faction;
@@ -27,8 +27,6 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
   const [roomName, setRoomName] = useState('Моя игра');
 
   React.useEffect(() => {
-    socket.emit('register_id', PLAYER_ID);
-    
     const onRoomUpdate = (room: any) => {
       setRoomId(room.id);
       setAppState('MULTIPLAYER_ROOM');
@@ -43,7 +41,6 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
     socket.emit('create_room', {
       name: roomName,
       map: selectedMap,
-      playerId: PLAYER_ID,
       player: {
         name: playerName,
         faction: selectedFaction,

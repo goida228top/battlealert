@@ -1,29 +1,10 @@
 import { io, Socket } from 'socket.io-client';
 
-// Если деплоим на Render, можно оставить пустым для текущего хоста
+// If deployed on Render, change the URL here, e.g., 'https://my-ra2-server.onrender.com'
+// Empty string means it will connect to the same host natively (works for dev proxy)
 const SERVER_URL = '';
-
-export const BUILD_VERSION = 'v1.3.7-FORCE-STABLE';
-
-// Persistent player ID to survive reconnections
-const getPersistentId = () => {
-  let id = localStorage.getItem('battle_alert_player_id');
-  if (!id) {
-    id = 'p-' + Math.random().toString(36).substring(2, 11);
-    localStorage.setItem('battle_alert_player_id', id);
-  }
-  return id;
-};
-
-export const PLAYER_ID = getPersistentId();
 
 export const socket: Socket = io(SERVER_URL, {
   autoConnect: false,
-  transports: ['websocket', 'polling'], // Prefer websocket
-  reconnection: true,
-  reconnectionAttempts: Infinity,
-  reconnectionDelay: 500,
-  reconnectionDelayMax: 2000,
-  timeout: 10000,
-  randomizationFactor: 0.5
+  transports: ['websocket', 'polling'],
 });

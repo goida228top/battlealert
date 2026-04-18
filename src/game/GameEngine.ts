@@ -52,12 +52,12 @@ export class GameEngine {
   state!: GameState;
   
   // Multiplayer properties
-  public role: 'HOST' | 'CLIENT' | 'OFFLINE' | 'SERVER' = 'OFFLINE';
+  public role: 'HOST' | 'CLIENT' | 'OFFLINE' = 'OFFLINE';
   public roomId: string | null = null;
   public socket: any = null;
   public localPlayerId: string = 'PLAYER';
 
-  private lastUpdate: number = typeof performance !== 'undefined' ? performance.now() : Date.now();
+  private lastUpdate: number = 0;
   private aiBuildOrder: BuildingType[] = [
     'POWER_PLANT', 'ORE_REFINERY', 'BARRACKS', 'SENTRY_GUN', 
     'WAR_FACTORY', 'NAVAL_YARD', 'RADAR', 'TESLA_COIL', 'SERVICE_DEPOT', 
@@ -78,10 +78,9 @@ export class GameEngine {
   public playerFaction: Faction = 'FEDERATION';
   public playerCountry: Country = 'RUSSIA';
 
-  constructor(faction: Faction = 'FEDERATION', country: Country = 'RUSSIA', role: 'HOST' | 'CLIENT' | 'OFFLINE' | 'SERVER' = 'OFFLINE') {
+  constructor(faction: Faction = 'FEDERATION', country: Country = 'RUSSIA') {
     this.playerFaction = faction;
     this.playerCountry = country;
-    this.role = role;
     this.initGame();
   }
 
@@ -101,7 +100,8 @@ export class GameEngine {
     return calculatePath.call(this, start, end);
   }
 
-   public initMultiplayer(role: 'HOST' | 'CLIENT' | 'SERVER', roomId: string, socket: any, roomInfo: any) {
+   public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, roomInfo: any) {
+    console.log(`[GameEngine] Start Multiplayer: ${role}, Socket: ${socket?.id}`);
     this.role = role;
     this.roomId = roomId;
     this.socket = socket;
@@ -127,8 +127,8 @@ export class GameEngine {
        });
 
        // Final fallback
-       if (!this.localPlayerId && role !== 'SERVER') {
-           this.localPlayerId = 'PLAYER';
+       if (!this.localPlayerId) {
+           this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI';
        }
 
        const mapWidth = this.state.map.width;
@@ -147,6 +147,7 @@ export class GameEngine {
            const isAllied = p.faction === 'COALITION';
            const pos = corners[index % corners.length];
            
+           console.log(`[GameEngine] Adding MCV for ${p.id} (${slot}) at ${pos.x},${pos.y}`);
            this.state.entities.push({
                id: `mcv-${p.id}`,
                type: 'UNIT',
@@ -160,14 +161,51 @@ export class GameEngine {
                rotation: 0,
            });
 
-           if (slot === this.localPlayerId && typeof window !== 'undefined') {
+           if (slot === this.localPlayerId) {
                this.state.camera.x = -pos.x + window.innerWidth / 2;
                this.state.camera.y = -pos.y + window.innerHeight / 2;
+               console.log(`[GameEngine] Camera centered on ${pos.x},${pos.y}`);
            }
        });
     }
 
-    if (this.role === 'CLIENT') {
+    if (this.role === 'HOST') {
+        setInterval(() => {
+            if (this.state) {
+                // EXTREMELY IMPORTANT: Do NOT send the massive `map`, `camera`, or UI selections over the network.
+                // Sending the full state object causes massive lag (MB/s) and socket disconnects.
+                const syncState = {
+                   entities: this.state.entities,
+                   credits: this.state.credits,
+                   aiCredits: this.state.aiCredits,
+                   p3Credits: this.state.p3Credits,
+                   p4Credits: this.state.p4Credits,
+                   productionQueue: this.state.productionQueue,
+                   aiProductionQueue: this.state.aiProductionQueue,
+                   p3ProductionQueue: this.state.p3ProductionQueue,
+                   p4ProductionQueue: this.state.p4ProductionQueue,
+                   effects: this.state.effects,
+                   projectiles: this.state.projectiles,
+                   crates: this.state.crates,
+                   ironCurtainActive: this.state.ironCurtainActive,
+                   specialAbilities: this.state.specialAbilities,
+                   aiSpecialAbilities: this.state.aiSpecialAbilities,
+                   p3SpecialAbilities: this.state.p3SpecialAbilities,
+                   p4SpecialAbilities: this.state.p4SpecialAbilities,
+                   power: this.state.power,
+                   powerConsumption: this.state.powerConsumption,
+                   playerMappings: this.state.playerMappings,
+                   playerColors: this.state.playerColors,
+                   botSlots: this.state.botSlots
+                };
+                this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
+            }
+        }, 50); // 20 updates per second is much smoother and lighter on bandwidth than 30fps full sync
+
+        this.socket.on('remote_command', (cmd: any) => {
+            this.executeRemoteCommand(cmd);
+        });
+    } else if (this.role === 'CLIENT') {
         this.socket.on('game_state_update', (newState: any) => {
             if (newState && this.state) {
                // Preserve UI states for entities (selected, selectionResponse, etc)
@@ -209,8 +247,8 @@ export class GameEngine {
                this.state.p4SpecialAbilities = newState.p4SpecialAbilities;
                this.state.power = newState.power;
                this.state.powerConsumption = newState.powerConsumption;
-               if (newState.playerMappings) this.state.playerMappings = newState.playerMappings;
-               if (newState.playerColors) this.state.playerColors = newState.playerColors;
+               this.state.playerMappings = newState.playerMappings;
+               this.state.playerColors = newState.playerColors;
             }
         });
     }

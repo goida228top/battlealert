@@ -13,7 +13,6 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { BuildButton } from './components/BuildButton';
 import { GameHUD } from './components/GameHUD';
 import { DebugMenu } from './components/DebugMenu';
-import { BUILD_VERSION } from './game/network';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -34,40 +33,12 @@ export default function App() {
   const cachedMapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogOfWarRef = useRef<FogOfWar>(new FogOfWar());
   const requestRef = useRef<number>(0);
-  const [appState, setAppState] = useState<'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM'>(
-    (localStorage.getItem('battle_alert_app_state') as any) || 'MENU'
-  );
+  const [appState, setAppState] = useState<'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM'>('MENU');
   const [selectedFaction, setSelectedFaction] = useState<'FEDERATION' | 'COALITION'>('FEDERATION');
   const [selectedCountry, setSelectedCountry] = useState<'RUSSIA' | 'CUBA' | 'LIBYA' | 'IRAQ' | 'AMERICA' | 'BRITAIN' | 'FRANCE' | 'GERMANY' | 'KOREA'>('RUSSIA');
   const [selectedMap, setSelectedMap] = useState<string>('RIVER_DIVIDE');
-  const [activeRoomId, setActiveRoomId] = useState<string | undefined>(
-    localStorage.getItem('battle_alert_room_id') || undefined
-  );
-
-  useEffect(() => {
-    if (appState.startsWith('MULTIPLAYER')) {
-      localStorage.setItem('battle_alert_app_state', appState);
-    } else {
-      localStorage.removeItem('battle_alert_app_state');
-    }
-  }, [appState]);
-
-  useEffect(() => {
-    if (activeRoomId) {
-      localStorage.setItem('battle_alert_room_id', activeRoomId);
-    } else {
-      localStorage.removeItem('battle_alert_room_id');
-    }
-  }, [activeRoomId]);
-
-  const [playerName, setPlayerName] = useState<string>(
-    localStorage.getItem('battle_alert_player_name') || 'Командир_' + Math.floor(Math.random() * 100)
-  );
-
-  useEffect(() => {
-    localStorage.setItem('battle_alert_player_name', playerName);
-  }, [playerName]);
-
+  const [activeRoomId, setActiveRoomId] = useState<string | undefined>(undefined);
+  const [playerName, setPlayerName] = useState<string>('Командир_' + Math.floor(Math.random() * 100));
   const mousePosRef = useRef<Vector2 | null>(null);
 
   useEffect(() => {
@@ -1316,11 +1287,6 @@ export default function App() {
       <GameOverScreen gameState={gameState} />
         </>
       )}
-
-      {/* Version Watermark */}
-      <div className="absolute bottom-2 right-2 z-[1000] pointer-events-none opacity-50 text-sm font-mono text-white select-none bg-black/50 px-2 py-1 rounded border border-white/20">
-        BUILD: {BUILD_VERSION}
-      </div>
     </div>
   );
 }

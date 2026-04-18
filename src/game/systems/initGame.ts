@@ -176,8 +176,8 @@ export function initGame(this: any, mapId: string = 'RIVER_DIVIDE') {
     productionQueue: [],
     aiProductionQueue: [],
     camera: {
-      x: -playerStart.x + (typeof window !== 'undefined' ? window.innerWidth / 2 : 400),
-      y: -playerStart.y + (typeof window !== 'undefined' ? window.innerHeight / 2 : 300),
+      x: -playerStart.x + window.innerWidth / 2,
+      y: -playerStart.y + window.innerHeight / 2,
       zoom: 1,
     },
     map: {

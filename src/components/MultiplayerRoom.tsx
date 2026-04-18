@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Faction, Country } from '../game/types';
 import { GameEngine } from '../game/GameEngine';
 import { User, Anchor, AlertCircle, ArrowLeft, Bot, Trash2 } from 'lucide-react';
-import { socket, PLAYER_ID } from '../game/network';
+import { socket } from '../game/network';
 
 interface MultiplayerRoomProps {
   selectedFaction: Faction;
@@ -66,18 +66,6 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   const [messageInput, setMessageInput] = useState('');
 
   useEffect(() => {
-    // Proactive registration
-    socket.emit('register_id', PLAYER_ID);
-
-    const onConnect = () => {
-      socket.emit('register_id', PLAYER_ID);
-      if (roomId) {
-        socket.emit('get_room_info', roomId);
-      }
-    };
-
-    socket.on('connect', onConnect);
-
     socket.on('room_update', (room) => {
       setRoomInfo(room);
       setPlayers(room.players);
@@ -88,19 +76,19 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     });
 
     socket.on('game_started', () => {
-      // Everyone is a CLIENT now, as the server handles the simulation
-      const role = 'CLIENT';
+      const isHost = players.find(p => p.id === socket.id)?.isHost;
+      const role = isHost ? 'HOST' : 'CLIENT';
       
-      const adminP = players.find(p => p.isAdmin);
-      const hostFaction = adminP?.faction || selectedFaction;
-      const hostCountry = adminP?.country || selectedCountry;
+      const hostP = players.find(p => p.isHost);
+      const hostFaction = hostP?.faction || selectedFaction;
+      const hostCountry = hostP?.country || selectedCountry;
       
       // We pass the full room info to the game engine now so it knows about all 4 players
       engineRef.current.resetGame(hostFaction, hostCountry, roomInfo?.map || selectedMap);
       
       engineRef.current.initMultiplayer(role, roomInfo?.id, socket, roomInfo);
       
-      const me = players.find(p => p.id === PLAYER_ID);
+      const me = players.find(p => p.id === socket.id);
       if (me) {
           engineRef.current.playerFaction = me.faction;
           engineRef.current.playerCountry = me.country;
@@ -110,15 +98,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       setAppState('PLAYING');
     });
 
-    socket.on('room_error', (err) => {
-      alert(`Ошибка: ${err}`);
-      if (err.includes('не существует')) {
-        setAppState('MULTIPLAYER_LOBBY');
-      }
-    });
-
     return () => {
-      socket.off('connect', onConnect);
       socket.off('room_update');
       socket.off('game_started');
       socket.off('chat_message');
@@ -133,7 +113,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
 
   const handleStart = () => {
     if (roomInfo && players.length >= 2) {
-      socket.emit('start_game', { roomId: roomInfo.id, playerId: PLAYER_ID });
+      socket.emit('start_game', roomInfo.id);
     }
   };
 
@@ -148,35 +128,25 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     socket.emit('update_player', { roomId: roomInfo?.id, faction, country });
   };
 
-  const isAdmin = players.find(p => p.id === PLAYER_ID)?.isAdmin;
-  const me = players.find(p => p.id === PLAYER_ID);
+  const isHost = players.find(p => p.id === socket.id)?.isHost;
+  const me = players.find(p => p.id === socket.id);
 
   return (
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
       <div className="relative z-10 flex flex-col h-full p-8 max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-4xl font-black text-red-600 uppercase tracking-tighter font-display">
-            Игровая Комната {roomInfo ? `- ${roomInfo.name}` : ''}
-          </h1>
-          {!socket.connected && (
-             <div className="bg-red-600 text-white px-3 py-1 rounded text-sm font-bold animate-pulse">
-               СОЕДИНЕНИЕ ПОТЕРЯНО
-             </div>
-          )}
-        </div>
-        <div className="flex items-center gap-4 mb-8">
-           <p className="text-zinc-400 font-bold">Карта: {roomInfo ? roomInfo.map : selectedMap}</p>
-           <p className="text-zinc-500 text-xs font-mono">ID: {roomId}</p>
-        </div>
+        <h1 className="text-4xl font-black text-red-600 mb-2 uppercase tracking-tighter font-display">
+          Игровая Комната {roomInfo ? `- ${roomInfo.name}` : ''}
+        </h1>
+        <p className="text-zinc-400 mb-8 font-bold">Карта: {roomInfo ? roomInfo.map : selectedMap}</p>
 
         <div className="flex-1 flex gap-8">
           {/* Players List */}
           <div className="flex-1 bg-zinc-900/80 border border-zinc-700 p-6 flex flex-col">
             <h2 className="text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-2 mb-4 flex justify-between items-center">
               <span>Игроки ({players.length}/4)</span>
-              {isAdmin && players.length < 4 && (
+              {isHost && players.length < 4 && (
                 <button 
                   onClick={() => socket.emit('add_bot', roomInfo?.id)}
                   className="bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-1 rounded border border-zinc-600 flex items-center gap-2 transition-colors"
@@ -198,7 +168,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                        <User size={24} className={TEXT_COLOR_MAP[player.color] || 'text-zinc-400'} />
                     )}
                     <span className="font-bold text-lg">{player.name} {player.id === socket.id ? '(Вы)' : ''}</span>
-                    {player.isAdmin && <span className="text-xs bg-red-600 px-2 py-1 rounded text-white font-bold ml-2">СОЗДАТЕЛЬ</span>}
+                    {player.isHost && <span className="text-xs bg-red-600 px-2 py-1 rounded text-white font-bold ml-2">ХОСТ</span>}
                   </div>
                   <div className="flex items-center gap-4">
                     {/* Settings Dropdowns for Me */}
@@ -229,7 +199,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                       {player.ready ? 'Готов' : 'Ждет'}
                     </span>
                     
-                    {isAdmin && player.isBot && (
+                    {isHost && player.isBot && (
                       <button 
                         onClick={() => socket.emit('remove_bot', { roomId: roomInfo?.id, botId: player.id })}
                         className="text-red-500 hover:text-red-400 ml-2"
@@ -283,9 +253,6 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
         <div className="mt-8 flex justify-between items-center w-full">
           <button 
             onClick={() => {
-              if (roomInfo) {
-                socket.emit('leave_room', roomInfo.id);
-              }
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}
@@ -296,14 +263,14 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
           
           <button 
             onClick={handleStart}
-            disabled={players.length < 2 || !isAdmin}
+            disabled={players.length < 2 || !isHost}
             className={`py-4 px-16 font-black uppercase tracking-widest border-2 transition-all ${
-              players.length < 2 || !isAdmin
+              players.length < 2 || !isHost
                 ? 'bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed' 
                 : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
             }`}
           >
-            {isAdmin ? 'Начать игру' : 'Ожидание создателя'}
+            {isHost ? 'Начать игру' : 'Ожидание хоста'}
           </button>
         </div>
       </div>
