@@ -76,12 +76,12 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     });
 
     socket.on('game_started', () => {
-      const isHost = players.find(p => p.id === socket.id)?.isHost;
-      const role = isHost ? 'HOST' : 'CLIENT';
+      // Everyone is a CLIENT now, as the server handles the simulation
+      const role = 'CLIENT';
       
-      const hostP = players.find(p => p.isHost);
-      const hostFaction = hostP?.faction || selectedFaction;
-      const hostCountry = hostP?.country || selectedCountry;
+      const adminP = players.find(p => p.isAdmin);
+      const hostFaction = adminP?.faction || selectedFaction;
+      const hostCountry = adminP?.country || selectedCountry;
       
       // We pass the full room info to the game engine now so it knows about all 4 players
       engineRef.current.resetGame(hostFaction, hostCountry, roomInfo?.map || selectedMap);
@@ -128,7 +128,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     socket.emit('update_player', { roomId: roomInfo?.id, faction, country });
   };
 
-  const isHost = players.find(p => p.id === socket.id)?.isHost;
+  const isAdmin = players.find(p => p.id === socket.id)?.isAdmin;
   const me = players.find(p => p.id === socket.id);
 
   return (
@@ -146,7 +146,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
           <div className="flex-1 bg-zinc-900/80 border border-zinc-700 p-6 flex flex-col">
             <h2 className="text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-2 mb-4 flex justify-between items-center">
               <span>Игроки ({players.length}/4)</span>
-              {isHost && players.length < 4 && (
+              {isAdmin && players.length < 4 && (
                 <button 
                   onClick={() => socket.emit('add_bot', roomInfo?.id)}
                   className="bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-1 rounded border border-zinc-600 flex items-center gap-2 transition-colors"
@@ -168,7 +168,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                        <User size={24} className={TEXT_COLOR_MAP[player.color] || 'text-zinc-400'} />
                     )}
                     <span className="font-bold text-lg">{player.name} {player.id === socket.id ? '(Вы)' : ''}</span>
-                    {player.isHost && <span className="text-xs bg-red-600 px-2 py-1 rounded text-white font-bold ml-2">ХОСТ</span>}
+                    {player.isAdmin && <span className="text-xs bg-red-600 px-2 py-1 rounded text-white font-bold ml-2">СОЗДАТЕЛЬ</span>}
                   </div>
                   <div className="flex items-center gap-4">
                     {/* Settings Dropdowns for Me */}
@@ -199,7 +199,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                       {player.ready ? 'Готов' : 'Ждет'}
                     </span>
                     
-                    {isHost && player.isBot && (
+                    {isAdmin && player.isBot && (
                       <button 
                         onClick={() => socket.emit('remove_bot', { roomId: roomInfo?.id, botId: player.id })}
                         className="text-red-500 hover:text-red-400 ml-2"
@@ -263,14 +263,14 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
           
           <button 
             onClick={handleStart}
-            disabled={players.length < 2 || !isHost}
+            disabled={players.length < 2 || !isAdmin}
             className={`py-4 px-16 font-black uppercase tracking-widest border-2 transition-all ${
-              players.length < 2 || !isHost
+              players.length < 2 || !isAdmin
                 ? 'bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed' 
                 : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
             }`}
           >
-            {isHost ? 'Начать игру' : 'Ожидание хоста'}
+            {isAdmin ? 'Начать игру' : 'Ожидание создателя'}
           </button>
         </div>
       </div>

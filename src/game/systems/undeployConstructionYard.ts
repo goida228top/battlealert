@@ -1,5 +1,13 @@
 
 export function undeployConstructionYard(this: any, yardId: string) {
+  if (this.role === 'CLIENT') {
+      this.socket.emit('client_command', {
+          roomId: this.roomId,
+          command: { type: 'UNDEPLOY_YARD', yardId }
+      });
+      return;
+  }
+
   const yardIndex = this.state.entities.findIndex((e: any) => e.id === yardId);
   if (yardIndex === -1) return;
 

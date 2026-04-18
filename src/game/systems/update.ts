@@ -175,7 +175,7 @@ export function update(this: any, timestamp: number) {
   
   this.state.entities = this.state.entities.filter((e: Entity) => e.health > 0);
 
-  if (this.role === 'OFFLINE' || (this.role === 'HOST' && this.state.botSlots?.length > 0)) {
+  if (this.role === 'OFFLINE' || this.role === 'SERVER' || (this.role === 'HOST' && this.state.botSlots?.length > 0)) {
       this.updateAI(timestamp);
   }
   

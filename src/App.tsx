@@ -85,12 +85,18 @@ export default function App() {
     loadTexture('OIL_DERRICK', '/assets/oil_derrick.png');
   }, []);
 
+  // Add ref to track last UI update
+  const lastUiUpdateRef = useRef<number>(0);
+
   const update = (time: number) => {
     engineRef.current.update(time);
     
-    // Optimization: Only update state when necessary to avoid React render lag
-    // draw() will use engineRef.current.state directly for smooth visuals
-    setGameState({ ...engineRef.current.state });
+    // Optimization: Render visually at 60fps, but update React UI at 10fps
+    if (time - lastUiUpdateRef.current > 100) {
+      setGameState({ ...engineRef.current.state });
+      lastUiUpdateRef.current = time;
+    }
+    
     draw();
     requestRef.current = requestAnimationFrame(update);
   };
@@ -311,7 +317,7 @@ export default function App() {
     }
 
     // Render highly optimized Fog of War
-    if (!gameState.debugFlags?.disableFog) {
+    if (!gameState.map.debugFogDisabled) {
       fogOfWarRef.current.render(ctx, visibility, map);
     }
 

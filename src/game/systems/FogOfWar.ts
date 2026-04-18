@@ -51,17 +51,17 @@ export class FogOfWar {
         const idx = (y * fW + x) * 4;
         
         if (vis === 0) {
-          // Unexplored: Dark gray/black
-          data[idx] = 15;
-          data[idx + 1] = 15;
-          data[idx + 2] = 15;
-          data[idx + 3] = 255;
+          // Unexplored: Translucent gray to see terrain underneath a bit
+          data[idx] = 10;
+          data[idx + 1] = 10;
+          data[idx + 2] = 10;
+          data[idx + 3] = 200; // Semi-transparent
         } else if (vis === 1) {
-          // Explored but not in vision: Fully transparent (no fog)
-          data[idx] = 0;
-          data[idx + 1] = 0;
-          data[idx + 2] = 0;
-          data[idx + 3] = 0;
+          // Explored but not in vision
+          data[idx] = 10;
+          data[idx + 1] = 10;
+          data[idx + 2] = 10;
+          data[idx + 3] = 100;
         } else {
           // Visible: Fully transparent
           data[idx] = 0;

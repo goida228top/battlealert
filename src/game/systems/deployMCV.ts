@@ -1,5 +1,13 @@
 
 export function deployMCV(this: any, mcvId: string) {
+  if (this.role === 'CLIENT') {
+      this.socket.emit('client_command', {
+          roomId: this.roomId,
+          command: { type: 'DEPLOY_MCV', mcvId }
+      });
+      return;
+  }
+
   const mcvIndex = this.state.entities.findIndex((e: any) => e.id === mcvId);
   if (mcvIndex === -1) return;
 

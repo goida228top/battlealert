@@ -3,8 +3,9 @@ import { createServer as createViteServer } from "vite";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
+import { GameEngine } from "../src/game/GameEngine";
 
-const rooms = new Map();
+const rooms = new Map<string, any>();
 let globalConnectionsCount = 0;
 
 const getRoomsList = () => {
@@ -25,7 +26,17 @@ async function startServer() {
     pingTimeout: 10000
   });
 
-  // Aggressive heartbeat to force-sync all clients every 2 seconds
+  // Server-side Game Loop
+  setInterval(() => {
+    rooms.forEach(room => {
+      if (room.gameStarted && room.engine) {
+        room.engine.update(Date.now());
+        io.to(room.id).emit('game_state_update', room.engine.state);
+      }
+    });
+  }, 50); // ~20 ticks per second is enough for state sync, engine dt handles smoothing
+
+  // Aggressive heartbeat tracking
   setInterval(() => {
     const list = getRoomsList();
     io.sockets.emit('rooms_list', list);
@@ -40,7 +51,6 @@ async function startServer() {
     globalConnectionsCount++;
     console.log(`[JOIN] ${socket.id} (Total: ${io.engine.clientsCount})`);
     
-    // Immediate full sync for the newcomer
     socket.emit('rooms_list', getRoomsList());
 
     socket.on('get_rooms', () => {
@@ -67,17 +77,17 @@ async function startServer() {
       const roomId = Math.random().toString(36).substring(7);
       const room = {
         id: roomId,
-        name: data.name || 'Game Room',
+        name: data.name || 'Название комнаты',
         map: data.map,
-        hostId: socket.id,
+        adminId: socket.id,
         botCount: 0,
-        players: [{ ...data.player, id: socket.id, ready: true, isHost: true, color: 'RED' }]
+        players: [{ ...data.player, id: socket.id, ready: true, isAdmin: true, color: 'RED' }],
+        gameStarted: false,
+        engine: null
       };
       rooms.set(roomId, room);
       socket.join(roomId);
       socket.emit('room_update', room);
-      
-      // Global broadcast to everyone!
       io.sockets.emit('rooms_list', getRoomsList());
     });
 
@@ -86,7 +96,7 @@ async function startServer() {
       const room = rooms.get(data.roomId);
       if (room && room.players.length < 4) {
         const color = assignColor(room.players);
-        room.players.push({ ...data.player, id: socket.id, ready: true, isHost: false, color });
+        room.players.push({ ...data.player, id: socket.id, ready: true, isAdmin: false, color });
         socket.join(room.id);
         io.to(room.id).emit('room_update', room);
         io.sockets.emit('rooms_list', getRoomsList());
@@ -109,16 +119,16 @@ async function startServer() {
 
     socket.on('add_bot', (roomId) => {
       const room = rooms.get(roomId);
-      if (room && room.hostId === socket.id && room.players.length < 4) {
+      if (room && room.adminId === socket.id && room.players.length < 4) {
         const color = assignColor(room.players);
         room.botCount++;
         room.players.push({
            name: `Бот ${room.botCount}`,
            id: `bot-${Math.random().toString(36).substring(7)}`,
-           isHost: false,
+           isAdmin: false,
            ready: true,
            faction: Math.random() > 0.5 ? 'FEDERATION' : 'COALITION',
-           country: 'RUSSIA', // default
+           country: 'RUSSIA',
            color,
            isBot: true
         });
@@ -128,7 +138,7 @@ async function startServer() {
 
     socket.on('remove_bot', (data) => {
       const room = rooms.get(data.roomId);
-      if (room && room.hostId === socket.id) {
+      if (room && room.adminId === socket.id) {
         const idx = room.players.findIndex((p: any) => p.id === data.botId && p.isBot);
         if (idx !== -1) {
           room.players.splice(idx, 1);
@@ -138,17 +148,38 @@ async function startServer() {
     });
 
     socket.on('start_game', (roomId) => {
-      io.to(roomId).emit('game_started');
-    });
-
-    socket.on('host_state_update', (data) => {
-      socket.to(data.roomId).emit('game_state_update', data.state);
+      const room = rooms.get(roomId);
+      if (room && room.adminId === socket.id) {
+        console.log(`[START] Game in room ${roomId}`);
+        room.gameStarted = true;
+        
+        // Initialize Server Game Engine
+        const engine = new GameEngine('FEDERATION', 'RUSSIA', 'SERVER');
+        engine.roomId = roomId;
+        engine.state.botSlots = [];
+        
+        const slots = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
+        room.players.forEach((p: any, index: number) => {
+            const slot = slots[index % slots.length];
+            engine.state.playerMappings![p.id] = slot;
+            engine.state.playerColors![slot] = p.color;
+            if (p.isBot) {
+                engine.state.botSlots?.push(slot);
+            }
+        });
+        
+        engine.resetGame('FEDERATION', 'RUSSIA', room.map);
+        room.engine = engine;
+        
+        io.to(roomId).emit('game_started');
+      }
     });
 
     socket.on('client_command', (data) => {
       const room = rooms.get(data.roomId);
-      if (room) {
-        io.to(room.hostId).emit('remote_command', data.command);
+      if (room && room.engine) {
+        // Server handles command directly
+        room.engine.executeRemoteCommand(data.command);
       }
     });
 
@@ -161,17 +192,16 @@ async function startServer() {
       for (const [id, room] of rooms.entries()) {
         const pIndex = room.players.findIndex((p: any) => p.id === socket.id);
         if (pIndex !== -1) {
-          console.log(`[Socket] Removing player ${socket.id} from room ${id}`);
           room.players.splice(pIndex, 1);
           if (room.players.length === 0) {
-            console.log(`[Socket] Room ${id} is empty. Deleting.`);
             rooms.delete(id);
           } else {
-            // Re-assign host if host left
-            if (socket.id === room.hostId && room.players.length > 0) {
-              room.hostId = room.players[0].id;
-              room.players[0].isHost = true;
-              console.log(`[Socket] New host for room ${id}: ${room.hostId}`);
+            if (socket.id === room.adminId && room.players.length > 0) {
+              const newAdmin = room.players.find((p: any) => !p.isBot);
+              if (newAdmin) {
+                room.adminId = newAdmin.id;
+                newAdmin.isAdmin = true;
+              }
             }
             io.to(id).emit('room_update', room);
           }
