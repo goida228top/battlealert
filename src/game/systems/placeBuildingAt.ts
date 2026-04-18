@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 import { getBuildingDimensions } from './getBuildingDimensions';
 
-export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingType, owner: 'PLAYER' | 'AI'): void {
+export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingType, owner: string): void {
   const tileSize = this.state.map.tileSize;
   const dims = getBuildingDimensions(type);
 

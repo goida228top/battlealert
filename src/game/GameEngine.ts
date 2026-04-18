@@ -100,12 +100,12 @@ export class GameEngine {
     return calculatePath.call(this, start, end);
   }
 
-  public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, roomInfo: any) {
+   public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, roomInfo: any) {
+    console.log(`[GameEngine] Start Multiplayer: ${role}, Socket: ${socket?.id}`);
     this.role = role;
     this.roomId = roomId;
     this.socket = socket;
     
-    // Assign structural slots
     if (roomInfo && roomInfo.players) {
        this.state.playerMappings = {};
        this.state.playerColors = {};
@@ -119,42 +119,54 @@ export class GameEngine {
                if (!this.state.botSlots) this.state.botSlots = [];
                this.state.botSlots.push(slot);
            }
+           
            if (socket && p.id === socket.id) {
                this.localPlayerId = slot as any;
+               console.log(`[GameEngine] I am ${this.localPlayerId} (Slot ${slot})`);
            }
        });
 
-       if (this.role === 'HOST') {
-           const mapWidth = this.state.map.width;
-           const mapHeight = this.state.map.height;
-           const corners = [
-               { x: 10 * 40, y: 10 * 40 }, // Top-Left
-               { x: (mapWidth - 10) * 40, y: (mapHeight - 10) * 40 }, // Bottom-Right
-               { x: (mapWidth - 10) * 40, y: 10 * 40 }, // Top-Right
-               { x: 10 * 40, y: (mapHeight - 10) * 40 }, // Bottom-Left
-           ];
-
-           this.state.entities = this.state.entities.filter(e => e.type !== 'UNIT' || (e.subType !== 'MCV' && e.subType !== 'ALLIED_MCV'));
-
-           roomInfo.players.forEach((p: any, index: number) => {
-               const slot = this.state.playerMappings![p.id];
-               const isAllied = p.faction === 'COALITION';
-               this.state.entities.push({
-                   id: `mcv-${p.id}`,
-                   type: 'UNIT',
-                   subType: isAllied ? 'ALLIED_MCV' : 'MCV',
-                   position: corners[index % corners.length],
-                   health: 3000,
-                   maxHealth: 3000,
-                   owner: slot, // Directly assign slot string
-                   size: 40,
-                   speed: 1.5,
-                   rotation: 0,
-               });
-           });
+       // Final fallback
+       if (!this.localPlayerId) {
+           this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI';
        }
-    } else {
-       this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI';
+
+       const mapWidth = this.state.map.width;
+       const mapHeight = this.state.map.height;
+       const corners = [
+           { x: 10 * 40, y: 10 * 40 }, // Top-Left
+           { x: (mapWidth - 10) * 40, y: (mapHeight - 10) * 40 }, // Bottom-Right
+           { x: (mapWidth - 10) * 40, y: 10 * 40 }, // Top-Right
+           { x: 10 * 40, y: (mapHeight - 10) * 40 }, // Bottom-Left
+       ];
+
+       this.state.entities = this.state.entities.filter(e => e.type !== 'UNIT' || (e.subType !== 'MCV' && e.subType !== 'ALLIED_MCV'));
+
+       roomInfo.players.forEach((p: any, index: number) => {
+           const slot = this.state.playerMappings![p.id];
+           const isAllied = p.faction === 'COALITION';
+           const pos = corners[index % corners.length];
+           
+           console.log(`[GameEngine] Adding MCV for ${p.id} (${slot}) at ${pos.x},${pos.y}`);
+           this.state.entities.push({
+               id: `mcv-${p.id}`,
+               type: 'UNIT',
+               subType: isAllied ? 'ALLIED_MCV' : 'MCV',
+               position: { ...pos },
+               health: 3000,
+               maxHealth: 3000,
+               owner: slot,
+               size: 40,
+               speed: 1.5,
+               rotation: 0,
+           });
+
+           if (slot === this.localPlayerId) {
+               this.state.camera.x = -pos.x + window.innerWidth / 2;
+               this.state.camera.y = -pos.y + window.innerHeight / 2;
+               console.log(`[GameEngine] Camera centered on ${pos.x},${pos.y}`);
+           }
+       });
     }
 
     if (this.role === 'HOST') {

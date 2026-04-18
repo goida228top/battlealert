@@ -15,16 +15,43 @@ async function startServer() {
     transports: ['websocket', 'polling']
   });
 
-  const rooms = new Map();
+const rooms = new Map();
+let globalConnectionsCount = 0;
 
-  const getRoomsList = () => {
-    return Array.from(rooms.values()).map(r => ({
-      id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
-    }));
-  };
+const getRoomsList = () => {
+  return Array.from(rooms.values()).map(r => ({
+    id: r.id, name: r.name, map: r.map, players: r.players.length, maxPlayers: 4
+  }));
+};
+
+async function startServer() {
+  const app = express();
+  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
+  const httpServer = http.createServer(app);
+
+  const io = new Server(httpServer, {
+    cors: { origin: "*" },
+    transports: ['websocket', 'polling'],
+    pingInterval: 5000,
+    pingTimeout: 10000
+  });
+
+  // Aggressive heartbeat to force-sync all clients every 2 seconds
+  setInterval(() => {
+    const list = getRoomsList();
+    io.sockets.emit('rooms_list', list);
+    io.sockets.emit('server_stats', {
+      online: io.engine.clientsCount,
+      rooms: list.length,
+      uptime: process.uptime()
+    });
+  }, 2000);
 
   io.on('connection', (socket) => {
-    // Immediately send current rooms to the new client
+    globalConnectionsCount++;
+    console.log(`[JOIN] ${socket.id} (Total: ${io.engine.clientsCount})`);
+    
+    // Immediate full sync for the newcomer
     socket.emit('rooms_list', getRoomsList());
 
     socket.on('get_rooms', () => {
@@ -47,6 +74,7 @@ async function startServer() {
     };
 
     socket.on('create_room', (data) => {
+      console.log(`[CREATE] ${socket.id} -> ${data.name}`);
       const roomId = Math.random().toString(36).substring(7);
       const room = {
         id: roomId,
@@ -60,18 +88,19 @@ async function startServer() {
       socket.join(roomId);
       socket.emit('room_update', room);
       
-      io.emit('rooms_list', getRoomsList());
+      // Global broadcast to everyone!
+      io.sockets.emit('rooms_list', getRoomsList());
     });
 
     socket.on('join_room', (data) => {
+      console.log(`[JOIN_ROOM] ${socket.id} -> ${data.roomId}`);
       const room = rooms.get(data.roomId);
       if (room && room.players.length < 4) {
         const color = assignColor(room.players);
         room.players.push({ ...data.player, id: socket.id, ready: true, isHost: false, color });
         socket.join(room.id);
         io.to(room.id).emit('room_update', room);
-        
-        io.emit('rooms_list', getRoomsList());
+        io.sockets.emit('rooms_list', getRoomsList());
       } else {
         socket.emit('room_error', 'Комната полна или не существует.');
       }
@@ -139,17 +168,21 @@ async function startServer() {
     });
 
     socket.on('disconnect', () => {
+      console.log(`[Socket] Disconnect: ${socket.id}`);
       for (const [id, room] of rooms.entries()) {
         const pIndex = room.players.findIndex((p: any) => p.id === socket.id);
         if (pIndex !== -1) {
+          console.log(`[Socket] Removing player ${socket.id} from room ${id}`);
           room.players.splice(pIndex, 1);
           if (room.players.length === 0) {
+            console.log(`[Socket] Room ${id} is empty. Deleting.`);
             rooms.delete(id);
           } else {
             // Re-assign host if host left
             if (socket.id === room.hostId && room.players.length > 0) {
               room.hostId = room.players[0].id;
               room.players[0].isHost = true;
+              console.log(`[Socket] New host for room ${id}: ${room.hostId}`);
             }
             io.to(id).emit('room_update', room);
           }

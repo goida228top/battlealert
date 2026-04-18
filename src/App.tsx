@@ -84,6 +84,9 @@ export default function App() {
 
   const update = (time: number) => {
     engineRef.current.update(time);
+    
+    // Optimization: Only update state when necessary to avoid React render lag
+    // draw() will use engineRef.current.state directly for smooth visuals
     setGameState({ ...engineRef.current.state });
     draw();
     requestRef.current = requestAnimationFrame(update);
@@ -95,6 +98,8 @@ export default function App() {
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
+    // USE ENGINE STATE DIRECTLY FOR RENDERING - Avoids React state synchronization lag
+    const gameState = engineRef.current.state;
     const { camera, map } = gameState;
 
     // Clear with water color

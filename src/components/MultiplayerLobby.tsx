@@ -19,6 +19,7 @@ interface MultiplayerLobbyProps {
 export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState, setRoomId, playerName }) => {
   const [rooms, setRooms] = useState<Room[]>([]);
   const [status, setStatus] = useState<string>('Подключение...');
+  const [stats, setStats] = useState<{ online: number; rooms: number } | null>(null);
 
   useEffect(() => {
     socket.connect();
@@ -27,8 +28,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
       setRooms(list);
     };
 
+    const handleStats = (s: any) => {
+      setStats(s);
+    };
+
     socket.on('connect', () => {
-      setStatus('Подключение к серверу установлено (v 1.2.0)');
+      setStatus(`v 1.3.0 | ID: ${socket.id?.substring(0, 5)}`);
       socket.emit('get_rooms');
     });
 
@@ -37,6 +42,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     });
 
     socket.on('rooms_list', handleRoomsList);
+    socket.on('server_stats', handleStats);
 
     const onRoomUpdate = (room: any) => {
        setRoomId(room.id);
@@ -46,7 +52,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
 
     // Initial check and request
     if (socket.connected) {
-      setStatus('Подключение к серверу установлено (v 1.2.0)');
+      setStatus(`v 1.3.0 | ID: ${socket.id?.substring(0, 5)}`);
       socket.emit('get_rooms');
     }
 
@@ -55,13 +61,14 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
       if (socket.connected) {
         socket.emit('get_rooms');
       }
-    }, 3000);
+    }, 2000);
 
     return () => {
       clearInterval(interval);
       socket.off('connect');
       socket.off('disconnect');
       socket.off('rooms_list', handleRoomsList);
+      socket.off('server_stats', handleStats);
       socket.off('room_update', onRoomUpdate);
     };
   }, [setAppState, setRoomId]);
@@ -83,8 +90,9 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
             <h1 className="text-4xl font-black uppercase text-red-500 flex items-center gap-4">
               <Server size={36} /> Мультиплеер: Лобби
             </h1>
-            <p className={status.includes('разорвано') ? "text-red-400 mt-2" : "text-green-400 mt-2"}>
-               {status}
+            <p className={status.includes('разорвано') ? "text-red-400 mt-2" : "text-green-400 mt-2 font-mono"}>
+               {status} 
+               {stats && ` | ОНЛАЙН: ${stats.online} | КОМНАТ: ${stats.rooms}`}
             </p>
           </div>
           
