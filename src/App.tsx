@@ -12,6 +12,7 @@ import { MultiplayerRoom } from './components/MultiplayerRoom';
 import { GameOverScreen } from './components/GameOverScreen';
 import { BuildButton } from './components/BuildButton';
 import { GameHUD } from './components/GameHUD';
+import { DebugMenu } from './components/DebugMenu';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -308,7 +309,9 @@ export default function App() {
     }
 
     // Render highly optimized Fog of War
-    fogOfWarRef.current.render(ctx, visibility, map);
+    if (!gameState.debugFlags?.disableFog) {
+      fogOfWarRef.current.render(ctx, visibility, map);
+    }
 
     // Crates
     gameState.crates.forEach(crate => {
@@ -1160,8 +1163,27 @@ export default function App() {
   };
 
   const handleWheel = (e: React.WheelEvent) => {
-    // Zooming is disabled per user request
-    return;
+    // Zooming is disabled per user request, but freeZoom allows it for debugging
+    if (!engineRef.current.state.debugFlags?.freeZoom) return;
+
+    const zoomSpeed = 0.1;
+    const { camera } = engineRef.current.state;
+    const oldZoom = camera.zoom;
+    
+    let newZoom = oldZoom;
+    if (e.deltaY < 0) newZoom += zoomSpeed;
+    if (e.deltaY > 0) newZoom -= zoomSpeed;
+    
+    // Limits
+    newZoom = Math.max(0.05, Math.min(5, newZoom));
+    
+    // Zoom toward cursor
+    const mouseX = e.clientX - 280; // HUD offset
+    const mouseY = e.clientY;
+    
+    camera.x = mouseX - (mouseX - camera.x) * (newZoom / oldZoom);
+    camera.y = mouseY - (mouseY - camera.y) * (newZoom / oldZoom);
+    camera.zoom = newZoom;
   };
 
   const onContextMenu = (e: React.MouseEvent) => {
@@ -1221,6 +1243,8 @@ export default function App() {
 
       {appState === 'PLAYING' && (
         <>
+          <DebugMenu engineRef={engineRef} />
+
           {/* Main Game Area */}
           <div className="relative flex-1 bg-zinc-900 cursor-crosshair overflow-hidden">
         <canvas

@@ -460,4 +460,56 @@ export class GameEngine {
   public updateProduction(timestamp: number, dt: number) {
     return updateProduction.call(this, timestamp, dt);
   }
+
+  // --- Debug / Cheat Methods ---
+  public toggleDebugFog() {
+    this.state.debugFlags = this.state.debugFlags || {};
+    this.state.debugFlags.disableFog = !this.state.debugFlags.disableFog;
+  }
+
+  public toggleFreeZoom() {
+    this.state.debugFlags = this.state.debugFlags || {};
+    this.state.debugFlags.freeZoom = !this.state.debugFlags.freeZoom;
+  }
+
+  public debugGiveCredits() {
+    if (this.localPlayerId === 'PLAYER') this.state.credits += 100000;
+    else if (this.localPlayerId === 'AI') this.state.aiCredits += 100000;
+    else if (this.localPlayerId === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + 100000;
+    else if (this.localPlayerId === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + 100000;
+  }
+
+  public debugSpawnEntity(subType: any, isBuilding = false) {
+    const x = -this.state.camera.x + window.innerWidth / 2;
+    const y = -this.state.camera.y + window.innerHeight / 2;
+    const pos = { x, y };
+
+    if (isBuilding) {
+      if (this.role === 'CLIENT') {
+        this.socket.emit('client_command', {
+            roomId: this.roomId,
+            command: { type: 'PLACE_BUILDING', buildingType: subType, position: pos, owner: this.localPlayerId }
+        });
+      } else {
+        this.placeBuildingAt(pos, subType, this.localPlayerId);
+      }
+    } else {
+      const entity = {
+        id: `${subType}-debug-${Date.now()}`,
+        type: 'UNIT',
+        subType,
+        position: pos,
+        health: 10000,
+        maxHealth: 10000,
+        owner: this.localPlayerId,
+        size: 40,
+        speed: 2,
+      };
+      this.state.entities.push(entity as any);
+    }
+  }
+
+  public debugClearEnemies() {
+    this.state.entities = this.state.entities.filter(e => e.owner === this.localPlayerId || e.owner === 'NEUTRAL');
+  }
 }

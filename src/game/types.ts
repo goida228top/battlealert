@@ -179,4 +179,8 @@ export interface GameState {
   };
   playerMappings?: Record<string, string>; // Maps socket/bot IDs to 'PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'
   playerColors?: Record<string, string>; // Maps internal slot ID ('PLAYER', etc) to color ('RED', etc)
+  debugFlags?: {
+    disableFog?: boolean;
+    freeZoom?: boolean;
+  };
 }
