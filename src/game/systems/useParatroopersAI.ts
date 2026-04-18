@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function useParatroopersAI(this: GameEngine, targetPos: Vector2): void {
-const pt = this.state.aiSpecialAbilities.PARATROOPERS;
+const pt = this.state.p2SpecialAbilities.PARATROOPERS;
 if (!pt || !pt.ready) return;
 
 const timestamp = performance.now();
@@ -16,7 +16,7 @@ for (let i = 0; i < 5; i++) {
       position: { x: targetPos.x + (Math.random() - 0.5) * 100, y: targetPos.y + (Math.random() - 0.5) * 100 },
       health: 100,
       maxHealth: 100,
-      owner: 'AI',
+      owner: 'PLAYER_2',
       size: 10,
       speed: 1.5,
       rotation: 0,

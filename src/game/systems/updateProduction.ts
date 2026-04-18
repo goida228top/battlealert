@@ -3,11 +3,11 @@ import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function updateProduction(this: GameEngine, timestamp: number, dt: number): void {
   const categories = ['BUILDINGS', 'DEFENSE', 'INFANTRY', 'VEHICLES'];
-  const owners: string[] = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
+  const owners: string[] = ['PLAYER', 'PLAYER_2', 'PLAYER_3', 'PLAYER_4'];
 
   owners.forEach(owner => {
     const queue = owner === 'PLAYER' ? this.state.productionQueue : 
-                  owner === 'AI' ? this.state.aiProductionQueue : 
+                  owner === 'PLAYER_2' ? this.state.p2ProductionQueue : 
                   owner === 'PLAYER_3' ? (this.state.p3ProductionQueue = this.state.p3ProductionQueue || []) : 
                   (this.state.p4ProductionQueue = this.state.p4ProductionQueue || []);
     if (!queue || queue.length === 0) return;
@@ -18,9 +18,10 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
 
       if (item.progress >= 100) {
         if (category === 'BUILDINGS' || category === 'DEFENSE') {
-          if (owner === 'AI') {
-            // AI places buildings automatically
-            const yard = this.state.entities.find(e => (e.subType === 'CONSTRUCTION_YARD' || e.subType === 'ALLIED_CONSTRUCTION_YARD') && e.owner === 'AI');
+          const isBot = this.state.botSlots?.includes(owner);
+          if (isBot) {
+            // AI/Bot places buildings automatically
+            const yard = this.state.entities.find(e => (e.subType === 'CONSTRUCTION_YARD' || e.subType === 'ALLIED_CONSTRUCTION_YARD') && e.owner === owner);
             if (yard) {
               const isDefense = ['SENTRY_GUN', 'FLAK_CANNON', 'TESLA_COIL', 'PILLBOX', 'PATRIOT_MISSILE', 'PRISM_TOWER'].includes(item.subType);
               const radius = isDefense ? 600 : 400;
@@ -46,8 +47,11 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
                     });
                     
                     if (!overlap) {
-                      this.placeBuildingAt(pos, item.subType as BuildingType, 'AI');
-                      this.state.aiProductionQueue = this.state.aiProductionQueue.filter(q => q.id !== item.id);
+                      this.placeBuildingAt(pos, item.subType as BuildingType, owner);
+                      if (owner === 'PLAYER_2') this.state.p2ProductionQueue = this.state.p2ProductionQueue!.filter(q => q.id !== item.id);
+                      else if (owner === 'PLAYER_3') this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
+                      else if (owner === 'PLAYER_4') this.state.p4ProductionQueue = this.state.p4ProductionQueue!.filter(q => q.id !== item.id);
+                      
                       placed = true;
                       break;
                     }
@@ -56,10 +60,11 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
               }
               
               if (!placed) {
-                  // Fallback: Just place it somewhat further
                   const pos = { x: yard.position.x + 400 + Math.random()*200, y: yard.position.y + Math.random()*200 };
-                  this.placeBuildingAt(pos, item.subType as BuildingType, 'AI');
-                  this.state.aiProductionQueue = this.state.aiProductionQueue.filter(q => q.id !== item.id);
+                  this.placeBuildingAt(pos, item.subType as BuildingType, owner);
+                  if (owner === 'PLAYER_2') this.state.p2ProductionQueue = this.state.p2ProductionQueue!.filter(q => q.id !== item.id);
+                  else if (owner === 'PLAYER_3') this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
+                  else if (owner === 'PLAYER_4') this.state.p4ProductionQueue = this.state.p4ProductionQueue!.filter(q => q.id !== item.id);
               }
             }
           }
@@ -84,8 +89,8 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
             this.produceUnitAt(factory, item.subType as UnitType, owner as any);
             if (owner === 'PLAYER') {
               this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== item.id);
-            } else if (owner === 'AI') {
-              this.state.aiProductionQueue = this.state.aiProductionQueue.filter(q => q.id !== item.id);
+            } else if (owner === 'PLAYER_2') {
+              this.state.p2ProductionQueue = this.state.p2ProductionQueue!.filter(q => q.id !== item.id);
             } else if (owner === 'PLAYER_3') {
               this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
             } else if (owner === 'PLAYER_4') {

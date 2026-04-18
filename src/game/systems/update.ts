@@ -157,7 +157,7 @@ export function update(this: any, timestamp: number) {
     }
 
     // Repair Logic
-    if (entity.type === 'BUILDING' && entity.isRepairing && entity.owner === 'PLAYER') {
+    if (entity.type === 'BUILDING' && entity.isRepairing) {
       const now = performance.now();
       const repairInterval = 500; // Repair every 0.5s
       const lastRepair = entity.lastRepairTime || 0;
@@ -166,9 +166,19 @@ export function update(this: any, timestamp: number) {
         const repairAmount = 50;
         const repairCost = 10;
         
-        if (this.state.credits >= repairCost && entity.health < entity.maxHealth) {
+        const owner = entity.owner;
+        const credits = owner === 'PLAYER' ? this.state.credits : 
+                        owner === 'PLAYER_2' ? (this.state.p2Credits || 0) :
+                        owner === 'PLAYER_3' ? (this.state.p3Credits || 0) :
+                        (this.state.p4Credits || 0);
+
+        if (credits >= repairCost && entity.health < entity.maxHealth) {
           entity.health = Math.min(entity.maxHealth, entity.health + repairAmount);
-          this.state.credits -= repairCost;
+          if (owner === 'PLAYER') this.state.credits -= repairCost;
+          else if (owner === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) - repairCost;
+          else if (owner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) - repairCost;
+          else if (owner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) - repairCost;
+          
           entity.lastRepairTime = now;
           
           // Visual effect
@@ -185,7 +195,7 @@ export function update(this: any, timestamp: number) {
           });
         }
         
-        if (entity.health >= entity.maxHealth || this.state.credits < repairCost) {
+        if (entity.health >= entity.maxHealth || (credits || 0) < repairCost) {
           entity.isRepairing = false;
         }
       }

@@ -3,8 +3,6 @@ import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function updateAI(this: GameEngine, timestamp: number): void {
   let bots = this.state.botSlots || [];
-  // Fallback if no bot slots set (e.g. singleplayer skirmish)
-  if (bots.length === 0) bots = ['AI'];
   
   // Create state objects if they don't exist
   if (!this.aiStates) this.aiStates = {};
@@ -24,24 +22,28 @@ export function updateAI(this: GameEngine, timestamp: number): void {
      // Use helper functions or directly map to the owner string
      // owner inside this function refers to botOwner
      const addCredits = (amount: number) => {
-         if (botOwner === 'AI') this.state.aiCredits += amount;
+         if (botOwner === 'PLAYER') this.state.credits += amount;
+         else if (botOwner === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) + amount;
          else if (botOwner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + amount;
          else if (botOwner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + amount;
      };
      const getCreditsLocal = () => {
-         if (botOwner === 'AI') return this.state.aiCredits;
+         if (botOwner === 'PLAYER') return this.state.credits;
+         if (botOwner === 'PLAYER_2') return this.state.p2Credits || 0;
          if (botOwner === 'PLAYER_3') return this.state.p3Credits || 0;
          if (botOwner === 'PLAYER_4') return this.state.p4Credits || 0;
          return 0;
      };
      const getQueueLocal = () => {
-         if (botOwner === 'AI') return this.state.aiProductionQueue;
+         if (botOwner === 'PLAYER') return this.state.productionQueue;
+         if (botOwner === 'PLAYER_2') return this.state.p2ProductionQueue || [];
          if (botOwner === 'PLAYER_3') return this.state.p3ProductionQueue || [];
          if (botOwner === 'PLAYER_4') return this.state.p4ProductionQueue || [];
          return [];
      };
      const getSpecialLocal = () => {
-         if (botOwner === 'AI') return this.state.aiSpecialAbilities;
+         if (botOwner === 'PLAYER') return this.state.specialAbilities;
+         if (botOwner === 'PLAYER_2') return this.state.p2SpecialAbilities;
          if (botOwner === 'PLAYER_3') return this.state.p3SpecialAbilities;
          if (botOwner === 'PLAYER_4') return this.state.p4SpecialAbilities;
          return undefined;
@@ -61,12 +63,12 @@ addCredits(5);
 
 // Vision Check
 if (!botState.knownPlayerBase) {
-  const playerBuildings = this.state.entities.filter(e => e.owner === 'PLAYER' && e.type === 'BUILDING');
+  const enemyBuildings = this.state.entities.filter(e => e.owner !== botOwner && e.type === 'BUILDING');
   for (const aiUnit of aiEntities) {
-    for (const pb of playerBuildings) {
-      const dist = Math.hypot(aiUnit.position.x - pb.position.x, aiUnit.position.y - pb.position.y);
+    for (const eb of enemyBuildings) {
+      const dist = Math.hypot(aiUnit.position.x - eb.position.x, aiUnit.position.y - eb.position.y);
       if (dist < 400) { // AI vision range
-        botState.knownPlayerBase = { ...pb.position };
+        botState.knownPlayerBase = { ...eb.position };
         break;
       }
     }
@@ -246,7 +248,7 @@ if (this.state.crates.length > 0) {
 // Engineer Logic (Capture Oil Derricks)
 const aiEngineers = aiEntities.filter(e => e.subType === 'ENGINEER');
 if (aiEngineers.length > 0) {
-  const neutralDerricks = this.state.entities.filter(e => e.subType === 'OIL_DERRICK' && e.owner !== 'AI');
+  const neutralDerricks = this.state.entities.filter(e => e.subType === 'OIL_DERRICK' && e.owner !== botOwner);
   aiEngineers.forEach(eng => {
     if (!eng.targetPosition && !eng.targetId && neutralDerricks.length > 0) {
       // Find nearest neutral derrick

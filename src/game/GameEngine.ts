@@ -110,7 +110,7 @@ export class GameEngine {
        this.state.playerMappings = {};
        this.state.playerColors = {};
        
-       const slots = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
+       const slots = ['PLAYER', 'PLAYER_2', 'PLAYER_3', 'PLAYER_4'];
        roomInfo.players.forEach((p: any, index: number) => {
            const slot = slots[index % slots.length];
            this.state.playerMappings![p.id] = slot;
@@ -130,7 +130,7 @@ export class GameEngine {
 
        // Final fallback
        if (!this.localPlayerId) {
-           this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'AI';
+           this.localPlayerId = role === 'HOST' ? 'PLAYER' : 'PLAYER_2';
        }
 
        const mapWidth = this.state.map.width;
@@ -195,11 +195,11 @@ export class GameEngine {
                         isRepairing: e.isRepairing,
                     })),
                     credits: this.state.credits,
-                    aiCredits: this.state.aiCredits,
+                    p2Credits: this.state.p2Credits,
                     p3Credits: this.state.p3Credits,
                     p4Credits: this.state.p4Credits,
                     productionQueue: this.state.productionQueue,
-                    aiProductionQueue: this.state.aiProductionQueue,
+                    p2ProductionQueue: this.state.p2ProductionQueue,
                     p3ProductionQueue: this.state.p3ProductionQueue,
                     p4ProductionQueue: this.state.p4ProductionQueue,
                     effects: this.state.effects,
@@ -207,7 +207,7 @@ export class GameEngine {
                     crates: this.state.crates,
                     ironCurtainActive: this.state.ironCurtainActive,
                     specialAbilities: this.state.specialAbilities,
-                    aiSpecialAbilities: this.state.aiSpecialAbilities,
+                    p2SpecialAbilities: this.state.p2SpecialAbilities,
                     p3SpecialAbilities: this.state.p3SpecialAbilities,
                     p4SpecialAbilities: this.state.p4SpecialAbilities,
                     power: this.state.power,
@@ -264,11 +264,11 @@ export class GameEngine {
                 });
 
                 this.state.credits = newState.credits;
-                this.state.aiCredits = newState.aiCredits;
+                this.state.p2Credits = newState.p2Credits;
                 this.state.p3Credits = newState.p3Credits;
                 this.state.p4Credits = newState.p4Credits;
                 this.state.productionQueue = newState.productionQueue;
-                this.state.aiProductionQueue = newState.aiProductionQueue;
+                this.state.p2ProductionQueue = newState.p2ProductionQueue;
                 this.state.p3ProductionQueue = newState.p3ProductionQueue;
                 this.state.p4ProductionQueue = newState.p4ProductionQueue;
                 this.state.effects = newState.effects;
@@ -276,7 +276,7 @@ export class GameEngine {
                 this.state.crates = newState.crates;
                 this.state.ironCurtainActive = newState.ironCurtainActive;
                 this.state.specialAbilities = newState.specialAbilities;
-                this.state.aiSpecialAbilities = newState.aiSpecialAbilities;
+                this.state.p2SpecialAbilities = newState.p2SpecialAbilities;
                 this.state.p3SpecialAbilities = newState.p3SpecialAbilities;
                 this.state.p4SpecialAbilities = newState.p4SpecialAbilities;
                 this.state.power = newState.power;
@@ -334,7 +334,7 @@ export class GameEngine {
     } else if (cmd.type === 'DEBUG_GIVE_CREDITS') {
         const id = cmd.playerId;
         if (id === 'PLAYER') this.state.credits += 100000;
-        else if (id === 'AI') this.state.aiCredits += 100000;
+        else if (id === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) + 100000;
         else if (id === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + 100000;
         else if (id === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + 100000;
     } else if (cmd.type === 'SPAWN_UNIT') {
@@ -537,7 +537,7 @@ export class GameEngine {
 
   public removeFromQueue(itemId: string) {
     this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== itemId);
-    this.state.aiProductionQueue = this.state.aiProductionQueue.filter(q => q.id !== itemId);
+    if (this.state.p2ProductionQueue) this.state.p2ProductionQueue = this.state.p2ProductionQueue.filter(q => q.id !== itemId);
     if (this.state.p3ProductionQueue) this.state.p3ProductionQueue = this.state.p3ProductionQueue.filter(q => q.id !== itemId);
     if (this.state.p4ProductionQueue) this.state.p4ProductionQueue = this.state.p4ProductionQueue.filter(q => q.id !== itemId);
   }
@@ -580,7 +580,7 @@ export class GameEngine {
     }
     
     if (this.localPlayerId === 'PLAYER') this.state.credits += 100000;
-    else if (this.localPlayerId === 'AI') this.state.aiCredits += 100000;
+    else if (this.localPlayerId === 'PLAYER_2') this.state.p2Credits += 100000;
     else if (this.localPlayerId === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + 100000;
     else if (this.localPlayerId === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + 100000;
   }

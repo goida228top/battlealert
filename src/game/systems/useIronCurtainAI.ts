@@ -2,13 +2,13 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function useIronCurtainAI(this: GameEngine, targetPos: Vector2): void {
-const ic = this.state.aiSpecialAbilities.IRON_CURTAIN;
+const ic = this.state.p2SpecialAbilities.IRON_CURTAIN;
 if (!ic.ready) return;
 
 const radius = 150;
 const timestamp = performance.now();
 this.state.entities.forEach(e => {
-  if (e.owner === 'AI' && e.type === 'UNIT' && Math.hypot(e.position.x - targetPos.x, e.position.y - targetPos.y) < radius) {
+  if (e.owner === 'PLAYER_2' && e.type === 'UNIT' && Math.hypot(e.position.x - targetPos.x, e.position.y - targetPos.y) < radius) {
     e.invulnerableUntil = timestamp + 15000;
   }
 });

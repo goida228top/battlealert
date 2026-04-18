@@ -14,12 +14,12 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
 
   const category = this.getCategory(subType);
   const queue = actualOwner === 'PLAYER' ? this.state.productionQueue : 
-                actualOwner === 'AI' ? this.state.aiProductionQueue : 
+                actualOwner === 'PLAYER_2' ? (this.state.p2ProductionQueue = this.state.p2ProductionQueue || []) : 
                 actualOwner === 'PLAYER_3' ? (this.state.p3ProductionQueue = this.state.p3ProductionQueue || []) : 
                 (this.state.p4ProductionQueue = this.state.p4ProductionQueue || []);
                 
   const credits = actualOwner === 'PLAYER' ? this.state.credits : 
-                  actualOwner === 'AI' ? this.state.aiCredits : 
+                  actualOwner === 'PLAYER_2' ? (this.state.p2Credits = this.state.p2Credits || 10000) : 
                   actualOwner === 'PLAYER_3' ? (this.state.p3Credits = this.state.p3Credits || 10000) : 
                   (this.state.p4Credits = this.state.p4Credits || 10000);
   
@@ -45,8 +45,8 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
   if (credits >= cost && this.isUnlocked(subType, actualOwner)) {
     if (actualOwner === 'PLAYER') {
       this.state.credits -= cost;
-    } else if (actualOwner === 'AI') {
-      this.state.aiCredits -= cost;
+    } else if (actualOwner === 'PLAYER_2') {
+      this.state.p2Credits = (this.state.p2Credits || 0) - cost;
     } else if (actualOwner === 'PLAYER_3') {
       this.state.p3Credits! -= cost;
     } else if (actualOwner === 'PLAYER_4') {

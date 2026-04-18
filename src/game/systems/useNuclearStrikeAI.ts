@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function useNuclearStrikeAI(this: GameEngine, targetPos: Vector2): void {
-const ns = this.state.aiSpecialAbilities.NUCLEAR_SILO;
+const ns = this.state.p2SpecialAbilities.NUCLEAR_SILO;
 if (!ns.ready) return;
 
 const timestamp = performance.now();

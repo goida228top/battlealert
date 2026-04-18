@@ -114,7 +114,7 @@ export interface GameState {
   moveMarkers: MoveMarker[];
   crates: Crate[];
   credits: number;
-  aiCredits: number;
+  p2Credits: number;
   p3Credits?: number;
   p4Credits?: number;
   power: number;
@@ -124,7 +124,7 @@ export interface GameState {
   sidebarTab: 'BUILDINGS' | 'INFANTRY' | 'VEHICLES' | 'DEFENSE';
   interactionMode: 'DEFAULT' | 'SELL' | 'REPAIR' | 'ATTACK_MOVE' | 'USE_IRON_CURTAIN' | 'USE_NUCLEAR_STRIKE' | 'USE_SPY_PLANE' | 'USE_PARATROOPERS' | 'USE_CHRONOSPHERE' | 'USE_WEATHER_STORM';
   productionQueue: ProductionItem[];
-  aiProductionQueue: ProductionItem[];
+  p2ProductionQueue?: ProductionItem[];
   p3ProductionQueue?: ProductionItem[];
   p4ProductionQueue?: ProductionItem[];
   camera: {
@@ -152,7 +152,7 @@ export interface GameState {
     CHRONOSPHERE: { ready: boolean; lastUsed: number; cooldown: number };
     WEATHER_DEVICE: { ready: boolean; lastUsed: number; cooldown: number };
   };
-  aiSpecialAbilities: {
+  p2SpecialAbilities: {
     IRON_CURTAIN: { ready: boolean; lastUsed: number; cooldown: number };
     NUCLEAR_SILO: { ready: boolean; lastUsed: number; cooldown: number };
     SPY_PLANE: { ready: boolean; lastUsed: number; cooldown: number };

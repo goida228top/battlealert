@@ -23,7 +23,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
     const updateCredits = () => {
       setDisplayedCredits(prev => {
         const owner = engineRef.current.localPlayerId;
-        const currentCredits = owner === 'AI' ? gameState.aiCredits : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits;
+        const currentCredits = owner === 'PLAYER_2' ? (gameState.p2Credits || 0) : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits;
 
         if (prev === currentCredits) return prev;
         const diff = currentCredits - prev;
@@ -41,14 +41,14 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [gameState.credits, gameState.aiCredits, gameState.p3Credits, gameState.p4Credits, engineRef]);
+  }, [gameState.credits, gameState.p2Credits, gameState.p3Credits, gameState.p4Credits, engineRef]);
 
   const owner = engineRef.current.localPlayerId;
   const localGameState = {
      ...gameState,
-     credits: owner === 'AI' ? gameState.aiCredits : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits,
-     productionQueue: owner === 'AI' ? gameState.aiProductionQueue : owner === 'PLAYER_3' ? (gameState.p3ProductionQueue || []) : owner === 'PLAYER_4' ? (gameState.p4ProductionQueue || []) : gameState.productionQueue,
-     specialAbilities: owner === 'AI' ? gameState.aiSpecialAbilities : owner === 'PLAYER_3' ? (gameState.p3SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_4' ? (gameState.p4SpecialAbilities || gameState.specialAbilities) : gameState.specialAbilities
+     credits: owner === 'PLAYER_2' ? (gameState.p2Credits || 0) : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits,
+     productionQueue: owner === 'PLAYER_2' ? (gameState.p2ProductionQueue || []) : owner === 'PLAYER_3' ? (gameState.p3ProductionQueue || []) : owner === 'PLAYER_4' ? (gameState.p4ProductionQueue || []) : gameState.productionQueue,
+     specialAbilities: owner === 'PLAYER_2' ? (gameState.p2SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_3' ? (gameState.p3SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_4' ? (gameState.p4SpecialAbilities || gameState.specialAbilities) : gameState.specialAbilities
   };
 
   return (

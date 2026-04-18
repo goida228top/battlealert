@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function useSpyPlaneAI(this: GameEngine, targetPos: Vector2): void {
-const sp = this.state.aiSpecialAbilities.SPY_PLANE;
+const sp = this.state.p2SpecialAbilities.SPY_PLANE;
 if (!sp || !sp.ready) return;
 
 const timestamp = performance.now();

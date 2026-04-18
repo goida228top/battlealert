@@ -5,7 +5,7 @@ export function checkWinLoss(this: GameEngine, ): void {
   // Only process if not already over
   if (this.state.gameOver) return;
 
-  const owners = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
+  const owners = ['PLAYER', 'PLAYER_2', 'PLAYER_3', 'PLAYER_4'];
   const aliveOwners = owners.filter(owner => 
     this.state.entities.some(e => e.owner === owner && (e.type === 'BUILDING' || e.subType === 'MCV' || e.subType === 'ALLIED_MCV'))
   );

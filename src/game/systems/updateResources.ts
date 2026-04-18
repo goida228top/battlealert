@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function updateResources(this: GameEngine, dt: number): void {
-  const owners = ['PLAYER', 'AI', 'PLAYER_3', 'PLAYER_4'];
+  const owners = ['PLAYER', 'PLAYER_2', 'PLAYER_3', 'PLAYER_4'];
   const timestamp = performance.now();
 
   owners.forEach(owner => {
@@ -37,7 +37,7 @@ export function updateResources(this: GameEngine, dt: number): void {
         if (e.subType === 'OIL_DERRICK') {
           if (Math.floor(timestamp / 2000) !== Math.floor((timestamp - dt) / 2000)) {
             if (owner === 'PLAYER') this.state.credits += 20;
-            else if (owner === 'AI') this.state.aiCredits += 20;
+            else if (owner === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) + 20;
             else if (owner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + 20;
             else if (owner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + 20;
           }

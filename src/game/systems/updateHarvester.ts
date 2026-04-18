@@ -156,8 +156,8 @@ if (harvester.harvestState === 'UNLOADING') {
       
       if (harvester.owner === 'PLAYER') {
         this.state.credits += income;
-      } else if (harvester.owner === 'AI') {
-        this.state.aiCredits += income;
+      } else if (harvester.owner === 'PLAYER_2') {
+        this.state.p2Credits = (this.state.p2Credits || 0) + income;
       } else if (harvester.owner === 'PLAYER_3') {
         this.state.p3Credits = (this.state.p3Credits || 0) + income;
       } else if (harvester.owner === 'PLAYER_4') {
@@ -173,8 +173,6 @@ if (harvester.harvestState === 'UNLOADING') {
           duration: 1500,
           text: `+$${income}`
         });
-      } else if (harvester.owner === 'AI') {
-        this.state.aiCredits += income;
       }
       harvester.harvestAmount = 0;
       harvester.harvestState = 'MOVING_TO_ORE';
