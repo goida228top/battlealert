@@ -4,17 +4,6 @@ import http from "http";
 import { Server } from "socket.io";
 import path from "path";
 
-async function startServer() {
-  const app = express();
-  // Use process.env.PORT, otherwise default to 3000 which AI studio expects for external traffic
-  const PORT = process.env.PORT ? parseInt(process.env.PORT, 10) : 3000;
-  const httpServer = http.createServer(app);
-
-  const io = new Server(httpServer, {
-    cors: { origin: "*" },
-    transports: ['websocket', 'polling']
-  });
-
 const rooms = new Map();
 let globalConnectionsCount = 0;
 
