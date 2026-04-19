@@ -317,15 +317,16 @@ export class GameEngine {
         const b = this.state.entities.find(e => e.id === cmd.entityId);
         if (b) this.repairBuilding(b);
     } else if (cmd.type === 'USE_ABILITY') {
-        if (cmd.ability === 'USE_IRON_CURTAIN') this.useIronCurtain(cmd.pos);
-        if (cmd.ability === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(cmd.pos);
-        if (cmd.ability === 'USE_SPY_PLANE') this.useSpyPlane(cmd.pos);
-        if (cmd.ability === 'USE_PARATROOPERS') this.useParatroopers(cmd.pos);
-        if (cmd.ability === 'USE_WEATHER_STORM') this.useWeatherStorm(cmd.pos);
-        if (cmd.ability === 'USE_CHRONOSPHERE_SELECT') this.useChronosphere(cmd.pos);
+        const owner = cmd.owner || 'PLAYER';
+        if (cmd.ability === 'USE_IRON_CURTAIN') this.useIronCurtain(cmd.pos, owner);
+        if (cmd.ability === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(cmd.pos, owner);
+        if (cmd.ability === 'USE_SPY_PLANE') this.useSpyPlane(cmd.pos, owner);
+        if (cmd.ability === 'USE_PARATROOPERS') this.useParatroopers(cmd.pos, owner);
+        if (cmd.ability === 'USE_WEATHER_STORM') this.useWeatherStorm(cmd.pos, owner);
+        if (cmd.ability === 'USE_CHRONOSPHERE_SELECT') this.useChronosphere(cmd.pos, owner);
         if (cmd.ability === 'USE_CHRONOSPHERE_EXECUTE') {
           (this as any).chronosphereSelection = cmd.selectionObj;
-          this.executeChronosphereTeleport(cmd.pos);
+          this.executeChronosphereTeleport(cmd.pos, owner);
         }
     } else if (cmd.type === 'DEPLOY_MCV') {
         this.deployMCV(cmd.mcvId);
@@ -411,32 +412,32 @@ export class GameEngine {
     return useNuclearStrikeAI.call(this, targetPos);
   }
 
-  public useIronCurtain(targetPos: Vector2) {
-    return useIronCurtain.call(this, targetPos);
+  public useIronCurtain(targetPos: Vector2, owner: string = 'PLAYER') {
+    return useIronCurtain.call(this, targetPos, owner);
   }
 
-  public useChronosphere(targetPos: Vector2) {
-    return useChronosphere.call(this, targetPos);
+  public useChronosphere(targetPos: Vector2, owner: string = 'PLAYER') {
+    return useChronosphere.call(this, targetPos, owner);
   }
 
-  public executeChronosphereTeleport(targetPos: Vector2) {
-    return executeChronosphereTeleport.call(this, targetPos);
+  public executeChronosphereTeleport(targetPos: Vector2, owner: string = 'PLAYER') {
+    return executeChronosphereTeleport.call(this, targetPos, owner);
   }
 
-  public useWeatherStorm(targetPos: Vector2) {
-    return useWeatherStorm.call(this, targetPos);
+  public useWeatherStorm(targetPos: Vector2, owner: string = 'PLAYER') {
+    return useWeatherStorm.call(this, targetPos, owner);
   }
 
-  public useSpyPlane(targetPos: Vector2) {
-    return useSpyPlane.call(this, targetPos);
+  public useSpyPlane(targetPos: Vector2, owner: string = 'PLAYER') {
+    return useSpyPlane.call(this, targetPos, owner);
   }
 
-  public useParatroopers(targetPos: Vector2) {
-    return useParatroopers.call(this, targetPos);
+  public useParatroopers(targetPos: Vector2, owner: string = 'PLAYER') {
+    return useParatroopers.call(this, targetPos, owner);
   }
 
-  public useNuclearStrike(targetPos: Vector2) {
-    return useNuclearStrike.call(this, targetPos);
+  public useNuclearStrike(targetPos: Vector2, owner: string = 'PLAYER') {
+    return useNuclearStrike.call(this, targetPos, owner);
   }
 
   public getPrerequisites(type: string): string[] {

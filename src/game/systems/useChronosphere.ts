@@ -1,8 +1,12 @@
 
 import { Vector2 } from '../types';
 
-export function useChronosphere(this: any, targetPos: Vector2) {
-  const cs = this.state.specialAbilities.CHRONOSPHERE;
+export function useChronosphere(this: any, targetPos: Vector2, owner: string = 'PLAYER') {
+  const abilities = owner === 'PLAYER_2' ? this.state.p2SpecialAbilities : 
+                     owner === 'PLAYER_3' ? this.state.p3SpecialAbilities : 
+                     owner === 'PLAYER_4' ? this.state.p4SpecialAbilities : 
+                     this.state.specialAbilities;
+  const cs = abilities.CHRONOSPHERE;
   if (!cs.ready) return;
 
   const radius = 150;

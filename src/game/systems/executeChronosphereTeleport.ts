@@ -1,11 +1,15 @@
 
 import { Vector2, Entity } from '../types';
 
-export function executeChronosphereTeleport(this: any, targetPos: Vector2) {
+export function executeChronosphereTeleport(this: any, targetPos: Vector2, owner: string = 'PLAYER') {
   const units = (this as any).chronosphereSelection as Entity[];
   if (!units || units.length === 0) return;
 
-  const cs = this.state.specialAbilities.CHRONOSPHERE;
+  const abilities = owner === 'PLAYER_2' ? this.state.p2SpecialAbilities : 
+                     owner === 'PLAYER_3' ? this.state.p3SpecialAbilities : 
+                     owner === 'PLAYER_4' ? this.state.p4SpecialAbilities : 
+                     this.state.specialAbilities;
+  const cs = abilities.CHRONOSPHERE;
   const timestamp = performance.now();
 
   // Calculate center of selected units

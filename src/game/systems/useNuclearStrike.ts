@@ -1,8 +1,12 @@
 
 import { Vector2 } from '../types';
 
-export function useNuclearStrike(this: any, targetPos: Vector2) {
-  const ns = this.state.specialAbilities.NUCLEAR_SILO;
+export function useNuclearStrike(this: any, targetPos: Vector2, owner: string = 'PLAYER') {
+  const abilities = owner === 'PLAYER_2' ? this.state.p2SpecialAbilities : 
+                     owner === 'PLAYER_3' ? this.state.p3SpecialAbilities : 
+                     owner === 'PLAYER_4' ? this.state.p4SpecialAbilities : 
+                     this.state.specialAbilities;
+  const ns = abilities.NUCLEAR_SILO;
   if (!ns.ready) return;
 
   const timestamp = performance.now();

@@ -134,9 +134,9 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
         </div>
         
         {/* Special Abilities Row */}
-        {(gameState.specialAbilities.IRON_CURTAIN.ready || gameState.specialAbilities.NUCLEAR_SILO.ready || gameState.specialAbilities.CHRONOSPHERE?.ready || gameState.specialAbilities.WEATHER_DEVICE?.ready) && (
-          <div className="flex gap-1 w-full justify-center">
-            {gameState.specialAbilities.IRON_CURTAIN.ready && (
+        {(localGameState.specialAbilities.IRON_CURTAIN.ready || localGameState.specialAbilities.NUCLEAR_SILO.ready || localGameState.specialAbilities.CHRONOSPHERE?.ready || localGameState.specialAbilities.WEATHER_DEVICE?.ready || localGameState.specialAbilities.PARATROOPERS?.ready || localGameState.specialAbilities.SPY_PLANE?.ready) && (
+          <div className="flex gap-1 w-full justify-center flex-wrap">
+            {localGameState.specialAbilities.IRON_CURTAIN.ready && (
               <button 
                 onClick={() => {
                   engineRef.current.state.interactionMode = 'USE_IRON_CURTAIN';
@@ -149,7 +149,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
                 <span className="text-[5px] font-black text-white uppercase mt-0.5">ЗАНАВЕС</span>
               </button>
             )}
-            {gameState.specialAbilities.NUCLEAR_SILO.ready && (
+            {localGameState.specialAbilities.NUCLEAR_SILO.ready && (
               <button 
                 onClick={() => {
                   engineRef.current.state.interactionMode = 'USE_NUCLEAR_STRIKE';
@@ -162,7 +162,33 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
                 <span className="text-[5px] font-black text-white uppercase mt-0.5">ЯДЕРКА</span>
               </button>
             )}
-            {gameState.specialAbilities.CHRONOSPHERE?.ready && (
+            {localGameState.specialAbilities.PARATROOPERS?.ready && (
+              <button 
+                onClick={() => {
+                  engineRef.current.state.interactionMode = 'USE_PARATROOPERS';
+                  setGameState({ ...engineRef.current.state });
+                }}
+                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_PARATROOPERS' ? 'bg-green-600 border-white shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-green-900/40 border-green-800 hover:bg-green-900/60'}`}
+                title="Десант готов!"
+              >
+                <MoveDown className="w-3 h-3 text-white" />
+                <span className="text-[5px] font-black text-white uppercase mt-0.5">ДЕСАНТ</span>
+              </button>
+            )}
+            {localGameState.specialAbilities.SPY_PLANE?.ready && (
+              <button 
+                onClick={() => {
+                  engineRef.current.state.interactionMode = 'USE_SPY_PLANE';
+                  setGameState({ ...engineRef.current.state });
+                }}
+                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_SPY_PLANE' ? 'bg-zinc-600 border-white shadow-[0_0_10px_rgba(113,113,122,0.5)]' : 'bg-zinc-800 border-zinc-700 hover:bg-zinc-700'}`}
+                title="Шпионский самолет готов!"
+              >
+                <Radar className="w-3 h-3 text-white" />
+                <span className="text-[5px] font-black text-white uppercase mt-0.5">ШПИОН</span>
+              </button>
+            )}
+            {localGameState.specialAbilities.CHRONOSPHERE?.ready && (
               <button 
                 onClick={() => {
                   engineRef.current.state.interactionMode = 'USE_CHRONOSPHERE';
@@ -175,7 +201,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
                 <span className="text-[5px] font-black text-white uppercase mt-0.5">ХРОНО</span>
               </button>
             )}
-            {gameState.specialAbilities.WEATHER_DEVICE?.ready && (
+            {localGameState.specialAbilities.WEATHER_DEVICE?.ready && (
               <button 
                 onClick={() => {
                   engineRef.current.state.interactionMode = 'USE_WEATHER_STORM';

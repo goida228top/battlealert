@@ -1,8 +1,12 @@
 
 import { Vector2 } from '../types';
 
-export function useIronCurtain(this: any, targetPos: Vector2) {
-  const ic = this.state.specialAbilities.IRON_CURTAIN;
+export function useIronCurtain(this: any, targetPos: Vector2, owner: string = 'PLAYER') {
+  const abilities = owner === 'PLAYER_2' ? this.state.p2SpecialAbilities : 
+                     owner === 'PLAYER_3' ? this.state.p3SpecialAbilities : 
+                     owner === 'PLAYER_4' ? this.state.p4SpecialAbilities : 
+                     this.state.specialAbilities;
+  const ic = abilities.IRON_CURTAIN;
   if (!ic.ready) return;
 
   // Apply invulnerability to units in radius

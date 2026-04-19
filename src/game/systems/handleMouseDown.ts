@@ -56,7 +56,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       );
       if (building) {
         if (this.role === 'CLIENT') {
-          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'SELL_BUILDING', entityId: building.id }});
+          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'SELL_BUILDING', entityId: building.id, owner: this.localPlayerId }});
         } else {
           this.sellBuilding(building);
         }
@@ -71,7 +71,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       );
       if (building) {
         if (this.role === 'CLIENT') {
-          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'REPAIR_BUILDING', entityId: building.id }});
+          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'REPAIR_BUILDING', entityId: building.id, owner: this.localPlayerId }});
         } else {
           if (this.repairBuilding(building)) {
             this.state.effects.push({
@@ -94,13 +94,13 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     const abilityModes = ['USE_IRON_CURTAIN', 'USE_NUCLEAR_STRIKE', 'USE_SPY_PLANE', 'USE_PARATROOPERS', 'USE_WEATHER_STORM'];
     if (abilityModes.includes(this.state.interactionMode)) {
       if (this.role === 'CLIENT') {
-        this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: this.state.interactionMode, pos: { ...pos } }});
+        this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: this.state.interactionMode, pos: { ...pos }, owner: this.localPlayerId }});
       } else {
-        if (this.state.interactionMode === 'USE_IRON_CURTAIN') this.useIronCurtain(pos);
-        if (this.state.interactionMode === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(pos);
-        if (this.state.interactionMode === 'USE_SPY_PLANE') this.useSpyPlane(pos);
-        if (this.state.interactionMode === 'USE_PARATROOPERS') this.useParatroopers(pos);
-        if (this.state.interactionMode === 'USE_WEATHER_STORM') this.useWeatherStorm(pos);
+        if (this.state.interactionMode === 'USE_IRON_CURTAIN') this.useIronCurtain(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_SPY_PLANE') this.useSpyPlane(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_PARATROOPERS') this.useParatroopers(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_WEATHER_STORM') this.useWeatherStorm(pos, this.localPlayerId);
       }
       this.state.interactionMode = 'DEFAULT';
       return;
@@ -109,19 +109,19 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     if (this.state.interactionMode === 'USE_CHRONOSPHERE') {
       if ((this as any).chronosphereSelection) {
         if (this.role === 'CLIENT') {
-          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: 'USE_CHRONOSPHERE_EXECUTE', pos: { ...pos }, selectionObj: (this as any).chronosphereSelection }});
+          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: 'USE_CHRONOSPHERE_EXECUTE', pos: { ...pos }, selectionObj: (this as any).chronosphereSelection, owner: this.localPlayerId }});
           (this as any).chronosphereSelection = null;
         } else {
-          this.executeChronosphereTeleport(pos);
+          this.executeChronosphereTeleport(pos, this.localPlayerId);
         }
       } else {
         if (this.role === 'CLIENT') {
-          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: 'USE_CHRONOSPHERE_SELECT', pos: { ...pos } }});
+          this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: 'USE_CHRONOSPHERE_SELECT', pos: { ...pos }, owner: this.localPlayerId }});
           // Optimistically set selection locally because the user expects visual feedback. But it might be overwritten.
           // Wait, chronosphere doesn't have visual feedback, it just selects. Let's just run it:
-          this.useChronosphere(pos);
+          this.useChronosphere(pos, this.localPlayerId);
         } else {
-          this.useChronosphere(pos);
+          this.useChronosphere(pos, this.localPlayerId);
         }
       }
       return;
