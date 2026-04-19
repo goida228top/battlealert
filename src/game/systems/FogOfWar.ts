@@ -55,9 +55,15 @@ export class FogOfWar {
           data[idx] = 10;
           data[idx + 1] = 10;
           data[idx + 2] = 10;
-          data[idx + 3] = 220; 
+          data[idx + 3] = 225; // Dark shroud
+        } else if (vis === 1) {
+          // Explored (Fog of War): Semi-transparent black
+          data[idx] = 20;
+          data[idx + 1] = 20;
+          data[idx + 2] = 20;
+          data[idx + 3] = 140; // Visible but fogged
         } else {
-          // Explored or Visible: Fully transparent (No fog of war, only shroud)
+          // Visible: Fully transparent
           data[idx] = 0;
           data[idx + 1] = 0;
           data[idx + 2] = 0;

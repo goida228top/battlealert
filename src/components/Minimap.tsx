@@ -63,7 +63,8 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState, onMinimapClick }) =
       const ty = Math.floor(entity.position.y / map.tileSize);
       if (map.visibility[ty]?.[tx] !== 2 && entity.owner !== 'PLAYER') return;
 
-      ctx.fillStyle = entity.owner === 'PLAYER' ? '#3b82f6' : '#ef4444';
+      const slotColor = gameState.playerColors?.[entity.owner] || (entity.owner === 'PLAYER' ? 'BLUE' : 'RED');
+      ctx.fillStyle = slotColor === 'BLUE' ? '#3b82f6' : slotColor === 'RED' ? '#ef4444' : slotColor === 'GREEN' ? '#22c55e' : slotColor === 'ORANGE' ? '#f97316' : '#ef4444';
       const size = entity.type === 'BUILDING' ? 4 : 2;
       ctx.fillRect(
         (entity.position.x / mapWidth) * width - size / 2,

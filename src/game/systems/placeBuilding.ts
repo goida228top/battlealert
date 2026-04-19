@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 import { getBuildingDimensions } from './getBuildingDimensions';
 
-export function placeBuilding(this: GameEngine, pos: Vector2): void {
+export function placeBuilding(this: GameEngine, pos: Vector2, serverEntityId?: string): void {
   if (!this.state.placingBuilding) return;
 
   const type = this.state.placingBuilding;
@@ -125,8 +125,10 @@ export function placeBuilding(this: GameEngine, pos: Vector2): void {
   else if (type === 'WEATHER_DEVICE') { health = 6000; }
   else if (type === 'ROBOT_CONTROL_CENTER') { health = 1500; }
 
+  const finalEntityId = serverEntityId || `${type}-${Date.now()}-${Math.random()}`;
+  
   const entity: Entity = {
-    id: `${type}-${Date.now()}`,
+    id: finalEntityId,
     type: 'BUILDING',
     subType: type,
     position: snappedPos,
@@ -137,14 +139,31 @@ export function placeBuilding(this: GameEngine, pos: Vector2): void {
     constructionStartTime: performance.now(),
   };
 
-
-this.state.entities.push(entity);
-this.state.placingBuilding = null;
-
-  // RA2 Mechanic: ORE_REFINERY comes with a HARVESTER
-if (type === 'ORE_REFINERY') {
-  this.produceUnitAt(entity, 'HARVESTER', this.localPlayerId);
-} else if (type === 'ALLIED_ORE_REFINERY') {
-  this.produceUnitAt(entity, 'CHRONO_MINER', this.localPlayerId);
-}
+  // 4. Find the item in the queue and remove it WITHOUT refunding
+  // (We use this.localPlayerId here since placeBuilding was originally designed for client, 
+  // but in server-auth we know the owner is passed correctly or managed correctly).
+  // Actually, wait, `this.localPlayerId` in placeBuilding.ts might be 'PLAYER' or whatever was set.
+  // When called via `executeRemoteCommand`, `this.localPlayerId` is NOT set to the command owner!
+  // Wait, `executeRemoteCommand` calls `placeBuildingAt(cmd.pos, cmd.buildType, cmd.owner, cmd.entityId)`
+  // But `placeBuilding` is called from handling placing locally.
+  // In `GameEngine.ts` `executeRemoteCommand`: 
+  // `else if (cmd.type === 'PLACE_BUILDING') { this.placeBuildingAt(cmd.pos, cmd.buildType, cmd.owner, cmd.entityId); }`
+  
+  // So `placeBuilding.ts` is ONLY used locally on the CLIENT for optimistic UI? No, we removed optimistic UI.
+  // Wait! If optimistic UI is removed, `placeBuilding.ts` is NEVER CALLED ANYMORE!
+  // Let's check `handleMouseDown.ts`:
+  // it used to call `this.placeBuilding(pos)` but I removed it!
+  // Wait, did I remove it? 
+  // Yes:
+  // ```
+  // if (this.role === 'CLIENT' || this.role === 'HOST') {
+  //   this.socket.emit('client_command', { ... type: 'PLACE_BUILDING' })
+  //   this.state.placingBuilding = null;
+  //   return;
+  // }
+  // ```
+  // Since `this.role === 'SERVER'` on the server, what happens when it receives `PLACE_BUILDING`?
+  // `executeRemoteCommand` calls `placeBuildingAt` !!
+  // So `placeBuilding.ts` is literally DEAD CODE now!
+  // Let's verify `placeBuildingAt.ts` !!!
 }

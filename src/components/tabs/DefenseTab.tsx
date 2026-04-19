@@ -12,6 +12,17 @@ interface DefenseTabProps {
 export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
 
+  const handleCancel = (type: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const item = gameState.productionQueue.find(q => q.subType === type);
+    if (item) {
+      engineRef.current.removeFromQueue(item.id);
+      if (gameState.placingBuilding === type) {
+        engineRef.current.state.placingBuilding = null;
+      }
+    }
+  };
+
   return (
     <>
             <div className="grid grid-cols-2 gap-2">
@@ -28,11 +39,12 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'SOVIET_WALL');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('SOVIET_WALL');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('SOVIET_WALL');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('SOVIET_WALL', e)}
                     title="Стена: Базовая защита от пехоты и техники."
                   />
                   <BuildButton 
@@ -46,11 +58,12 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'SENTRY_GUN');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('SENTRY_GUN');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('SENTRY_GUN');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('SENTRY_GUN', e)}
                     title="Пулеметная вышка: Базовая защита против пехоты."
                   />
                   <BuildButton 
@@ -64,11 +77,12 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'FLAK_CANNON');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('FLAK_CANNON');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('FLAK_CANNON');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('FLAK_CANNON', e)}
                     title="Зенитное орудие: Защита от воздушных целей."
                   />
                   <BuildButton 
@@ -82,11 +96,12 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'TESLA_COIL');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('TESLA_COIL');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('TESLA_COIL');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('TESLA_COIL', e)}
                     title="Катушка Теслы: Мощная защита против наземных целей."
                   />
                   <BuildButton 
@@ -100,7 +115,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'PSYCHIC_SENSOR');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('PSYCHIC_SENSOR');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('PSYCHIC_SENSOR');
                       }
@@ -118,7 +133,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'IRON_CURTAIN');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('IRON_CURTAIN');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('IRON_CURTAIN');
                       }
@@ -136,7 +151,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'NUCLEAR_SILO');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('NUCLEAR_SILO');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('NUCLEAR_SILO');
                       }
@@ -174,7 +189,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                         const item = gameState.productionQueue.find(q => q.subType === 'GRAND_CANNON');
                         if (item && item.progress >= 100) {
                           engineRef.current.startPlacing('GRAND_CANNON');
-                          engineRef.current.removeFromQueue(item.id);
+                          
                         } else if (!item) {
                           engineRef.current.startProduction('GRAND_CANNON');
                         }
@@ -193,7 +208,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'PILLBOX');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('PILLBOX');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('PILLBOX');
                       }
@@ -211,7 +226,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'PATRIOT_MISSILE');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('PATRIOT_MISSILE');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('PATRIOT_MISSILE');
                       }
@@ -229,7 +244,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'PRISM_TOWER');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('PRISM_TOWER');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('PRISM_TOWER');
                       }
@@ -247,7 +262,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'CHRONOSPHERE');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('CHRONOSPHERE');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('CHRONOSPHERE');
                       }
@@ -265,7 +280,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'WEATHER_DEVICE');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('WEATHER_DEVICE');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('WEATHER_DEVICE');
                       }
@@ -283,7 +298,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'GAP_GENERATOR');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('GAP_GENERATOR');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('GAP_GENERATOR');
                       }
@@ -301,7 +316,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'SPY_SATELLITE');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('SPY_SATELLITE');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('SPY_SATELLITE');
                       }
@@ -319,7 +334,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                       const item = gameState.productionQueue.find(q => q.subType === 'ALLIED_WALL');
                       if (item && item.progress >= 100) {
                         engineRef.current.startPlacing('ALLIED_WALL');
-                        engineRef.current.removeFromQueue(item.id);
+                        
                       } else if (!item) {
                         engineRef.current.startProduction('ALLIED_WALL');
                       }

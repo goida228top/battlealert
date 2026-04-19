@@ -52,7 +52,7 @@ export class GameEngine {
   state!: GameState;
   
   // Multiplayer properties
-  public role: 'HOST' | 'CLIENT' | 'OFFLINE' = 'OFFLINE';
+  public role: 'HOST' | 'CLIENT' | 'OFFLINE' | 'SERVER' = 'OFFLINE';
   public roomId: string | null = null;
   public socket: any = null;
   public localPlayerId: string = 'PLAYER';
@@ -102,7 +102,7 @@ export class GameEngine {
 
    public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, roomInfo: any) {
     console.log(`[GameEngine] Start Multiplayer: ${role}, Socket: ${socket?.id}`);
-    this.role = role;
+    this.role = 'CLIENT'; // FORCE NO ONE TO BE HOST ON FRONTEND
     this.roomId = roomId;
     this.socket = socket;
     
@@ -164,67 +164,14 @@ export class GameEngine {
            });
 
            if (slot === this.localPlayerId) {
-               this.state.camera.x = -pos.x + window.innerWidth / 2;
-               this.state.camera.y = -pos.y + window.innerHeight / 2;
+               this.state.camera.x = -pos.x + (typeof window !== 'undefined' ? window.innerWidth / 2 : 500);
+               this.state.camera.y = -pos.y + (typeof window !== 'undefined' ? window.innerHeight / 2 : 500);
                console.log(`[GameEngine] Camera centered on ${pos.x},${pos.y}`);
            }
        });
     }
 
-    if (this.role === 'HOST') {
-        setInterval(() => {
-            if (this.state) {
-                // EXTREMELY IMPORTANT: Do NOT send the massive `map`, `camera`, or UI selections over the network.
-                // Sending the full state object causes massive lag (MB/s) and socket disconnects.
-                const syncState = {
-                    entities: this.state.entities.map(e => ({
-                        id: e.id,
-                        type: e.type,
-                        subType: e.subType,
-                        position: e.position,
-                        health: e.health,
-                        maxHealth: e.maxHealth,
-                        owner: e.owner,
-                        rotation: e.rotation,
-                        size: e.size,
-                        speed: e.speed,
-                        targetId: e.targetId,
-                        targetPosition: e.targetPosition,
-                        isDeployed: e.isDeployed,
-                        rank: e.rank,
-                        isRepairing: e.isRepairing,
-                    })),
-                    credits: this.state.credits,
-                    p2Credits: this.state.p2Credits,
-                    p3Credits: this.state.p3Credits,
-                    p4Credits: this.state.p4Credits,
-                    productionQueue: this.state.productionQueue,
-                    p2ProductionQueue: this.state.p2ProductionQueue,
-                    p3ProductionQueue: this.state.p3ProductionQueue,
-                    p4ProductionQueue: this.state.p4ProductionQueue,
-                    effects: this.state.effects,
-                    projectiles: this.state.projectiles,
-                    crates: this.state.crates,
-                    ironCurtainActive: this.state.ironCurtainActive,
-                    specialAbilities: this.state.specialAbilities,
-                    p2SpecialAbilities: this.state.p2SpecialAbilities,
-                    p3SpecialAbilities: this.state.p3SpecialAbilities,
-                    p4SpecialAbilities: this.state.p4SpecialAbilities,
-                    power: this.state.power,
-                    powerConsumption: this.state.powerConsumption,
-                    playerMappings: this.state.playerMappings,
-                    playerColors: this.state.playerColors,
-                    botSlots: this.state.botSlots,
-                    gameOver: this.state.gameOver
-                };
-                this.socket.emit('host_state_update', { roomId: this.roomId, state: syncState });
-            }
-        }, 60); 
-
-        this.socket.on('remote_command', (cmd: any) => {
-            this.executeRemoteCommand(cmd);
-        });
-    } else if (this.role === 'CLIENT') {
+    if (this.role === 'CLIENT' || this.role === 'HOST') {
         this.socket.on('game_state_update', (newState: any) => {
             if (newState && this.state) {
                 // Мягкая синхронизация сущностей: обновляем существующие, удаляем пропавшие, добавляем новые
@@ -290,14 +237,16 @@ export class GameEngine {
   }
 
   public executeRemoteCommand(cmd: any) {
+    const owner = cmd.owner || 'PLAYER';
+
     if (cmd.type === 'START_PRODUCTION') {
-        this.startProduction(cmd.subType, cmd.owner);
+        this.startProduction(cmd.subType, owner, cmd.processId);
     } else if (cmd.type === 'REMOVE_FROM_QUEUE') {
-        this.removeFromQueue(cmd.itemId, cmd.owner);
+        this.removeFromQueue(cmd.itemId, owner);
     } else if (cmd.type === 'PLACE_BUILDING') {
-        this.placeBuildingAt(cmd.pos, cmd.buildType, cmd.owner);
+        this.placeBuildingAt(cmd.pos, cmd.buildType, owner, cmd.entityId);
     } else if (cmd.type === 'MOVE_OR_ATTACK') {
-        const units = this.state.entities.filter(e => cmd.unitIds.includes(e.id));
+        const units = this.state.entities.filter(e => cmd.unitIds.includes(e.id) && e.owner === owner);
         if (cmd.targetId) {
             units.forEach(u => {
               u.targetId = cmd.targetId;
@@ -313,13 +262,12 @@ export class GameEngine {
             });
         }
     } else if (cmd.type === 'SELL_BUILDING') {
-        const b = this.state.entities.find(e => e.id === cmd.entityId);
+        const b = this.state.entities.find(e => e.id === cmd.entityId && e.owner === owner);
         if (b) this.sellBuilding(b);
     } else if (cmd.type === 'REPAIR_BUILDING') {
-        const b = this.state.entities.find(e => e.id === cmd.entityId);
+        const b = this.state.entities.find(e => e.id === cmd.entityId && e.owner === owner);
         if (b) this.repairBuilding(b);
     } else if (cmd.type === 'USE_ABILITY') {
-        const owner = cmd.owner || 'PLAYER';
         if (cmd.ability === 'USE_IRON_CURTAIN') this.useIronCurtain(cmd.pos, owner);
         if (cmd.ability === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(cmd.pos, owner);
         if (cmd.ability === 'USE_SPY_PLANE') this.useSpyPlane(cmd.pos, owner);
@@ -331,14 +279,16 @@ export class GameEngine {
           this.executeChronosphereTeleport(cmd.pos, owner);
         }
     } else if (cmd.type === 'DEPLOY_MCV') {
-        this.deployMCV(cmd.mcvId);
+        const unit = this.state.entities.find(e => e.id === cmd.mcvId && e.owner === owner);
+        if (unit) this.deployMCV(cmd.mcvId, cmd.baseId);
     } else if (cmd.type === 'UNDEPLOY_YARD') {
-        this.undeployConstructionYard(cmd.yardId);
+        const building = this.state.entities.find(e => e.id === cmd.yardId && e.owner === owner);
+        if (building) this.undeployConstructionYard(cmd.yardId, cmd.mcvId);
     } else if (cmd.type === 'SET_RALLY_POINT') {
-        const buildings = this.state.entities.filter(e => cmd.buildingIds.includes(e.id));
+        const buildings = this.state.entities.filter(e => cmd.buildingIds.includes(e.id) && e.owner === owner);
         buildings.forEach(b => b.rallyPoint = cmd.pos);
     } else if (cmd.type === 'STOP_UNITS') {
-        const units = this.state.entities.filter(e => cmd.unitIds.includes(e.id));
+        const units = this.state.entities.filter(e => cmd.unitIds.includes(e.id) && e.owner === owner);
         units.forEach(u => {
             u.targetPosition = undefined;
             u.targetId = undefined;
@@ -346,7 +296,7 @@ export class GameEngine {
             u.explicitAttack = false;
         });
     } else if (cmd.type === 'TOGGLE_DEPLOY') {
-        const unit = this.state.entities.find(e => e.id === cmd.unitId);
+        const unit = this.state.entities.find(e => e.id === cmd.unitId && e.owner === owner);
         if (unit) {
             unit.isDeployed = !unit.isDeployed;
             unit.targetPosition = undefined;
@@ -354,7 +304,7 @@ export class GameEngine {
         }
     } else if (cmd.type === 'SCATTER_UNITS') {
         cmd.scatteredInfos.forEach((info: any) => {
-            const unit = this.state.entities.find(e => e.id === info.id);
+            const unit = this.state.entities.find(e => e.id === info.id && e.owner === owner);
             if (unit) {
                 unit.targetPosition = info.targetPosition;
                 unit.path = [info.targetPosition];
@@ -362,11 +312,10 @@ export class GameEngine {
             }
         });
     } else if (cmd.type === 'DEBUG_GIVE_CREDITS') {
-        const id = cmd.playerId;
-        if (id === 'PLAYER') this.state.credits += 100000;
-        else if (id === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) + 100000;
-        else if (id === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + 100000;
-        else if (id === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + 100000;
+        if (owner === 'PLAYER') this.state.credits += 100000;
+        else if (owner === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) + 100000;
+        else if (owner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + 100000;
+        else if (owner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + 100000;
     } else if (cmd.type === 'SPAWN_UNIT') {
         const entity = {
           id: `${cmd.subType}-debug-${Date.now()}`,
@@ -477,8 +426,8 @@ export class GameEngine {
     return isUnlocked.call(this, type, owner);
   }
 
-  public startProduction(subType: UnitType | BuildingType, owner: string = 'PLAYER') {
-    return startProduction.call(this, subType, owner);
+  public startProduction(subType: UnitType | BuildingType, owner: string = 'PLAYER', processId?: string) {
+    return startProduction.call(this, subType, owner, processId);
   }
 
   public getCost(type: string): number {
@@ -493,8 +442,8 @@ export class GameEngine {
     return updateVisibility.call(this);
   }
 
-  public updateHarvester(harvester: Entity) {
-    return updateHarvester.call(this, harvester);
+  public updateHarvester(harvester: Entity, dt: number) {
+    return updateHarvester.call(this, harvester, dt);
   }
 
   public updateCombat(entity: Entity, dt: number, timestamp: number) {
@@ -505,8 +454,8 @@ export class GameEngine {
     return updateAI.call(this, timestamp);
   }
 
-  public placeBuildingAt(pos: Vector2, type: BuildingType, owner: string) {
-    return placeBuildingAt.call(this, pos, type, owner);
+  public placeBuildingAt(pos: Vector2, type: BuildingType, owner: string, providedEntityId?: string) {
+    return placeBuildingAt.call(this, pos, type, owner, providedEntityId);
   }
 
   public produceUnitAt(producer: Entity, type: UnitType, owner: string) {
@@ -549,31 +498,31 @@ export class GameEngine {
     return startPlacing.call(this, type);
   }
 
-  public deployMCV(mcvId: string) {
-    return deployMCV.call(this, mcvId);
+  public deployMCV(mcvId: string, baseId?: string) {
+    return deployMCV.call(this, mcvId, baseId);
   }
 
-  public undeployConstructionYard(yardId: string) {
-    return undeployConstructionYard.call(this, yardId);
+  public undeployConstructionYard(yardId: string, mcvId?: string) {
+    return undeployConstructionYard.call(this, yardId, mcvId);
   }
 
   public produceUnit(type: UnitType) {
     return produceUnit.call(this, type);
   }
 
-  public placeBuilding(pos: Vector2) {
-    return placeBuilding.call(this, pos);
+  public placeBuilding(pos: Vector2, serverEntityId?: string) {
+    return placeBuilding.call(this, pos, serverEntityId);
   }
 
   public removeFromQueue(itemId: string, owner?: string) {
     const actualOwner = owner || this.localPlayerId || 'PLAYER';
     
-    if (this.role === 'CLIENT' && actualOwner === this.localPlayerId) {
+    if (this.role === 'CLIENT' || this.role === 'HOST') {
         this.socket.emit('client_command', {
             roomId: this.roomId,
             command: { type: 'REMOVE_FROM_QUEUE', itemId, owner: actualOwner }
         });
-        // Optimistic UI update
+        return; // Only emit
     }
 
     if (actualOwner === 'PLAYER') {
@@ -645,8 +594,10 @@ export class GameEngine {
   }
 
   public debugSpawnEntity(subType: any, isBuilding = false) {
-    const x = -this.state.camera.x + window.innerWidth / 2;
-    const y = -this.state.camera.y + window.innerHeight / 2;
+    const ww = typeof window !== 'undefined' ? window.innerWidth : 1000;
+    const wh = typeof window !== 'undefined' ? window.innerHeight : 1000;
+    const x = -this.state.camera.x + ww / 2;
+    const y = -this.state.camera.y + wh / 2;
     const pos = { x, y };
 
     if (isBuilding) {

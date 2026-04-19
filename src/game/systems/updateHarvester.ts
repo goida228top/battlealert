@@ -1,7 +1,7 @@
 import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
-export function updateHarvester(this: GameEngine, harvester: Entity): void {
+export function updateHarvester(this: GameEngine, harvester: Entity, dt: number): void {
 if (harvester.harvestState === 'IDLE' || !harvester.harvestState) {
   if ((harvester.harvestAmount || 0) >= 500) {
     harvester.harvestState = 'RETURNING';
@@ -47,8 +47,8 @@ if (harvester.harvestState === 'MOVING_TO_ORE') {
 }
 
 if (harvester.harvestState === 'MINING') {
-  // Slower mining: 0.2 per tick (takes ~40 seconds to fill 500 capacity at 60fps)
-  harvester.harvestAmount = (harvester.harvestAmount || 0) + 0.2;
+  // Slower mining: normalized to dt
+  harvester.harvestAmount = (harvester.harvestAmount || 0) + 0.2 * dt;
   
   // Visual effect for mining
   if (Math.random() < 0.1) {

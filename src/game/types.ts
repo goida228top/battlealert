@@ -119,6 +119,12 @@ export interface GameState {
   p4Credits?: number;
   power: number;
   powerConsumption: number;
+  p2Power?: number;
+  p2PowerConsumption?: number;
+  p3Power?: number;
+  p3PowerConsumption?: number;
+  p4Power?: number;
+  p4PowerConsumption?: number;
   selectionBox: { start: Vector2; end: Vector2 } | null;
   placingBuilding: BuildingType | null;
   sidebarTab: 'BUILDINGS' | 'INFANTRY' | 'VEHICLES' | 'DEFENSE';

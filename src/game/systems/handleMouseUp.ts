@@ -11,14 +11,22 @@ export function handleMouseUp(this: any) {
     const timestamp = performance.now();
 
     this.state.entities.forEach((entity: any) => {
-      if (entity.owner === this.localPlayerId && entity.type === 'UNIT') {
+      if (entity.owner === this.localPlayerId) {
         let newlySelected = false;
         if (isSingleClick) {
-          const dx = entity.position.x - start.x;
-          const dy = entity.position.y - start.y;
-          const dist = Math.sqrt(dx * dx + dy * dy);
-          newlySelected = dist < entity.size / 1.5;
-        } else {
+          if (entity.type === 'BUILDING') {
+            const dims = this.getBuildingDimensions(entity.subType);
+            const w = dims.w * this.state.map.tileSize;
+            const h = dims.h * this.state.map.tileSize;
+            newlySelected = start.x >= entity.position.x - w/2 && start.x <= entity.position.x + w/2 &&
+                           start.y >= entity.position.y - h/2 && start.y <= entity.position.y + h/2;
+          } else {
+            const dx = entity.position.x - start.x;
+            const dy = entity.position.y - start.y;
+            const dist = Math.sqrt(dx * dx + dy * dy);
+            newlySelected = dist < entity.size / 1.5;
+          }
+        } else if (entity.type === 'UNIT') {
           newlySelected = 
             entity.position.x >= xMin && 
             entity.position.x <= xMax && 
@@ -26,7 +34,7 @@ export function handleMouseUp(this: any) {
             entity.position.y <= yMax;
         }
 
-        if (newlySelected && !entity.selected) {
+        if (newlySelected && !entity.selected && entity.type === 'UNIT') {
           const responses = ['Acknowledged', 'Yes, sir!', 'Moving out', 'On my way', 'Ready for action', 'Unit reporting'];
           entity.selectionResponse = responses[Math.floor(Math.random() * responses.length)];
           entity.selectionResponseTime = timestamp;

@@ -7,5 +7,7 @@ export function resetGame(this: any, faction: Faction, country: Country, mapId: 
   this.roomId = undefined;
   this.playerFaction = faction;
   this.playerCountry = country;
+  this.lastUpdate = 0;
   this.initGame(mapId);
+  this.state.botSlots = ['PLAYER_2'];
 }

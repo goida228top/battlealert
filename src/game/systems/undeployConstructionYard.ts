@@ -1,11 +1,13 @@
 
-export function undeployConstructionYard(this: any, yardId: string) {
-  if (this.role === 'CLIENT') {
+export function undeployConstructionYard(this: any, yardId: string, providedMcvId?: string) {
+  const mcvId = providedMcvId || `mcv-${Date.now()}-${Math.random()}`;
+  
+  if (this.role === 'CLIENT' || this.role === 'HOST') {
       this.socket.emit('client_command', {
           roomId: this.roomId,
-          command: { type: 'UNDEPLOY_YARD', yardId }
+          command: { type: 'UNDEPLOY_YARD', yardId, mcvId }
       });
-      // Оптимистичное локальное выполнение
+      return; // Только отправляем команду
   }
 
   const yardIndex = this.state.entities.findIndex((e: any) => e.id === yardId);
@@ -17,7 +19,7 @@ export function undeployConstructionYard(this: any, yardId: string) {
   // Replace Construction Yard with MCV
   this.state.entities.splice(yardIndex, 1);
   this.state.entities.push({
-    id: `mcv-${Date.now()}`,
+    id: mcvId,
     type: 'UNIT',
     subType: yard.subType === 'ALLIED_CONSTRUCTION_YARD' ? 'ALLIED_MCV' : 'MCV',
     position: { ...yard.position },

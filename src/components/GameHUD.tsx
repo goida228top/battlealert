@@ -48,7 +48,9 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
      ...gameState,
      credits: owner === 'PLAYER_2' ? (gameState.p2Credits || 0) : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits,
      productionQueue: owner === 'PLAYER_2' ? (gameState.p2ProductionQueue || []) : owner === 'PLAYER_3' ? (gameState.p3ProductionQueue || []) : owner === 'PLAYER_4' ? (gameState.p4ProductionQueue || []) : gameState.productionQueue,
-     specialAbilities: owner === 'PLAYER_2' ? (gameState.p2SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_3' ? (gameState.p3SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_4' ? (gameState.p4SpecialAbilities || gameState.specialAbilities) : gameState.specialAbilities
+     specialAbilities: owner === 'PLAYER_2' ? (gameState.p2SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_3' ? (gameState.p3SpecialAbilities || gameState.specialAbilities) : owner === 'PLAYER_4' ? (gameState.p4SpecialAbilities || gameState.specialAbilities) : gameState.specialAbilities,
+     power: owner === 'PLAYER_2' ? (gameState.p2Power || 0) : owner === 'PLAYER_3' ? (gameState.p3Power || 0) : owner === 'PLAYER_4' ? (gameState.p4Power || 0) : gameState.power,
+     powerConsumption: owner === 'PLAYER_2' ? (gameState.p2PowerConsumption || 0) : owner === 'PLAYER_3' ? (gameState.p3PowerConsumption || 0) : owner === 'PLAYER_4' ? (gameState.p4PowerConsumption || 0) : gameState.powerConsumption,
   };
 
   return (
@@ -58,7 +60,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
       
       {/* Minimap Section (Top) */}
       <div className="p-2 bg-zinc-900/50 border-b border-zinc-800 aspect-square flex items-center justify-center relative overflow-hidden">
-        {localGameState.entities.some(e => e.type === 'BUILDING' && e.owner === engineRef.current.localPlayerId && (e.subType === 'RADAR' || e.subType === 'AIR_FORCE_COMMAND')) ? (
+        {localGameState.entities.some(e => e.type === 'BUILDING' && e.owner === engineRef.current.localPlayerId && (e.subType === 'RADAR' || e.subType === 'AIR_FORCE_COMMAND')) && localGameState.power >= localGameState.powerConsumption ? (
           <Minimap 
             gameState={localGameState} 
             onMinimapClick={(pos) => {
@@ -217,7 +219,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
           </div>
         )}
       </div>
-
+      
       {/* Tab Row */}
       <div className="flex gap-0.5 p-1 bg-black border-b border-zinc-800">
         <button 
@@ -253,13 +255,13 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
       {/* Build Area with Power Bar */}
       <div className="flex-1 flex overflow-hidden bg-black">
         {/* Power Bar (Vertical) */}
-        <div className="w-10 bg-zinc-950 border-r border-zinc-800 flex flex-col-reverse p-1.5 relative group" title={`Энергия: ${gameState.power} / Потребление: ${gameState.powerConsumption}`}>
+        <div className="w-10 bg-zinc-950 border-r border-zinc-800 flex flex-col-reverse p-1.5 relative group" title={`Энергия: ${localGameState.power} / Потребление: ${localGameState.powerConsumption}`}>
           <div className="absolute inset-0 bg-black/40 pointer-events-none" />
           <div className="flex-1 w-full bg-black rounded-sm overflow-hidden relative border border-zinc-800">
             {/* Power Level Indicator */}
             <div 
-              className={`absolute bottom-0 left-0 w-full transition-all duration-700 ${gameState.power >= gameState.powerConsumption ? 'bg-gradient-to-t from-green-900 via-green-700 to-green-600' : 'bg-gradient-to-t from-red-900 via-red-700 to-red-600'}`}
-              style={{ height: `${Math.min(100, (gameState.power / Math.max(1, gameState.powerConsumption)) * 50)}%` }}
+              className={`absolute bottom-0 left-0 w-full transition-all duration-700 ${localGameState.power >= localGameState.powerConsumption ? 'bg-gradient-to-t from-green-900 via-green-700 to-green-600' : 'bg-gradient-to-t from-red-900 via-red-700 to-red-600'}`}
+              style={{ height: `${Math.min(100, (localGameState.power / Math.max(1, localGameState.powerConsumption)) * 50)}%` }}
             />
             {/* Consumption Marker */}
             <div 
@@ -268,14 +270,14 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
             />
           </div>
           <div className="text-center mt-2">
-            <Zap className={`w-4 h-4 mx-auto ${gameState.power >= gameState.powerConsumption ? 'text-green-500' : 'text-red-500 animate-pulse'}`} />
+            <Zap className={`w-4 h-4 mx-auto ${localGameState.power >= localGameState.powerConsumption ? 'text-green-500' : 'text-red-500 animate-pulse'}`} />
           </div>
           
           {/* Power Tooltip */}
           <div className="absolute left-full ml-2 bottom-4 bg-zinc-900 border border-zinc-700 p-2 rounded text-xs whitespace-nowrap opacity-0 group-hover:opacity-100 pointer-events-none transition-opacity z-50">
             <div className="font-bold text-white mb-1">Статус энергии</div>
-            <div className="text-green-400">Произведено: {gameState.power} МВт</div>
-            <div className="text-red-400">Потреблено: {gameState.powerConsumption} МВт</div>
+            <div className="text-green-400">Произведено: {localGameState.power} МВт</div>
+            <div className="text-red-400">Потреблено: {localGameState.powerConsumption} МВт</div>
           </div>
         </div>
 

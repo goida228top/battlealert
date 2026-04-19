@@ -146,8 +146,8 @@ export function update(this: any, timestamp: number) {
     }
 
     // Harvester Logic
-    if (entity.subType === 'HARVESTER') {
-      this.updateHarvester(entity);
+    if (entity.subType === 'HARVESTER' || entity.subType === 'CHRONO_MINER') {
+      this.updateHarvester(entity, dt);
     }
 
     // Combat
@@ -212,17 +212,40 @@ export function update(this: any, timestamp: number) {
         refinery.occupiedBy = null;
       }
     }
+
+    if (dead.subType === 'DEMOLITION_TRUCK') {
+      // Big explosion!
+      this.state.effects.push({
+        id: `demo-exp-${dead.id}-${timestamp}`,
+        type: 'EXPLOSION',
+        position: { ...dead.position },
+        startTime: timestamp,
+        duration: 1000,
+      });
+      // Area damage
+      this.state.entities.forEach(e => {
+        if (e.id !== dead.id && e.health > 0) {
+          const dist = Math.hypot(e.position.x - dead.position.x, e.position.y - dead.position.y);
+          if (dist < 200) {
+            const damage = (1 - dist / 200) * 800;
+            e.health -= damage;
+          }
+        }
+      });
+    }
   });
   
   this.state.entities = this.state.entities.filter((e: Entity) => e.health > 0);
 
-  if (this.role === 'OFFLINE' || (this.role === 'HOST' && this.state.botSlots?.length > 0)) {
+  if (this.role === 'OFFLINE' || (this.role === 'SERVER' && this.state.botSlots?.length > 0)) {
       this.updateAI(timestamp);
   }
   
   this.updateCrates(dt, timestamp);
   this.updateResources(dt);
-  this.updateVisibility();
+  if (this.role !== 'SERVER') {
+    this.updateVisibility();
+  }
   this.updateProjectiles(dt, timestamp);
   this.updateEffects(timestamp);
   this.updateSpecialAbilities(timestamp);

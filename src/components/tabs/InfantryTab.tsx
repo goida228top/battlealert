@@ -12,6 +12,15 @@ interface InfantryTabProps {
 export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
 
+  const handleCancel = (type: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const items = gameState.productionQueue.filter(q => q.subType === type);
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      engineRef.current.removeFromQueue(lastItem.id);
+    }
+  };
+
   return (
     <>
             <div className="grid grid-cols-2 gap-2">
@@ -25,6 +34,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'SOLDIER').length}
                     locked={!engineRef.current.isUnlocked('SOLDIER', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('SOLDIER')}
+                    onContextMenu={(e) => handleCancel('SOLDIER', e)}
                     title="Призывник: Базовая пехота."
                   />
                   <BuildButton 
@@ -35,6 +45,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'ENGINEER').length}
                     locked={!engineRef.current.isUnlocked('ENGINEER', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ENGINEER')}
+                    onContextMenu={(e) => handleCancel('ENGINEER', e)}
                     title="Инженер: Захватывает вражеские здания или чинит свои."
                   />
                   <BuildButton 
@@ -45,6 +56,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'ATTACK_DOG').length}
                     locked={!engineRef.current.isUnlocked('ATTACK_DOG', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ATTACK_DOG')}
+                    onContextMenu={(e) => handleCancel('ATTACK_DOG', e)}
                     title="Боевой пес: Быстрый разведчик, мгновенно убивает пехоту."
                   />
                   <BuildButton 
@@ -55,6 +67,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'FLAK_TROOPER').length}
                     locked={!engineRef.current.isUnlocked('FLAK_TROOPER', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('FLAK_TROOPER')}
+                    onContextMenu={(e) => handleCancel('FLAK_TROOPER', e)}
                     title="Зенитчик: Эффективен против авиации и техники."
                   />
                   <BuildButton 
@@ -65,6 +78,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'TESLA_TROOPER').length}
                     locked={!engineRef.current.isUnlocked('TESLA_TROOPER', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TESLA_TROOPER')}
+                    onContextMenu={(e) => handleCancel('TESLA_TROOPER', e)}
                     title="Тесла-пехотинец: Эффективен против техники, нельзя раздавить."
                   />
                   <BuildButton 
@@ -75,6 +89,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'CRAZY_IVAN').length}
                     locked={!engineRef.current.isUnlocked('CRAZY_IVAN', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('CRAZY_IVAN')}
+                    onContextMenu={(e) => handleCancel('CRAZY_IVAN', e)}
                     title="Безумный Иван: Минирует всё вокруг."
                   />
                   <BuildButton 
@@ -85,6 +100,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'YURI').length}
                     locked={!engineRef.current.isUnlocked('YURI', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('YURI')}
+                    onContextMenu={(e) => handleCancel('YURI', e)}
                     title="Юрий: Обладает способностью контролировать разум врагов."
                   />
                   <BuildButton 
@@ -95,6 +111,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'BORIS').length}
                     locked={!engineRef.current.isUnlocked('BORIS', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('BORIS')}
+                    onContextMenu={(e) => handleCancel('BORIS', e)}
                     title="Борис: Элитный спецназ. Вызывает авиаудар по зданиям."
                   />
                   {engineRef.current.playerCountry === 'IRAQ' && (

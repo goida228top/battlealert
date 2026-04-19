@@ -1,11 +1,13 @@
 
-export function deployMCV(this: any, mcvId: string) {
-  if (this.role === 'CLIENT') {
+export function deployMCV(this: any, mcvId: string, providedBaseId?: string) {
+  const baseId = providedBaseId || `base-${Date.now()}-${Math.random()}`;
+  
+  if (this.role === 'CLIENT' || this.role === 'HOST') {
       this.socket.emit('client_command', {
           roomId: this.roomId,
-          command: { type: 'DEPLOY_MCV', mcvId }
+          command: { type: 'DEPLOY_MCV', mcvId, baseId }
       });
-      // Оптимистичное локальное выполнение
+      return; // Только отправляем команду
   }
 
   const mcvIndex = this.state.entities.findIndex((e: any) => e.id === mcvId);
@@ -29,16 +31,16 @@ export function deployMCV(this: any, mcvId: string) {
       const curY = ty + dy;
       if (curX < 0 || curX >= this.state.map.width || curY < 0 || curY >= this.state.map.height) return;
       const tileType = this.state.map.tiles[curY][curX];
-      const visibility = this.state.map.visibility[curY][curX];
       
-      if (tileType !== 'GRASS') return; // Must be on clean grass
+      // Allow deployment on GRASS and ORE
+      if (tileType === 'WATER') return; 
     }
   }
 
   // Replace MCV with Construction Yard
   this.state.entities.splice(mcvIndex, 1);
   this.state.entities.push({
-    id: `base-${Date.now()}`,
+    id: baseId,
     type: 'BUILDING',
     subType: mcv.subType === 'ALLIED_MCV' ? 'ALLIED_CONSTRUCTION_YARD' : 'CONSTRUCTION_YARD',
     position: { x: snappedX, y: snappedY },

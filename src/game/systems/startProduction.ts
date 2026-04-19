@@ -1,15 +1,16 @@
 
 import { UnitType, BuildingType } from '../types';
 
-export function startProduction(this: any, subType: UnitType | BuildingType, owner?: string) {
+export function startProduction(this: any, subType: UnitType | BuildingType, owner?: string, processId?: string) {
   const actualOwner = owner || this.localPlayerId || 'PLAYER';
+  const idValue = processId || `${subType}-${Date.now()}-${Math.random()}`;
   
   if (this.role === 'CLIENT' && actualOwner === this.localPlayerId) {
       this.socket.emit('client_command', {
           roomId: this.roomId,
-          command: { type: 'START_PRODUCTION', subType, owner: actualOwner }
+          command: { type: 'START_PRODUCTION', subType, owner: actualOwner, processId: idValue }
       });
-      // Оптимистичное обновление очереди, НЕ возвращаемся через return
+      return; // Только отправляем команду
   }
 
   const category = this.getCategory(subType);
@@ -19,9 +20,9 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
                 (this.state.p4ProductionQueue = this.state.p4ProductionQueue || []);
                 
   const credits = actualOwner === 'PLAYER' ? this.state.credits : 
-                  actualOwner === 'PLAYER_2' ? (this.state.p2Credits = this.state.p2Credits || 10000) : 
-                  actualOwner === 'PLAYER_3' ? (this.state.p3Credits = this.state.p3Credits || 10000) : 
-                  (this.state.p4Credits = this.state.p4Credits || 10000);
+                  actualOwner === 'PLAYER_2' ? (this.state.p2Credits ?? 10000) : 
+                  actualOwner === 'PLAYER_3' ? (this.state.p3Credits ?? 10000) : 
+                  (this.state.p4Credits ?? 10000);
   
   const queuedCount = queue.filter((q: any) => this.getCategory(q.subType) === category).length;
   
@@ -54,13 +55,13 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
     }
     
     queue.push({
-      id: `${subType}-${Date.now()}-${Math.random()}`,
+      id: idValue,
       subType,
       progress: 0,
       cost,
       time,
-      startTime: 0,
-      owner,
+      startTime: 0, // Server syncs this properly if processing
+      owner: actualOwner,
     });
   }
 }

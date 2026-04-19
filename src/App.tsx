@@ -316,11 +316,6 @@ export default function App() {
       ctx.drawImage(cachedMapCanvasRef.current, 0, 0);
     }
 
-    // Render highly optimized Fog of War
-    if (!gameState.debugFlags?.disableFog) {
-      fogOfWarRef.current.render(ctx, visibility, map);
-    }
-
     // Crates
     gameState.crates.forEach(crate => {
       const tx = Math.floor(crate.position.x / mapTileSize);
@@ -380,8 +375,13 @@ export default function App() {
         vis = visibility[ty]?.[tx] ?? 0;
       }
       
-      if (vis === 0 && entity.owner !== engineRef.current.localPlayerId) return; // Hide in shroud
-      if (vis === 1 && entity.owner !== engineRef.current.localPlayerId && entity.type === 'UNIT') return; // Hide enemy units in fog
+      // If it's a building, we show it always (but shaded if vis < 2)
+      if (entity.type === 'UNIT') {
+        if (vis === 0 && entity.owner !== engineRef.current.localPlayerId) return; // Hide units in shroud
+        if (vis === 1 && entity.owner !== engineRef.current.localPlayerId) return; // Hide enemy units in fog
+      }
+      
+      // Buildings are ALWAYS rendered now (they will be under the fog layer if vis < 2)
 
       ctx.save();
       ctx.translate(entity.position.x, entity.position.y);
@@ -801,6 +801,11 @@ export default function App() {
 
       ctx.restore();
     });
+
+    // Render highly optimized Fog of War AFTER entities so they are "under" the fog
+    if (!gameState.debugFlags?.disableFog) {
+      fogOfWarRef.current.render(ctx, visibility, map);
+    }
 
     // Building Placement Ghost
     if (gameState.placingBuilding && mousePosRef.current) {

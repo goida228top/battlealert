@@ -2,6 +2,9 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 
 export function checkWinLoss(this: GameEngine, ): void {
+  // Only process on client/host where localPlayerId is meaningful
+  if (this.role === 'SERVER') return;
+  
   // Only process if not already over
   if (this.state.gameOver) return;
 

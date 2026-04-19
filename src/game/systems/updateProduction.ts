@@ -47,28 +47,18 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
                     });
                     
                     if (!overlap) {
-                      this.placeBuildingAt(pos, item.subType as BuildingType, owner);
-                      if (owner === 'PLAYER_2') this.state.p2ProductionQueue = this.state.p2ProductionQueue!.filter(q => q.id !== item.id);
-                      else if (owner === 'PLAYER_3') this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
-                      else if (owner === 'PLAYER_4') this.state.p4ProductionQueue = this.state.p4ProductionQueue!.filter(q => q.id !== item.id);
-                      
-                      placed = true;
-                      break;
+                      const success = this.placeBuildingAt(pos, item.subType as BuildingType, owner);
+                      if (success) {
+                        placed = true;
+                        break;
+                      }
                     }
                   }
                 }
               }
-              
-              if (!placed) {
-                  const pos = { x: yard.position.x + 400 + Math.random()*200, y: yard.position.y + Math.random()*200 };
-                  this.placeBuildingAt(pos, item.subType as BuildingType, owner);
-                  if (owner === 'PLAYER_2') this.state.p2ProductionQueue = this.state.p2ProductionQueue!.filter(q => q.id !== item.id);
-                  else if (owner === 'PLAYER_3') this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
-                  else if (owner === 'PLAYER_4') this.state.p4ProductionQueue = this.state.p4ProductionQueue!.filter(q => q.id !== item.id);
-              }
             }
           }
-          return; // Wait for player to place the building
+          return; // Wait for player/next tick for bot
         } else {
           let factoryTypes: string[] = [];
           if (category === 'INFANTRY') {
@@ -117,8 +107,24 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
         factoryCount = this.state.entities.filter(e => (e.subType === 'CONSTRUCTION_YARD' || e.subType === 'ALLIED_CONSTRUCTION_YARD') && e.owner === owner).length;
       }
       
+      let playerPower = 100;
+      let playerConsumption = 0;
+      if (owner === 'PLAYER') {
+        playerPower = this.state.power;
+        playerConsumption = this.state.powerConsumption;
+      } else if (owner === 'PLAYER_2') {
+        playerPower = this.state.p2Power || 0;
+        playerConsumption = this.state.p2PowerConsumption || 0;
+      } else if (owner === 'PLAYER_3') {
+        playerPower = this.state.p3Power || 0;
+        playerConsumption = this.state.p3PowerConsumption || 0;
+      } else if (owner === 'PLAYER_4') {
+        playerPower = this.state.p4Power || 0;
+        playerConsumption = this.state.p4PowerConsumption || 0;
+      }
+
       let powerMultiplier = 1;
-      if (owner === 'PLAYER' && this.state.power < this.state.powerConsumption) {
+      if (playerPower < playerConsumption) {
         powerMultiplier = 0.5; // 50% slower if low power
       }
       

@@ -2,7 +2,7 @@ import { GameEngine } from '../GameEngine';
 import { Entity, Vector2, BuildingType, UnitType } from '../types';
 import { getBuildingDimensions } from './getBuildingDimensions';
 
-export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingType, owner: string): void {
+export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingType, owner: string, providedEntityId?: string): boolean {
   const tileSize = this.state.map.tileSize;
   const dims = getBuildingDimensions(type);
 
@@ -10,10 +10,61 @@ export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingTy
   const tx = Math.floor((pos.x - (dims.w * tileSize) / 2) / tileSize);
   const ty = Math.floor((pos.y - (dims.h * tileSize) / 2) / tileSize);
 
+  // 1. Bounds and Terrain Check
+  for (let dy = 0; dy < dims.h; dy++) {
+    for (let dx = 0; dx < dims.w; dx++) {
+      const curX = tx + dx;
+      const curY = ty + dy;
+
+      if (curX < 0 || curX >= this.state.map.width || curY < 0 || curY >= this.state.map.height) {
+        return false; // Out of bounds
+      }
+
+      const tileType = this.state.map.tiles[curY][curX];
+      if (tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE') {
+        return false; // Cannot build on water or ore
+      }
+    }
+  }
+
   // Calculate snapped center position
   const snappedX = (tx + dims.w / 2) * tileSize;
   const snappedY = (ty + dims.h / 2) * tileSize;
   const snappedPos = { x: snappedX, y: snappedY };
+
+  // 2. Overlap Check
+  const margin = 5;
+  const bounds = {
+    minX: snappedX - (dims.w * tileSize) / 2 + margin,
+    maxX: snappedX + (dims.w * tileSize) / 2 - margin,
+    minY: snappedY - (dims.h * tileSize) / 2 + margin,
+    maxY: snappedY + (dims.h * tileSize) / 2 - margin
+  };
+
+  const hasOverlap = this.state.entities.some((e: any) => {
+    if (e.type !== 'BUILDING') return false;
+    const eDims = getBuildingDimensions(e.subType as BuildingType);
+    const eBounds = {
+      minX: e.position.x - (eDims.w * tileSize) / 2 + margin,
+      maxX: e.position.x + (eDims.w * tileSize) / 2 - margin,
+      minY: e.position.y - (eDims.h * tileSize) / 2 + margin,
+      maxY: e.position.y + (eDims.h * tileSize) / 2 - margin
+    };
+    return !(bounds.maxX < eBounds.minX || bounds.minX > eBounds.maxX || bounds.maxY < eBounds.minY || bounds.minY > eBounds.maxY);
+  });
+
+  if (hasOverlap && type !== 'SOVIET_WALL' && type !== 'ALLIED_WALL') return false;
+
+  // 3. Proximity Check (Must be near a friendly building)
+  const isNearFriendly = this.state.entities.some((e: any) => {
+    if (e.type !== 'BUILDING' || e.owner !== owner) return false;
+    const dist = Math.hypot(e.position.x - snappedPos.x, e.position.y - snappedPos.y);
+    return dist < 800; // Allow 800 distance for placing (so it's not too restrictive)
+  });
+
+  if (!isNearFriendly && this.state.entities.some(e => e.type === 'BUILDING' && e.owner === owner)) {
+    return false;
+  }
 
   let health = 2000;
   let size = dims.w * tileSize;
@@ -54,7 +105,7 @@ export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingTy
   else if (type === 'WEATHER_DEVICE') { health = 6000; }
   else if (type === 'ROBOT_CONTROL_CENTER') { health = 1500; }
 
-  const entityId = `${type}-${Date.now()}-${Math.random()}`;
+  const entityId = providedEntityId || `${type}-${Date.now()}-${Math.random()}`;
   
   const entity: Entity = {
     id: entityId,
@@ -65,7 +116,23 @@ export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingTy
     maxHealth: health,
     owner,
     size,
+    constructionStartTime: performance.now(),
   };
+
+  // 4. Consume from queue WITHOUT refunding
+  const queue = owner === 'PLAYER' ? this.state.productionQueue : 
+                owner === 'PLAYER_2' ? this.state.p2ProductionQueue : 
+                owner === 'PLAYER_3' ? this.state.p3ProductionQueue : 
+                this.state.p4ProductionQueue;
+  if (queue) {
+    const qIndex = queue.findIndex((q: any) => q.subType === type && q.progress >= 100);
+    if (qIndex !== -1) {
+      queue.splice(qIndex, 1);
+    } else if (type !== 'CONSTRUCTION_YARD' && type !== 'ALLIED_CONSTRUCTION_YARD' && !providedEntityId?.includes('debug')) {
+      // If none found in queue, and it's not a deployment or debug, abort!
+      return false;
+    }
+  }
 
   this.state.entities.push(entity);
 
@@ -74,5 +141,7 @@ export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingTy
   } else if (type === 'ALLIED_ORE_REFINERY') {
     this.produceUnitAt(entity, 'CHRONO_MINER', owner);
   }
+  
+  return true;
 }
 

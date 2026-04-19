@@ -136,41 +136,49 @@ if (timestamp > botState.nextBuildTime) {
         if (getCreditsLocal() >= cost && getQueueLocal().filter(q => ['BUILDINGS', 'DEFENSE'].includes(this.getCategory(q.subType))).length === 0) {
             this.startProduction(nextToBuild, botOwner);
         }
-        botState.nextBuildTime = timestamp + 6000;
+        botState.nextBuildTime = timestamp + 3000; // Faster building
     }
   }
 }
 
 // Produce Units
 const aiBarracks = aiEntities.find(e => e.subType === 'BARRACKS' || e.subType === 'ALLIED_BARRACKS');
-  if (aiBarracks && timestamp > 15000) { // AI starts producing units very early (15s)
-    if (aiEntities.filter(e => e.subType === 'SOLDIER' || e.subType === 'GI').length < 15) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'GI' : 'SOLDIER', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'FLAK_TROOPER' || e.subType === 'ROCKETEER').length < 6 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'ROCKETEER' : 'FLAK_TROOPER', botOwner)) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'ROCKETEER' : 'FLAK_TROOPER', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'TESLA_TROOPER' || e.subType === 'NAVY_SEAL').length < 4 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'NAVY_SEAL' : 'TESLA_TROOPER', botOwner)) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'NAVY_SEAL' : 'TESLA_TROOPER', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'DESOLATOR' || e.subType === 'CHRONO_LEGIONNAIRE').length < 3 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR', botOwner)) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'TERRORIST' || e.subType === 'SNIPER').length < 5 && this.isUnlocked(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'SNIPER' : 'TERRORIST', botOwner)) {
-      this.startProduction(aiBarracks.subType === 'ALLIED_BARRACKS' ? 'SNIPER' : 'TERRORIST', botOwner);
-    }
-  }
+if (aiBarracks) {
+    const isAllied = aiBarracks.subType === 'ALLIED_BARRACKS';
+    const mainInfantry = isAllied ? 'GI' : 'SOLDIER';
+    const antiAirInfantry = isAllied ? 'ROCKETEER' : 'FLAK_TROOPER';
+    const specialInfantry1 = isAllied ? 'NAVY_SEAL' : 'TESLA_TROOPER';
+    const specialInfantry2 = isAllied ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR';
 
-  const aiFactory = aiEntities.find(e => e.subType === 'WAR_FACTORY' || e.subType === 'ALLIED_WAR_FACTORY');
-  if (aiFactory && timestamp > 30000) { // AI starts producing vehicles at 30s
-    if (aiEntities.filter(e => e.subType === 'HARVESTER' || e.subType === 'CHRONO_MINER').length < 4) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'CHRONO_MINER' : 'HARVESTER', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'TANK' || e.subType === 'GRIZZLY_TANK').length < 10) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'GRIZZLY_TANK' : 'TANK', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'RHINO_TANK' || e.subType === 'IFV').length < 8 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'IFV' : 'RHINO_TANK', botOwner)) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'IFV' : 'RHINO_TANK', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'TESLA_TANK' || e.subType === 'MIRAGE_TANK').length < 5 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'MIRAGE_TANK' : 'TESLA_TANK', botOwner)) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'MIRAGE_TANK' : 'TESLA_TANK', botOwner);
-    } else if (aiEntities.filter(e => e.subType === 'APOCALYPSE_TANK' || e.subType === 'BATTLE_FORTRESS').length < 4 && this.isUnlocked(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK', botOwner)) {
-      this.startProduction(aiFactory.subType === 'ALLIED_WAR_FACTORY' ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK', botOwner);
+    if (aiEntities.filter(e => e.subType === mainInfantry).length < 20) {
+        this.startProduction(mainInfantry, botOwner);
+    } else if (aiEntities.filter(e => e.subType === antiAirInfantry).length < 8 && this.isUnlocked(antiAirInfantry, botOwner)) {
+        this.startProduction(antiAirInfantry, botOwner);
+    } else if (aiEntities.filter(e => e.subType === specialInfantry1).length < 5 && this.isUnlocked(specialInfantry1, botOwner)) {
+        this.startProduction(specialInfantry1, botOwner);
+    } else if (aiEntities.filter(e => e.subType === specialInfantry2).length < 3 && this.isUnlocked(specialInfantry2, botOwner)) {
+        this.startProduction(specialInfantry2, botOwner);
     }
-  }
+}
+
+const aiFactory = aiEntities.find(e => e.subType === 'WAR_FACTORY' || e.subType === 'ALLIED_WAR_FACTORY');
+if (aiFactory) {
+    const isAllied = aiFactory.subType === 'ALLIED_WAR_FACTORY';
+    const mainHarvester = isAllied ? 'CHRONO_MINER' : 'HARVESTER';
+    const mainTank = isAllied ? 'GRIZZLY_TANK' : 'TANK';
+    const offensiveTank = isAllied ? 'IFV' : 'RHINO_TANK';
+    const heavyTank = isAllied ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK';
+
+    if (aiEntities.filter(e => e.subType === mainHarvester).length < 5) {
+        this.startProduction(mainHarvester, botOwner);
+    } else if (aiEntities.filter(e => e.subType === mainTank).length < 12) {
+        this.startProduction(mainTank, botOwner);
+    } else if (aiEntities.filter(e => e.subType === offensiveTank).length < 10 && this.isUnlocked(offensiveTank, botOwner)) {
+        this.startProduction(offensiveTank, botOwner);
+    } else if (aiEntities.filter(e => e.subType === heavyTank).length < 5 && this.isUnlocked(heavyTank, botOwner)) {
+        this.startProduction(heavyTank, botOwner);
+    }
+}
 
   const aiNavalYard = aiEntities.find(e => e.subType === 'NAVAL_YARD' || e.subType === 'ALLIED_NAVAL_YARD');
   if (aiNavalYard && timestamp > 120000) { // AI starts producing ships after 2 minutes
@@ -210,24 +218,24 @@ const combatUnits = aiEntities.filter(e => [
   'DESTROYER', 'AEGIS_CRUISER', 'AIRCRAFT_CARRIER', 'DOLPHIN'
 ].includes(e.subType || ''));
 
-if (!botState.knownPlayerBase && combatUnits.length >= 5 && timestamp > botState.scoutTime) {
+if (!botState.knownPlayerBase && combatUnits.length >= 3 && timestamp > botState.scoutTime) {
   // Send a scout to find the player
   const scout = combatUnits.find(u => !u.targetPosition);
   if (scout) {
     const scoutTarget = { x: Math.random() * 800 + 100, y: Math.random() * 1200 + 100 };
     scout.path = this.calculatePath(scout.position, scoutTarget);
     scout.targetPosition = scout.path[0];
-    botState.scoutTime = timestamp + 15000; // Increased scout delay
+    botState.scoutTime = timestamp + 10000;
   }
 }
 
-if (botState.knownPlayerBase && combatUnits.length >= 8 && timestamp > botState.attackTime) {
+if (botState.knownPlayerBase && combatUnits.length >= 6 && timestamp > botState.attackTime) {
   combatUnits.forEach(u => {
     u.path = this.calculatePath(u.position, botState.knownPlayerBase!);
     u.targetPosition = u.path[0];
     u.targetId = undefined;
   });
-  botState.attackTime = timestamp + 45000; // Attack every 45s
+  botState.attackTime = timestamp + 30000; // Attack every 30s
 }
 
 // Crate Seeking Logic

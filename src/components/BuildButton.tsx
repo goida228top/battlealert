@@ -6,6 +6,7 @@ interface BuildButtonProps {
   icon?: React.ReactNode; 
   cost: number; 
   onClick?: () => void;
+  onContextMenu?: (e: React.MouseEvent) => void;
   active?: boolean;
   disabled?: boolean;
   locked?: boolean;
@@ -16,11 +17,12 @@ interface BuildButtonProps {
 }
 
 export const BuildButton: React.FC<BuildButtonProps> = ({ 
-  label, icon, cost, onClick, active, disabled, locked, title, progress, stuck, count 
+  label, icon, cost, onClick, onContextMenu, active, disabled, locked, title, progress, stuck, count 
 }) => {
   return (
     <button 
       onClick={onClick}
+      onContextMenu={onContextMenu}
       disabled={(disabled || locked) && !progress}
       title={title}
       className={`

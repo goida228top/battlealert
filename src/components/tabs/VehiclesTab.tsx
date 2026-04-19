@@ -12,6 +12,15 @@ interface VehiclesTabProps {
 export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
 
+  const handleCancel = (type: string, e: React.MouseEvent) => {
+    e.preventDefault();
+    const items = gameState.productionQueue.filter(q => q.subType === type);
+    if (items.length > 0) {
+      const lastItem = items[items.length - 1];
+      engineRef.current.removeFromQueue(lastItem.id);
+    }
+  };
+
   return (
     <>
             <div className="grid grid-cols-2 gap-2">
@@ -25,6 +34,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'RHINO_TANK').length}
                     locked={!engineRef.current.isUnlocked('RHINO_TANK', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('RHINO_TANK')}
+                    onContextMenu={(e) => handleCancel('RHINO_TANK', e)}
                     title="Тяжелый танк Рино: Стандартный бронированный юнит."
                   />
                   <BuildButton 
@@ -35,6 +45,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'FLAK_TRACK').length}
                     locked={!engineRef.current.isUnlocked('FLAK_TRACK', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('FLAK_TRACK')}
+                    onContextMenu={(e) => handleCancel('FLAK_TRACK', e)}
                     title="Зенитный БТР: Быстрый транспорт, эффективен против авиации."
                   />
                   <BuildButton 
@@ -45,6 +56,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'V3_LAUNCHER').length}
                     locked={!engineRef.current.isUnlocked('V3_LAUNCHER', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('V3_LAUNCHER')}
+                    onContextMenu={(e) => handleCancel('V3_LAUNCHER', e)}
                     title="Ракетная установка V3: Дальнобойная артиллерия."
                   />
                   <BuildButton 
@@ -55,6 +67,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     count={gameState.productionQueue.filter(q => q.subType === 'TERROR_DRONE').length}
                     locked={!engineRef.current.isUnlocked('TERROR_DRONE', engineRef.current.localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TERROR_DRONE')}
+                    onContextMenu={(e) => handleCancel('TERROR_DRONE', e)}
                     title="Дрон-террорист: Быстрый механический паук. Разбирает технику изнутри."
                   />
                   <BuildButton 

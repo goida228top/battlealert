@@ -3,6 +3,7 @@ import { createServer as createViteServer } from "vite";
 import http from "http";
 import { Server } from "socket.io";
 import path from "path";
+import { GameEngine } from "../src/game/GameEngine";
 
 const rooms = new Map();
 let globalConnectionsCount = 0;
@@ -35,6 +36,56 @@ async function startServer() {
       uptime: process.uptime()
     });
   }, 2000);
+
+  // Server Game Loop!
+  setInterval(() => {
+    const now = performance.now();
+    for (const room of rooms.values()) {
+        if (room.inGame && room.engine) {
+            room.engine.update(now);
+            const syncState = {
+                entities: room.engine.state.entities.map((e: any) => ({
+                    id: e.id, health: e.health, maxHealth: e.maxHealth, owner: e.owner,
+                    subType: e.subType, type: e.type, size: e.size, speed: e.speed,
+                    isDeployed: e.isDeployed, targetPosition: e.targetPosition,
+                    targetId: e.targetId, rank: e.rank, isRepairing: e.isRepairing,
+                    position: e.position, rotation: e.rotation,
+                    harvestState: e.harvestState, harvestAmount: e.harvestAmount,
+                    occupiedBy: e.occupiedBy, constructionStartTime: e.constructionStartTime,
+                    mindControlledBy: e.mindControlledBy, rallyPoint: e.rallyPoint,
+                    isDisguised: e.isDisguised, kills: e.kills
+                })),
+                credits: room.engine.state.credits,
+                p2Credits: room.engine.state.p2Credits,
+                p3Credits: room.engine.state.p3Credits,
+                p4Credits: room.engine.state.p4Credits,
+                productionQueue: room.engine.state.productionQueue,
+                p2ProductionQueue: room.engine.state.p2ProductionQueue,
+                p3ProductionQueue: room.engine.state.p3ProductionQueue,
+                p4ProductionQueue: room.engine.state.p4ProductionQueue,
+                effects: room.engine.state.effects,
+                projectiles: room.engine.state.projectiles,
+                crates: room.engine.state.crates,
+                ironCurtainActive: room.engine.state.ironCurtainActive,
+                specialAbilities: room.engine.state.specialAbilities,
+                p2SpecialAbilities: room.engine.state.p2SpecialAbilities,
+                p3SpecialAbilities: room.engine.state.p3SpecialAbilities,
+                p4SpecialAbilities: room.engine.state.p4SpecialAbilities,
+                power: room.engine.state.power,
+                powerConsumption: room.engine.state.powerConsumption,
+                p2Power: room.engine.state.p2Power,
+                p2PowerConsumption: room.engine.state.p2PowerConsumption,
+                p3Power: room.engine.state.p3Power,
+                p3PowerConsumption: room.engine.state.p3PowerConsumption,
+                p4Power: room.engine.state.p4Power,
+                p4PowerConsumption: room.engine.state.p4PowerConsumption,
+                playerMappings: room.engine.state.playerMappings,
+                playerColors: room.engine.state.playerColors
+            };
+            io.to(room.id).emit('game_state_update', syncState);
+        }
+    }
+  }, 100); // 10 updates a second
 
   io.on('connection', (socket) => {
     globalConnectionsCount++;
@@ -138,17 +189,55 @@ async function startServer() {
     });
 
     socket.on('start_game', (roomId) => {
-      io.to(roomId).emit('game_started');
-    });
+      const room = rooms.get(roomId);
+      if (room && room.hostId === socket.id) {
+          room.inGame = true;
+          room.engine = new GameEngine();
+          room.engine.role = 'SERVER'; // So it processes all logic
 
-    socket.on('host_state_update', (data) => {
-      socket.to(data.roomId).emit('game_state_update', data.state);
+          // Map slots
+          const mappings: any = {};
+          const colors: any = {};
+          let slotIdx = 1;
+          const slots = ['PLAYER', 'PLAYER_2', 'PLAYER_3', 'PLAYER_4'];
+          room.engine.state = { botSlots: [] } as any;
+
+          room.players.forEach((p: any) => {
+              const slot = slots[slotIdx - 1];
+              mappings[p.id] = slot;
+              colors[slot] = p.color;
+              if (p.isBot) {
+                 room.engine.state.botSlots.push(slot);
+              }
+              slotIdx++;
+          });
+
+          room.engine.initGame(room.map); // re-init correctly
+          room.engine.state.playerMappings = mappings;
+          room.engine.state.playerColors = colors;
+          room.engine.state.botSlots = room.engine.state.botSlots || [];
+          // apply factions
+          room.players.forEach((p: any) => {
+              const slot = mappings[p.id];
+              const base = room.engine.state.entities.find((e: any) => e.owner === slot && (e.subType === 'MCV' || e.subType === 'ALLIED_MCV'));
+              if (base) {
+                  base.subType = p.faction === 'COALITION' ? 'ALLIED_MCV' : 'MCV';
+              }
+          });
+
+          io.to(roomId).emit('game_started');
+      }
     });
 
     socket.on('client_command', (data) => {
       const room = rooms.get(data.roomId);
-      if (room) {
-        io.to(room.hostId).emit('remote_command', data.command);
+      if (room && room.engine && room.engine.state.playerMappings) {
+          const slot = room.engine.state.playerMappings[socket.id];
+          if (slot) {
+              // Forced logic: the server decides the owner!
+              const command = { ...data.command, owner: slot };
+              room.engine.executeRemoteCommand(command);
+          }
       }
     });
 

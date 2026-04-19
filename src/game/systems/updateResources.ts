@@ -48,12 +48,21 @@ export function updateResources(this: GameEngine, dt: number): void {
     if (owner === 'PLAYER') {
       this.state.power = p;
       this.state.powerConsumption = c;
-    } else {
-        // We might want to store power per player later, but currently HUD only shows local power
-        if (this.localPlayerId === owner) {
-            this.state.power = p;
-            this.state.powerConsumption = c;
-        }
+    } else if (owner === 'PLAYER_2') {
+      this.state.p2Power = p;
+      this.state.p2PowerConsumption = c;
+    } else if (owner === 'PLAYER_3') {
+      this.state.p3Power = p;
+      this.state.p3PowerConsumption = c;
+    } else if (owner === 'PLAYER_4') {
+      this.state.p4Power = p;
+      this.state.p4PowerConsumption = c;
+    }
+    
+    // For local UI fallback (legacy, but helps if UI only uses state.power)
+    if (this.localPlayerId === owner) {
+        this.state.power = p;
+        this.state.powerConsumption = c;
     }
   });
 }

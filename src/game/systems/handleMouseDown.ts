@@ -16,14 +16,37 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     return Math.hypot(e.position.x - p.x, e.position.y - p.y) < e.size / 1.5; // Slightly more generous than radius for units
   };
 
-  // RMB: Cancel or Deselect
+  // RMB: Orders in OFFLINE mode or Deselect
   if (isRightClick) {
     if (this.state.placingBuilding) {
-      const cost = this.getCost(this.state.placingBuilding);
-      this.state.credits += cost;
       this.state.placingBuilding = null;
+    } else if (this.role === 'OFFLINE') {
+      const selectedUnits = this.state.entities.filter((e: any) => e.selected && e.owner === this.localPlayerId && e.type === 'UNIT');
+      if (selectedUnits.length > 0) {
+        // Handle as an order
+        const clickedEntity = this.state.entities.find((e: any) => isPointInEntity(e, pos));
+        const isEnemy = clickedEntity && clickedEntity.owner !== this.localPlayerId;
+        
+        if (clickedEntity && isEnemy) {
+          selectedUnits.forEach((u: any) => {
+            u.targetId = clickedEntity.id;
+            u.explicitAttack = true;
+            u.targetPosition = undefined;
+            u.path = undefined;
+          });
+        } else {
+          this.issueMoveOrder(selectedUnits, pos);
+          selectedUnits.forEach((u: any) => {
+            u.explicitAttack = false;
+            u.targetId = undefined;
+          });
+        }
+        this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
+      } else {
+        this.state.entities.forEach((e: any) => e.selected = false);
+      }
     } else {
-      // Deselect all
+      // In online mode, right click just deselects or cancels for now
       this.state.entities.forEach((e: any) => e.selected = false);
     }
     this.state.interactionMode = 'DEFAULT';
@@ -36,14 +59,19 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
   if (this.state.placingBuilding) {
     const buildType = this.state.placingBuilding;
     const placePos = { ...pos }; // Position to place
-    if (this.role === 'CLIENT') {
+    const newBuildingId = `${buildType}-${Date.now()}-${Math.random()}`;
+    if (this.role === 'CLIENT' || this.role === 'HOST') {
         this.socket.emit('client_command', {
             roomId: this.roomId,
-            command: { type: 'PLACE_BUILDING', pos: placePos, buildType: buildType, owner: this.localPlayerId }
+            command: { type: 'PLACE_BUILDING', pos: placePos, buildType: buildType, owner: this.localPlayerId, entityId: newBuildingId }
         });
-        this.placeBuilding(pos); // Оптимистичное локальное выполнение
-    } else {
-        this.placeBuilding(pos);
+        this.state.placingBuilding = null; // Clear UI state, wait for server
+        return;
+    } 
+    
+    // OFFLINE mode execution
+    if (this.placeBuildingAt(placePos, buildType, this.localPlayerId, newBuildingId)) {
+        this.state.placingBuilding = null;
     }
     return;
   }
@@ -152,6 +180,8 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
   const selectedBuildings = this.state.entities.filter((e: any) => e.selected && e.owner === this.localPlayerId && e.type === 'BUILDING');
 
   // If we have units selected and we click on ground or enemy -> Give Order
+  // Support both left click (if interaction mode is default) and potentially right click logic if we want, 
+  // but for now let's ensure the existing logic works in OFFLINE mode.
   if (selectedUnits.length > 0) {
     const isEnemy = clickedEntity && clickedEntity.owner !== this.localPlayerId;
     const isForceAttack = isCtrlKey;
@@ -168,7 +198,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
         entity.selectionResponseTime = performance.now();
       });
 
-      if (this.role === 'CLIENT') {
+      if (this.role === 'CLIENT' || this.role === 'HOST') {
           this.socket.emit('client_command', {
               roomId: this.roomId,
               command: {
@@ -178,21 +208,31 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
                   targetId: clickedEntity ? clickedEntity.id : undefined
               }
           });
-          // Оптимистичное выполнение
+          return;
       }
 
-      if (clickedEntity && (isEnemy || isForceAttack || isEngineerAction)) {
+      // OFFLINE mode execution (or SERVER)
+      if (clickedEntity && isEnemy) {
           selectedUnits.forEach((u: any) => {
               u.targetId = clickedEntity.id;
               u.explicitAttack = true;
-              u.path = undefined;
               u.targetPosition = undefined;
+              u.path = undefined;
+          });
+      } else if (clickedEntity && isEngineerAction) {
+          selectedUnits.forEach((u: any) => {
+              if (u.subType === 'ENGINEER') {
+                u.targetId = clickedEntity.id;
+                u.targetPosition = undefined;
+              }
           });
       } else {
           this.issueMoveOrder(selectedUnits, pos);
-          selectedUnits.forEach((u: any) => { u.explicitAttack = false; u.targetId = undefined; });
+          selectedUnits.forEach((u: any) => {
+              u.explicitAttack = false;
+              u.targetId = undefined;
+          });
       }
-
       return;
     }
   }
@@ -203,11 +243,13 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       ['BARRACKS', 'ALLIED_BARRACKS', 'WAR_FACTORY', 'ALLIED_WAR_FACTORY', 'NAVAL_YARD', 'ALLIED_NAVAL_YARD', 'AIR_FORCE_COMMAND'].includes(b.subType || '')
     );
     if (prodBuildings.length > 0) {
-      if (this.role === 'CLIENT') {
+      if (this.role === 'CLIENT' || this.role === 'HOST') {
         this.socket.emit('client_command', {
             roomId: this.roomId,
             command: { type: 'SET_RALLY_POINT', buildingIds: prodBuildings.map((b:any) => b.id), pos: { ...pos }, owner: this.localPlayerId }
         });
+        this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
+        return;
       }
       prodBuildings.forEach((b: any) => b.rallyPoint = { ...pos });
       this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
