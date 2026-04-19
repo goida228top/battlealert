@@ -85,7 +85,7 @@ async function startServer() {
             io.to(room.id).emit('game_state_update', syncState);
         }
     }
-  }, 100); // 10 updates a second
+  }, 50); // 20 updates a second (smoother)
 
   io.on('connection', (socket) => {
     globalConnectionsCount++;

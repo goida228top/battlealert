@@ -3,10 +3,14 @@ import { Entity, BuildingType } from '../types';
 import { getBuildingDimensions } from './getBuildingDimensions';
 
 export function update(this: any, timestamp: number) {
+  if (this.lastUpdate === 0) {
+      this.lastUpdate = timestamp;
+      return;
+  }
   const dt = (timestamp - this.lastUpdate) / 16.67; // normalize to ~60fps
   this.lastUpdate = timestamp;
 
-  if (dt > 5) return; // Prevent huge jumps
+  if (dt > 100) return; // Prevent massive jumps, but allow server-side 10-20Hz loops
 
   if (this.role === 'CLIENT') {
       // Плавная интерполяция серверных позиций на клиенте

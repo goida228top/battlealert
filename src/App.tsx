@@ -737,23 +737,6 @@ export default function App() {
       }
 
       // Selection Response Text
-      if (entity.selectionResponse && entity.selectionResponseTime && timestamp - entity.selectionResponseTime < 2000) {
-        const age = timestamp - entity.selectionResponseTime;
-        const opacity = Math.min(1, 2 - age / 1000);
-        ctx.save();
-        ctx.setTransform(1, 0, 0, 1, 0, 0); // Reset transform for text
-        const screenX = entity.position.x * camera.zoom + camera.x;
-        const screenY = entity.position.y * camera.zoom + camera.y;
-        
-        ctx.fillStyle = `rgba(255, 255, 255, ${opacity})`;
-        ctx.font = 'bold 12px sans-serif';
-        ctx.textAlign = 'center';
-        ctx.shadowColor = 'black';
-        ctx.shadowBlur = 4;
-        ctx.fillText(entity.selectionResponse, screenX, screenY - entity.size * camera.zoom - 20 - (age / 50));
-        ctx.restore();
-      }
-
       // Harvester load bar
       if (entity.subType === 'HARVESTER' && entity.harvestAmount !== undefined) {
         const loadWidth = entity.size;

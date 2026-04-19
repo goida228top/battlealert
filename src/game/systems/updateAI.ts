@@ -58,8 +58,8 @@ if (aiMCV && !aiEntities.some(e => e.subType === 'CONSTRUCTION_YARD' || e.subTyp
   this.deployMCV(aiMCV.id);
 }
 
-// AI Cheat Income to keep up with players (Passive 5 credits per tick ~ 300 per sec)
-addCredits(5);
+// AI Cheat Income to keep up with players (Passive 15 credits per tick ~ 450 per sec at 30Hz)
+addCredits(15);
 
 // Vision Check
 if (!botState.knownPlayerBase) {
@@ -141,26 +141,28 @@ if (timestamp > botState.nextBuildTime) {
   }
 }
 
-// Produce Units
+// Infantry Production
 const aiBarracks = aiEntities.find(e => e.subType === 'BARRACKS' || e.subType === 'ALLIED_BARRACKS');
 if (aiBarracks) {
     const isAllied = aiBarracks.subType === 'ALLIED_BARRACKS';
     const mainInfantry = isAllied ? 'GI' : 'SOLDIER';
     const antiAirInfantry = isAllied ? 'ROCKETEER' : 'FLAK_TROOPER';
-    const specialInfantry1 = isAllied ? 'NAVY_SEAL' : 'TESLA_TROOPER';
-    const specialInfantry2 = isAllied ? 'CHRONO_LEGIONNAIRE' : 'DESOLATOR';
+    const specialInfantry = isAllied ? 'TANYA' : 'BORIS';
 
-    if (aiEntities.filter(e => e.subType === mainInfantry).length < 20) {
+    const infantryQueue = getQueueLocal().filter(q => this.getCategory(q.subType) === 'INFANTRY');
+    
+    if (infantryQueue.length < 5) {
+      if (aiEntities.filter(e => e.subType === mainInfantry).length < 15) {
         this.startProduction(mainInfantry, botOwner);
-    } else if (aiEntities.filter(e => e.subType === antiAirInfantry).length < 8 && this.isUnlocked(antiAirInfantry, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === antiAirInfantry).length < 6 && this.isUnlocked(antiAirInfantry, botOwner)) {
         this.startProduction(antiAirInfantry, botOwner);
-    } else if (aiEntities.filter(e => e.subType === specialInfantry1).length < 5 && this.isUnlocked(specialInfantry1, botOwner)) {
-        this.startProduction(specialInfantry1, botOwner);
-    } else if (aiEntities.filter(e => e.subType === specialInfantry2).length < 3 && this.isUnlocked(specialInfantry2, botOwner)) {
-        this.startProduction(specialInfantry2, botOwner);
+      } else if (aiEntities.filter(e => e.subType === specialInfantry).length < 1 && this.isUnlocked(specialInfantry, botOwner)) {
+        this.startProduction(specialInfantry, botOwner);
+      }
     }
 }
 
+// Vehicle Production
 const aiFactory = aiEntities.find(e => e.subType === 'WAR_FACTORY' || e.subType === 'ALLIED_WAR_FACTORY');
 if (aiFactory) {
     const isAllied = aiFactory.subType === 'ALLIED_WAR_FACTORY';
@@ -169,14 +171,18 @@ if (aiFactory) {
     const offensiveTank = isAllied ? 'IFV' : 'RHINO_TANK';
     const heavyTank = isAllied ? 'BATTLE_FORTRESS' : 'APOCALYPSE_TANK';
 
-    if (aiEntities.filter(e => e.subType === mainHarvester).length < 5) {
+    const vehicleQueue = getQueueLocal().filter(q => this.getCategory(q.subType) === 'VEHICLES');
+
+    if (vehicleQueue.length < 3) {
+      if (aiEntities.filter(e => e.subType === mainHarvester).length < 2) {
         this.startProduction(mainHarvester, botOwner);
-    } else if (aiEntities.filter(e => e.subType === mainTank).length < 12) {
+      } else if (aiEntities.filter(e => e.subType === mainTank).length < 8) {
         this.startProduction(mainTank, botOwner);
-    } else if (aiEntities.filter(e => e.subType === offensiveTank).length < 10 && this.isUnlocked(offensiveTank, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === offensiveTank).length < 6 && this.isUnlocked(offensiveTank, botOwner)) {
         this.startProduction(offensiveTank, botOwner);
-    } else if (aiEntities.filter(e => e.subType === heavyTank).length < 5 && this.isUnlocked(heavyTank, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === heavyTank).length < 3 && this.isUnlocked(heavyTank, botOwner)) {
         this.startProduction(heavyTank, botOwner);
+      }
     }
 }
 

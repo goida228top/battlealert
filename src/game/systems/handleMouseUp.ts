@@ -1,4 +1,6 @@
 
+import { getBuildingDimensions } from './getBuildingDimensions';
+
 export function handleMouseUp(this: any) {
   if (this.state.selectionBox) {
     const { start, end } = this.state.selectionBox;
@@ -15,7 +17,7 @@ export function handleMouseUp(this: any) {
         let newlySelected = false;
         if (isSingleClick) {
           if (entity.type === 'BUILDING') {
-            const dims = this.getBuildingDimensions(entity.subType);
+            const dims = getBuildingDimensions(entity.subType);
             const w = dims.w * this.state.map.tileSize;
             const h = dims.h * this.state.map.tileSize;
             newlySelected = start.x >= entity.position.x - w/2 && start.x <= entity.position.x + w/2 &&
@@ -35,9 +37,7 @@ export function handleMouseUp(this: any) {
         }
 
         if (newlySelected && !entity.selected && entity.type === 'UNIT') {
-          const responses = ['Acknowledged', 'Yes, sir!', 'Moving out', 'On my way', 'Ready for action', 'Unit reporting'];
-          entity.selectionResponse = responses[Math.floor(Math.random() * responses.length)];
-          entity.selectionResponseTime = timestamp;
+          // No response text
         }
         entity.selected = newlySelected;
       }
