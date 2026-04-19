@@ -5,7 +5,7 @@ export function undeployConstructionYard(this: any, yardId: string) {
           roomId: this.roomId,
           command: { type: 'UNDEPLOY_YARD', yardId }
       });
-      return;
+      // Оптимистичное локальное выполнение
   }
 
   const yardIndex = this.state.entities.findIndex((e: any) => e.id === yardId);

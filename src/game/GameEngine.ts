@@ -292,6 +292,8 @@ export class GameEngine {
   public executeRemoteCommand(cmd: any) {
     if (cmd.type === 'START_PRODUCTION') {
         this.startProduction(cmd.subType, cmd.owner);
+    } else if (cmd.type === 'REMOVE_FROM_QUEUE') {
+        this.removeFromQueue(cmd.itemId, cmd.owner);
     } else if (cmd.type === 'PLACE_BUILDING') {
         this.placeBuildingAt(cmd.pos, cmd.buildType, cmd.owner);
     } else if (cmd.type === 'MOVE_OR_ATTACK') {
@@ -332,6 +334,33 @@ export class GameEngine {
         this.deployMCV(cmd.mcvId);
     } else if (cmd.type === 'UNDEPLOY_YARD') {
         this.undeployConstructionYard(cmd.yardId);
+    } else if (cmd.type === 'SET_RALLY_POINT') {
+        const buildings = this.state.entities.filter(e => cmd.buildingIds.includes(e.id));
+        buildings.forEach(b => b.rallyPoint = cmd.pos);
+    } else if (cmd.type === 'STOP_UNITS') {
+        const units = this.state.entities.filter(e => cmd.unitIds.includes(e.id));
+        units.forEach(u => {
+            u.targetPosition = undefined;
+            u.targetId = undefined;
+            u.path = undefined;
+            u.explicitAttack = false;
+        });
+    } else if (cmd.type === 'TOGGLE_DEPLOY') {
+        const unit = this.state.entities.find(e => e.id === cmd.unitId);
+        if (unit) {
+            unit.isDeployed = !unit.isDeployed;
+            unit.targetPosition = undefined;
+            unit.path = undefined;
+        }
+    } else if (cmd.type === 'SCATTER_UNITS') {
+        cmd.scatteredInfos.forEach((info: any) => {
+            const unit = this.state.entities.find(e => e.id === info.id);
+            if (unit) {
+                unit.targetPosition = info.targetPosition;
+                unit.path = [info.targetPosition];
+                unit.targetId = undefined;
+            }
+        });
     } else if (cmd.type === 'DEBUG_GIVE_CREDITS') {
         const id = cmd.playerId;
         if (id === 'PLAYER') this.state.credits += 100000;
@@ -536,11 +565,40 @@ export class GameEngine {
     return placeBuilding.call(this, pos);
   }
 
-  public removeFromQueue(itemId: string) {
-    this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== itemId);
-    if (this.state.p2ProductionQueue) this.state.p2ProductionQueue = this.state.p2ProductionQueue.filter(q => q.id !== itemId);
-    if (this.state.p3ProductionQueue) this.state.p3ProductionQueue = this.state.p3ProductionQueue.filter(q => q.id !== itemId);
-    if (this.state.p4ProductionQueue) this.state.p4ProductionQueue = this.state.p4ProductionQueue.filter(q => q.id !== itemId);
+  public removeFromQueue(itemId: string, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    
+    if (this.role === 'CLIENT' && actualOwner === this.localPlayerId) {
+        this.socket.emit('client_command', {
+            roomId: this.roomId,
+            command: { type: 'REMOVE_FROM_QUEUE', itemId, owner: actualOwner }
+        });
+        // Optimistic UI update
+    }
+
+    if (actualOwner === 'PLAYER') {
+        const item = this.state.productionQueue.find(q => q.id === itemId);
+        if (item) this.state.credits += item.cost; // Refund
+        this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== itemId);
+    } else if (actualOwner === 'PLAYER_2') {
+        if (this.state.p2ProductionQueue) {
+            const item = this.state.p2ProductionQueue.find(q => q.id === itemId);
+            if (item) this.state.p2Credits = (this.state.p2Credits || 0) + item.cost;
+            this.state.p2ProductionQueue = this.state.p2ProductionQueue.filter(q => q.id !== itemId);
+        }
+    } else if (actualOwner === 'PLAYER_3') {
+        if (this.state.p3ProductionQueue) {
+            const item = this.state.p3ProductionQueue.find(q => q.id === itemId);
+            if (item) this.state.p3Credits = (this.state.p3Credits || 0) + item.cost;
+            this.state.p3ProductionQueue = this.state.p3ProductionQueue.filter(q => q.id !== itemId);
+        }
+    } else if (actualOwner === 'PLAYER_4') {
+        if (this.state.p4ProductionQueue) {
+            const item = this.state.p4ProductionQueue.find(q => q.id === itemId);
+            if (item) this.state.p4Credits = (this.state.p4Credits || 0) + item.cost;
+            this.state.p4ProductionQueue = this.state.p4ProductionQueue.filter(q => q.id !== itemId);
+        }
+    }
   }
 
   // Helper methods for other systems

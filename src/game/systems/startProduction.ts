@@ -9,7 +9,7 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
           roomId: this.roomId,
           command: { type: 'START_PRODUCTION', subType, owner: actualOwner }
       });
-      return;
+      // Оптимистичное обновление очереди, НЕ возвращаемся через return
   }
 
   const category = this.getCategory(subType);

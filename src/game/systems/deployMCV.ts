@@ -5,7 +5,7 @@ export function deployMCV(this: any, mcvId: string) {
           roomId: this.roomId,
           command: { type: 'DEPLOY_MCV', mcvId }
       });
-      return;
+      // Оптимистичное локальное выполнение
   }
 
   const mcvIndex = this.state.entities.findIndex((e: any) => e.id === mcvId);

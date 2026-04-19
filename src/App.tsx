@@ -1083,13 +1083,21 @@ export default function App() {
       }
       if (e.key.toLowerCase() === 's') {
         // Stop command
+        const stoppedIds: string[] = [];
         engineRef.current.state.entities.forEach(entity => {
           if (entity.selected && entity.owner === engineRef.current.localPlayerId) {
             entity.targetPosition = undefined;
             entity.targetId = undefined;
             entity.path = undefined;
+            stoppedIds.push(entity.id);
           }
         });
+        if (stoppedIds.length > 0 && engineRef.current.role === 'CLIENT') {
+          engineRef.current.socket.emit('client_command', {
+            roomId: engineRef.current.roomId,
+            command: { type: 'STOP_UNITS', unitIds: stoppedIds, owner: engineRef.current.localPlayerId }
+          });
+        }
         setGameState({ ...engineRef.current.state });
       }
       if (e.key.toLowerCase() === 'd') {
@@ -1100,15 +1108,14 @@ export default function App() {
               entity.isDeployed = !entity.isDeployed;
               entity.targetPosition = undefined;
               entity.path = undefined;
-            } else if (entity.subType === 'MCV' || entity.subType === 'ALLIED_MCV') {
               if (engineRef.current.role === 'CLIENT') {
                 engineRef.current.socket.emit('client_command', {
                   roomId: engineRef.current.roomId,
-                  command: { type: 'DEPLOY_MCV', mcvId: entity.id }
+                  command: { type: 'TOGGLE_DEPLOY', unitId: entity.id, owner: engineRef.current.localPlayerId }
                 });
-              } else {
-                engineRef.current.deployMCV(entity.id);
               }
+            } else if (entity.subType === 'MCV' || entity.subType === 'ALLIED_MCV') {
+              engineRef.current.deployMCV(entity.id);
             }
           }
         });
@@ -1116,6 +1123,7 @@ export default function App() {
       }
       if (e.key.toLowerCase() === 'x') {
         // Scatter command
+        const scatteredInfos: any[] = [];
         engineRef.current.state.entities.forEach(entity => {
           if (entity.selected && entity.owner === engineRef.current.localPlayerId && entity.type === 'UNIT' && !entity.isDeployed) {
             const angle = Math.random() * Math.PI * 2;
@@ -1126,8 +1134,15 @@ export default function App() {
             };
             entity.path = [entity.targetPosition];
             entity.targetId = undefined;
+            scatteredInfos.push({ id: entity.id, targetPosition: entity.targetPosition });
           }
         });
+        if (scatteredInfos.length > 0 && engineRef.current.role === 'CLIENT') {
+          engineRef.current.socket.emit('client_command', {
+            roomId: engineRef.current.roomId,
+            command: { type: 'SCATTER_UNITS', scatteredInfos, owner: engineRef.current.localPlayerId }
+          });
+        }
         setGameState({ ...engineRef.current.state });
       }
     };

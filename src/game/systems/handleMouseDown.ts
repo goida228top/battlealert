@@ -41,7 +41,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
             roomId: this.roomId,
             command: { type: 'PLACE_BUILDING', pos: placePos, buildType: buildType, owner: this.localPlayerId }
         });
-        this.startPlacing(null);
+        this.placeBuilding(pos); // Оптимистичное локальное выполнение
     } else {
         this.placeBuilding(pos);
     }
@@ -57,6 +57,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       if (building) {
         if (this.role === 'CLIENT') {
           this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'SELL_BUILDING', entityId: building.id, owner: this.localPlayerId }});
+          this.sellBuilding(building); // Оптимистичное выполнение
         } else {
           this.sellBuilding(building);
         }
@@ -72,6 +73,15 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       if (building) {
         if (this.role === 'CLIENT') {
           this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'REPAIR_BUILDING', entityId: building.id, owner: this.localPlayerId }});
+          if (this.repairBuilding(building)) { // Оптимистичное выполнение
+            this.state.effects.push({
+              id: `repair-${Date.now()}-${Math.random()}`,
+              type: 'MUZZLE_FLASH',
+              position: { ...building.position },
+              startTime: performance.now(),
+              duration: 500,
+            });
+          }
         } else {
           if (this.repairBuilding(building)) {
             this.state.effects.push({
@@ -95,6 +105,12 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     if (abilityModes.includes(this.state.interactionMode)) {
       if (this.role === 'CLIENT') {
         this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: this.state.interactionMode, pos: { ...pos }, owner: this.localPlayerId }});
+        // Оптимистичное выполнение
+        if (this.state.interactionMode === 'USE_IRON_CURTAIN') this.useIronCurtain(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_SPY_PLANE') this.useSpyPlane(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_PARATROOPERS') this.useParatroopers(pos, this.localPlayerId);
+        if (this.state.interactionMode === 'USE_WEATHER_STORM') this.useWeatherStorm(pos, this.localPlayerId);
       } else {
         if (this.state.interactionMode === 'USE_IRON_CURTAIN') this.useIronCurtain(pos, this.localPlayerId);
         if (this.state.interactionMode === 'USE_NUCLEAR_STRIKE') this.useNuclearStrike(pos, this.localPlayerId);
@@ -110,6 +126,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       if ((this as any).chronosphereSelection) {
         if (this.role === 'CLIENT') {
           this.socket.emit('client_command', { roomId: this.roomId, command: { type: 'USE_ABILITY', ability: 'USE_CHRONOSPHERE_EXECUTE', pos: { ...pos }, selectionObj: (this as any).chronosphereSelection, owner: this.localPlayerId }});
+          this.executeChronosphereTeleport(pos, this.localPlayerId); // Оптимистично
           (this as any).chronosphereSelection = null;
         } else {
           this.executeChronosphereTeleport(pos, this.localPlayerId);
@@ -161,7 +178,7 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
                   targetId: clickedEntity ? clickedEntity.id : undefined
               }
           });
-          return;
+          // Оптимистичное выполнение
       }
 
       if (clickedEntity && (isEnemy || isForceAttack || isEngineerAction)) {
@@ -186,6 +203,12 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
       ['BARRACKS', 'ALLIED_BARRACKS', 'WAR_FACTORY', 'ALLIED_WAR_FACTORY', 'NAVAL_YARD', 'ALLIED_NAVAL_YARD', 'AIR_FORCE_COMMAND'].includes(b.subType || '')
     );
     if (prodBuildings.length > 0) {
+      if (this.role === 'CLIENT') {
+        this.socket.emit('client_command', {
+            roomId: this.roomId,
+            command: { type: 'SET_RALLY_POINT', buildingIds: prodBuildings.map((b:any) => b.id), pos: { ...pos }, owner: this.localPlayerId }
+        });
+      }
       prodBuildings.forEach((b: any) => b.rallyPoint = { ...pos });
       this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
       return;
