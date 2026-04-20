@@ -747,23 +747,6 @@ export default function App() {
         ctx.fillRect(-loadWidth/2, -entity.size/2 - 18, currentLoadWidth, 3 / camera.zoom);
       }
 
-      // Construction animation for buildings
-      if (entity.type === 'BUILDING' && entity.constructionStartTime) {
-        const constructionAge = performance.now() - entity.constructionStartTime;
-        if (constructionAge < 2000) {
-          const dims = getBuildingDimensions(entity.subType as BuildingType);
-          const width = dims.w * mapTileSize;
-          const height = dims.h * mapTileSize;
-          const constructionProgress = constructionAge / 2000;
-          ctx.fillStyle = 'rgba(50, 50, 50, 0.9)';
-          // Draw a gray box that "shrinks" from top to bottom as building is built
-          ctx.fillRect(-width/2, -height/2, width, height * (1 - constructionProgress));
-          
-          // Draw a progress bar on top
-          ctx.fillStyle = '#4ade80';
-          ctx.fillRect(-width/2, -height/2 - 5, width * constructionProgress, 3);
-        }
-      }
 
       // Repair Icon
       if (entity.isRepairing) {
