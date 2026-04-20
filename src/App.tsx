@@ -718,17 +718,14 @@ export default function App() {
 
       // Health bar
       if (entity.selected || entity.health < entity.maxHealth) {
-        // Cap health bar width to entity size
-        const healthBarWidth = entity.size; 
-        const healthPercentage = Math.max(0, Math.min(1, entity.health / entity.maxHealth));
-        const currentHealthWidth = healthPercentage * healthBarWidth;
-        
+        const healthWidth = entity.size;
+        const currentHealthWidth = (entity.health / entity.maxHealth) * healthWidth;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
-        // Positioned slightly above the entity
-        ctx.fillRect(-healthBarWidth/2, -entity.size/2 - 12, healthBarWidth, 4);
+        ctx.fillRect(-healthWidth/2, -entity.size/2 - 12, healthWidth, 4 / camera.zoom);
         
-        ctx.fillStyle = isInvulnerable ? '#ef4444' : (healthPercentage > 0.5 ? '#22c55e' : (healthPercentage > 0.25 ? '#eab308' : '#ef4444'));
-        ctx.fillRect(-healthBarWidth/2, -entity.size/2 - 12, currentHealthWidth, 4);
+        ctx.fillStyle = isInvulnerable ? '#ef4444' : (entity.health / entity.maxHealth > 0.5 ? '#22c55e' : '#eab308');
+        if (!isInvulnerable && entity.health / entity.maxHealth < 0.25) ctx.fillStyle = '#ef4444';
+        ctx.fillRect(-healthWidth/2, -entity.size/2 - 12, currentHealthWidth, 4 / camera.zoom);
       }
 
       if (isInvulnerable) {
@@ -754,15 +751,17 @@ export default function App() {
       if (entity.type === 'BUILDING' && entity.constructionStartTime) {
         const constructionAge = performance.now() - entity.constructionStartTime;
         if (constructionAge < 2000) {
-          const constructionProgress = Math.min(1, constructionAge / 2000);
-          
+          const dims = getBuildingDimensions(entity.subType as BuildingType);
+          const width = dims.w * mapTileSize;
+          const height = dims.h * mapTileSize;
+          const constructionProgress = constructionAge / 2000;
           ctx.fillStyle = 'rgba(50, 50, 50, 0.9)';
-          // Ensure drawing takes place strictly within entity bounds
-          ctx.fillRect(-entity.size/2, -entity.size/2, entity.size, entity.size * (1 - constructionProgress));
+          // Draw a gray box that "shrinks" from top to bottom as building is built
+          ctx.fillRect(-width/2, -height/2, width, height * (1 - constructionProgress));
           
-          // Progress bar above the building, not flying
+          // Draw a progress bar on top
           ctx.fillStyle = '#4ade80';
-          ctx.fillRect(-entity.size/2, -entity.size/2 - 10, entity.size * constructionProgress, 5);
+          ctx.fillRect(-width/2, -height/2 - 5, width * constructionProgress, 3);
         }
       }
 

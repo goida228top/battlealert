@@ -24,7 +24,9 @@ import { getCategory } from "./systems/getCategory";
 import { getCost } from "./systems/getCost";
 import { getBuildTime } from "./systems/getBuildTime";
 
-// New system imports
+import { getBuildingDimensions } from "./systems/getBuildingDimensions";
+ 
+ // New system imports
 import { initGame } from "./systems/initGame";
 import { calculatePath } from "./systems/calculatePath";
 import { update } from "./systems/update";
@@ -553,6 +555,10 @@ export class GameEngine {
   // Helper methods for other systems
   public getCategory(type: string) {
     return getCategory.call(this, type);
+  }
+
+  public getBuildingDimensions(type: BuildingType) {
+    return getBuildingDimensions(type);
   }
 
   public updateProjectiles(dt: number, timestamp: number) {
