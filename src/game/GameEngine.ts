@@ -58,6 +58,8 @@ export class GameEngine {
   public roomId: string | null = null;
   public socket: any = null;
   public localPlayerId: string = 'PLAYER';
+  public ping: number = 0;
+  private pingInterval: any = null;
 
   private lastUpdate: number = 0;
   private aiBuildOrder: BuildingType[] = [
@@ -234,6 +236,17 @@ export class GameEngine {
                 this.state.playerColors = newState.playerColors;
                 this.state.gameOver = newState.gameOver;
             }
+        });
+
+        // Setup ping measurement
+        if (this.pingInterval) clearInterval(this.pingInterval);
+        this.pingInterval = setInterval(() => {
+             if (this.socket) {
+                 this.socket.emit('ping_req', Date.now());
+             }
+        }, 1000);
+        this.socket.on('ping_res', (time: number) => {
+             this.ping = Date.now() - time;
         });
     }
   }

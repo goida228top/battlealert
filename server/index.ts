@@ -85,12 +85,17 @@ async function startServer() {
             io.to(room.id).emit('game_state_update', syncState);
         }
     }
-  }, 50); // 20 updates a second (smoother)
+  }, 100); // 10 updates a second (optimized for network lag)
 
   io.on('connection', (socket) => {
     globalConnectionsCount++;
     console.log(`[JOIN] ${socket.id} (Total: ${io.engine.clientsCount})`);
     
+    // Ping handler for latency measurement
+    socket.on('ping_req', (timestamp) => {
+       socket.emit('ping_res', timestamp);
+    });
+
     // Immediate full sync for the newcomer
     socket.emit('rooms_list', getRoomsList());
 

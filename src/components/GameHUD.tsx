@@ -58,6 +58,14 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
       {/* Scanline Effect */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
       
+      {/* Network Ping Indicator */}
+      <div className="absolute top-2 left-2 z-50 pointer-events-none">
+        <div className={`px-1.5 py-0.5 bg-black/60 backdrop-blur-sm rounded flex items-center gap-1.5 border ${engineRef.current.ping > 150 ? 'border-red-900/50 text-red-500 shadow-[0_0_5px_rgba(239,68,68,0.3)]' : engineRef.current.ping > 75 ? 'border-yellow-900/50 text-yellow-500 shadow-[0_0_5px_rgba(234,179,8,0.3)]' : 'border-green-900/50 text-green-500 shadow-[0_0_5px_rgba(34,197,94,0.3)]'}`}>
+          <div className={`w-1.5 h-1.5 rounded-full ${engineRef.current.ping > 150 ? 'bg-red-500' : engineRef.current.ping > 75 ? 'bg-yellow-500' : 'bg-green-500'} ${engineRef.current.ping > 150 ? 'animate-ping' : 'animate-pulse'}`} />
+          <span className="text-[10px] font-mono font-black">{engineRef.current.ping} MS</span>
+        </div>
+      </div>
+
       {/* Minimap Section (Top) */}
       <div className="p-2 bg-zinc-900/50 border-b border-zinc-800 aspect-square flex items-center justify-center relative overflow-hidden">
         {localGameState.entities.some(e => e.type === 'BUILDING' && e.owner === engineRef.current.localPlayerId && (e.subType === 'RADAR' || e.subType === 'AIR_FORCE_COMMAND')) && localGameState.power >= localGameState.powerConsumption ? (
