@@ -167,6 +167,7 @@ export interface GameState {
     WEATHER_DEVICE: { ready: boolean; lastUsed: number; cooldown: number };
   };
   botSlots?: string[];
+  botDifficulties?: Record<string, string>;
   p3SpecialAbilities?: {
     IRON_CURTAIN: { ready: boolean; lastUsed: number; cooldown: number };
     NUCLEAR_SILO: { ready: boolean; lastUsed: number; cooldown: number };

@@ -88,8 +88,8 @@ export class GameEngine {
     this.initGame();
   }
 
-  public resetGame(faction: Faction, country: Country, mapId: string = 'RIVER_DIVIDE') {
-    return resetGame.call(this, faction, country, mapId);
+  public resetGame(faction: Faction, country: Country, mapId: string = 'RIVER_DIVIDE', botDifficulty: string = 'NORMAL') {
+    return resetGame.call(this, faction, country, mapId, botDifficulty);
   }
 
   public initGame(mapId: string = 'RIVER_DIVIDE') {
@@ -113,6 +113,7 @@ export class GameEngine {
     if (roomInfo && roomInfo.players) {
        this.state.playerMappings = {};
        this.state.playerColors = {};
+       this.state.botDifficulties = {};
        
        const slots = ['PLAYER', 'PLAYER_2', 'PLAYER_3', 'PLAYER_4'];
        roomInfo.players.forEach((p: any, index: number) => {
@@ -122,6 +123,7 @@ export class GameEngine {
            if (p.isBot) {
                if (!this.state.botSlots) this.state.botSlots = [];
                this.state.botSlots.push(slot);
+               this.state.botDifficulties![slot] = p.difficulty || 'NORMAL';
            }
            
            if (socket && p.id === socket.id) {

@@ -50,6 +50,12 @@ export function updateAI(this: GameEngine, timestamp: number): void {
      };
 
      // The core logic starts here:
+     const difficulty = this.state.botDifficulties?.[botOwner] || 'NORMAL';
+     const diffParams = {
+        EASY: { income: 5, buildDelay: 6000, infLmt: 8, tnkLmt: 4, atkLimit: 12, atkDelay: 45000 },
+        NORMAL: { income: 15, buildDelay: 3000, infLmt: 15, tnkLmt: 8, atkLimit: 20, atkDelay: 25000 },
+        HARD: { income: 40, buildDelay: 1000, infLmt: 30, tnkLmt: 16, atkLimit: 30, atkDelay: 15000 }
+     }[difficulty] || { income: 15, buildDelay: 3000, infLmt: 15, tnkLmt: 8, atkLimit: 20, atkDelay: 25000 };
 
 const aiEntities = this.state.entities.filter(e => e.owner === botOwner);
 const aiMCV = aiEntities.find(e => e.subType === 'MCV' || e.subType === 'ALLIED_MCV');
@@ -58,8 +64,8 @@ if (aiMCV && !aiEntities.some(e => e.subType === 'CONSTRUCTION_YARD' || e.subTyp
   this.deployMCV(aiMCV.id);
 }
 
-// AI Cheat Income to keep up with players (Passive 15 credits per tick ~ 450 per sec at 30Hz)
-addCredits(15);
+// AI Cheat Income to keep up with players
+addCredits(diffParams.income);
 
 // Vision Check
 if (!botState.knownPlayerBase) {
@@ -136,7 +142,7 @@ if (timestamp > botState.nextBuildTime) {
         if (getCreditsLocal() >= cost && getQueueLocal().filter(q => ['BUILDINGS', 'DEFENSE'].includes(this.getCategory(q.subType))).length === 0) {
             this.startProduction(nextToBuild, botOwner);
         }
-        botState.nextBuildTime = timestamp + 3000; // Faster building
+        botState.nextBuildTime = timestamp + diffParams.buildDelay; // Scale build speed based on difficulty
     }
   }
 }
@@ -152,11 +158,11 @@ if (aiBarracks) {
     const infantryQueue = getQueueLocal().filter(q => this.getCategory(q.subType) === 'INFANTRY');
     
     if (infantryQueue.length < 5) {
-      if (aiEntities.filter(e => e.subType === mainInfantry).length < 15) {
+      if (aiEntities.filter(e => e.subType === mainInfantry).length < diffParams.infLmt) {
         this.startProduction(mainInfantry, botOwner);
-      } else if (aiEntities.filter(e => e.subType === antiAirInfantry).length < 6 && this.isUnlocked(antiAirInfantry, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === antiAirInfantry).length < Math.floor(diffParams.infLmt * 0.4) && this.isUnlocked(antiAirInfantry, botOwner)) {
         this.startProduction(antiAirInfantry, botOwner);
-      } else if (aiEntities.filter(e => e.subType === specialInfantry).length < 1 && this.isUnlocked(specialInfantry, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === specialInfantry).length < Math.floor(diffParams.infLmt * 0.1) && this.isUnlocked(specialInfantry, botOwner)) {
         this.startProduction(specialInfantry, botOwner);
       }
     }
@@ -176,11 +182,11 @@ if (aiFactory) {
     if (vehicleQueue.length < 3) {
       if (aiEntities.filter(e => e.subType === mainHarvester).length < 2) {
         this.startProduction(mainHarvester, botOwner);
-      } else if (aiEntities.filter(e => e.subType === mainTank).length < 8) {
+      } else if (aiEntities.filter(e => e.subType === mainTank).length < diffParams.tnkLmt) {
         this.startProduction(mainTank, botOwner);
-      } else if (aiEntities.filter(e => e.subType === offensiveTank).length < 6 && this.isUnlocked(offensiveTank, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === offensiveTank).length < Math.floor(diffParams.tnkLmt * 0.75) && this.isUnlocked(offensiveTank, botOwner)) {
         this.startProduction(offensiveTank, botOwner);
-      } else if (aiEntities.filter(e => e.subType === heavyTank).length < 3 && this.isUnlocked(heavyTank, botOwner)) {
+      } else if (aiEntities.filter(e => e.subType === heavyTank).length < Math.floor(diffParams.tnkLmt * 0.4) && this.isUnlocked(heavyTank, botOwner)) {
         this.startProduction(heavyTank, botOwner);
       }
     }
@@ -224,7 +230,7 @@ const combatUnits = aiEntities.filter(e => [
   'DESTROYER', 'AEGIS_CRUISER', 'AIRCRAFT_CARRIER', 'DOLPHIN'
 ].includes(e.subType || ''));
 
-if (!botState.knownPlayerBase && combatUnits.length >= 3 && timestamp > botState.scoutTime) {
+if (!botState.knownPlayerBase && combatUnits.length >= Math.ceil(diffParams.atkLimit / 2) && timestamp > botState.scoutTime) {
   // Send a scout to find the player
   const scout = combatUnits.find(u => !u.targetPosition);
   if (scout) {
@@ -235,13 +241,13 @@ if (!botState.knownPlayerBase && combatUnits.length >= 3 && timestamp > botState
   }
 }
 
-if (botState.knownPlayerBase && combatUnits.length >= 6 && timestamp > botState.attackTime) {
+if (botState.knownPlayerBase && combatUnits.length >= diffParams.atkLimit && timestamp > botState.attackTime) {
   combatUnits.forEach(u => {
     u.path = this.calculatePath(u.position, botState.knownPlayerBase!);
     u.targetPosition = u.path[0];
     u.targetId = undefined;
   });
-  botState.attackTime = timestamp + 30000; // Attack every 30s
+  botState.attackTime = timestamp + diffParams.atkDelay; // Attack pacing based on difficulty
 }
 
 // Crate Seeking Logic

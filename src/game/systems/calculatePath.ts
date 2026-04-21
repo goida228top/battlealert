@@ -11,15 +11,21 @@ interface Node {
   parent: Node | null;
 }
 
-export function calculatePath(this: any, start: Vector2, end: Vector2): Vector2[] {
+export function calculatePath(this: any, start: Vector2, endRaw: Vector2): Vector2[] {
   const tileSize = this.state.map.tileSize;
   const mapWidth = this.state.map.width;
   const mapHeight = this.state.map.height;
 
+  // Clamp desired end position so we never path out of bounds
+  const end = {
+    x: Math.max(0, Math.min(mapWidth * tileSize - 1, endRaw.x)),
+    y: Math.max(0, Math.min(mapHeight * tileSize - 1, endRaw.y))
+  };
+
   // Convert world coordinates to tile coordinates
   const startTile = {
-    x: Math.floor(start.x / tileSize),
-    y: Math.floor(start.y / tileSize)
+    x: Math.floor(start.x / Math.max(1, tileSize)),
+    y: Math.floor(start.y / Math.max(1, tileSize))
   };
   const endTile = {
     x: Math.floor(end.x / tileSize),

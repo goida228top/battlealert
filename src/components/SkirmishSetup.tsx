@@ -125,6 +125,19 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
               </div>
             </div>
 
+            <div className="mt-6 flex flex-col gap-2">
+              <label className="block text-zinc-400 text-sm font-bold uppercase tracking-wider">Сложность противника</label>
+              <select 
+                id="skirmish-bot-difficulty"
+                className="bg-black border border-zinc-700 text-sm p-3 rounded text-white font-bold tracking-widest outline-none focus:border-red-500 transition-colors"
+                defaultValue="NORMAL"
+              >
+                <option value="EASY">Легкий</option>
+                <option value="NORMAL">Средний</option>
+                <option value="HARD">Тяжелый</option>
+              </select>
+            </div>
+
             <div className="flex-1 flex flex-col items-center justify-center border-2 border-dashed border-zinc-700 text-zinc-500 mt-4">
               <span className="mb-2">Превью карты (Недоступно)</span>
               <span className="text-xs text-zinc-600 text-center">
@@ -146,7 +159,8 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
           </button>
           <button 
             onClick={() => {
-              engineRef.current.resetGame(selectedFaction, selectedCountry, selectedMap);
+              const botDiff = (document.getElementById('skirmish-bot-difficulty') as HTMLSelectElement)?.value || 'NORMAL';
+              engineRef.current.resetGame(selectedFaction, selectedCountry, selectedMap, botDiff);
               setGameState(engineRef.current.state);
               setAppState('PLAYING');
             }}

@@ -163,20 +163,24 @@ async function startServer() {
       }
     });
 
-    socket.on('add_bot', (roomId) => {
+    socket.on('add_bot', (data) => {
+      const roomId = typeof data === 'string' ? data : data.roomId;
+      const difficulty = typeof data === 'object' && data.difficulty ? data.difficulty : 'NORMAL';
+
       const room = rooms.get(roomId);
       if (room && room.hostId === socket.id && room.players.length < 4) {
         const color = assignColor(room.players);
         room.botCount++;
         room.players.push({
-           name: `Бот ${room.botCount}`,
+           name: `Бот ${room.botCount} (${difficulty === 'EASY' ? 'Легкий' : difficulty === 'HARD' ? 'Тяжелый' : 'Средний'})`,
            id: `bot-${Math.random().toString(36).substring(7)}`,
            isHost: false,
            ready: true,
            faction: Math.random() > 0.5 ? 'FEDERATION' : 'COALITION',
            country: 'RUSSIA', // default
            color,
-           isBot: true
+           isBot: true,
+           difficulty: difficulty
         });
         io.to(room.id).emit('room_update', room);
       }

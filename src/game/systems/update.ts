@@ -85,9 +85,15 @@ export function update(this: any, timestamp: number) {
       const distance = Math.sqrt(dx * dx + dy * dy);
 
       if (distance > entity.speed * dt) {
-        const nextX = entity.position.x + (dx / distance) * entity.speed * dt;
-        const nextY = entity.position.y + (dy / distance) * entity.speed * dt;
+        let nextX = entity.position.x + (dx / distance) * entity.speed * dt;
+        let nextY = entity.position.y + (dy / distance) * entity.speed * dt;
         
+        // Map edges boundaries constraint
+        const mapW = this.state.map.width * this.state.map.tileSize;
+        const mapH = this.state.map.height * this.state.map.tileSize;
+        nextX = Math.max(0, Math.min(nextX, mapW));
+        nextY = Math.max(0, Math.min(nextY, mapH));
+
         // Simple collision check for the next step
         const collision = this.state.entities.find((e: Entity) => {
           if (e.type !== 'BUILDING' || e.health <= 0) return false;

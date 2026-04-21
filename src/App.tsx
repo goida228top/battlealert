@@ -111,8 +111,8 @@ export default function App() {
     const gameState = engineRef.current.state;
     const { camera, map } = gameState;
 
-    // Clear with water color
-    ctx.fillStyle = map.theme === 'DESERT' ? '#4682b4' : map.theme === 'SNOW' ? '#add8e6' : '#00008b';
+    // Use black for void outside the map
+    ctx.fillStyle = '#000000';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     // Enable Smoothing
@@ -127,9 +127,9 @@ export default function App() {
     // Render Tiles with Culling
     const { tileSize: mapTileSize, tiles, width: mapWidthVal, height: mapHeightVal, visibility } = map;
 
-    // Draw infinite water background (or at least large enough)
+    // Draw water only as the map background (not infinite)
     ctx.fillStyle = map.theme === 'DESERT' ? '#4682b4' : map.theme === 'SNOW' ? '#add8e6' : '#00008b';
-    ctx.fillRect(-2000, -2000, mapWidthVal * mapTileSize + 4000, mapHeightVal * mapTileSize + 4000);
+    ctx.fillRect(0, 0, mapWidthVal * mapTileSize, mapHeightVal * mapTileSize);
     
     // --- MAP CACHING LOGIC ---
     if (!cachedMapCanvasRef.current || 

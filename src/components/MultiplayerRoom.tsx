@@ -64,6 +64,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<{sender: string, text: string}[]>([]);
   const [messageInput, setMessageInput] = useState('');
+  const [botDifficulty, setBotDifficulty] = useState('NORMAL');
 
   useEffect(() => {
     socket.on('room_update', (room) => {
@@ -147,12 +148,26 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
             <h2 className="text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-2 mb-4 flex justify-between items-center">
               <span>Игроки ({players.length}/4)</span>
               {isHost && players.length < 4 && (
-                <button 
-                  onClick={() => socket.emit('add_bot', roomInfo?.id)}
-                  className="bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-1 rounded border border-zinc-600 flex items-center gap-2 transition-colors"
-                >
-                  <Bot size={16} /> Добавить Бота
-                </button>
+                <div className="flex gap-2">
+                  <select 
+                    id="bot-difficulty-select"
+                    className="bg-black border border-zinc-600 text-sm p-1 rounded text-white"
+                    value={botDifficulty}
+                    onChange={(e) => setBotDifficulty(e.target.value)}
+                  >
+                    <option value="EASY">Легкий</option>
+                    <option value="NORMAL">Средний</option>
+                    <option value="HARD">Тяжелый</option>
+                  </select>
+                  <button 
+                    onClick={() => {
+                      socket.emit('add_bot', { roomId: roomInfo?.id, difficulty: botDifficulty });
+                    }}
+                    className="bg-zinc-800 hover:bg-zinc-700 text-sm px-3 py-1 rounded border border-zinc-600 flex items-center gap-2 transition-colors"
+                  >
+                    <Bot size={16} /> Добавить Бота
+                  </button>
+                </div>
               )}
             </h2>
             
