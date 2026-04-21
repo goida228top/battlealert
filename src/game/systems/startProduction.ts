@@ -49,9 +49,9 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
     } else if (actualOwner === 'PLAYER_2') {
       this.state.p2Credits = (this.state.p2Credits || 0) - cost;
     } else if (actualOwner === 'PLAYER_3') {
-      this.state.p3Credits! -= cost;
+      this.state.p3Credits = (this.state.p3Credits || 0) - cost;
     } else if (actualOwner === 'PLAYER_4') {
-      this.state.p4Credits! -= cost;
+      this.state.p4Credits = (this.state.p4Credits || 0) - cost;
     }
     
     queue.push({

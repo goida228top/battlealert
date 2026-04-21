@@ -41,6 +41,12 @@ export function updateCrates(this: GameEngine, dt: number, timestamp: number): v
         case 'MONEY':
           if (pickingUnit.owner === 'PLAYER') {
             this.state.credits += 2000;
+          } else if (pickingUnit.owner === 'PLAYER_2') {
+            this.state.p2Credits = (this.state.p2Credits || 0) + 2000;
+          } else if (pickingUnit.owner === 'PLAYER_3') {
+            this.state.p3Credits = (this.state.p3Credits || 0) + 2000;
+          } else if (pickingUnit.owner === 'PLAYER_4') {
+            this.state.p4Credits = (this.state.p4Credits || 0) + 2000;
           }
           break;
         case 'HEAL':

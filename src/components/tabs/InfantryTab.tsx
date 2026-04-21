@@ -11,10 +11,15 @@ interface InfantryTabProps {
 
 export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
+  const localPlayerId = engineRef.current.localPlayerId;
+  const activeQueue = localPlayerId === 'PLAYER' ? gameState.productionQueue : 
+                      localPlayerId === 'PLAYER_2' ? (gameState.p2ProductionQueue || []) :
+                      localPlayerId === 'PLAYER_3' ? (gameState.p3ProductionQueue || []) :
+                      (gameState.p4ProductionQueue || []);
 
   const handleCancel = (type: string, e: React.MouseEvent) => {
     e.preventDefault();
-    const items = gameState.productionQueue.filter(q => q.subType === type);
+    const items = activeQueue.filter(q => q.subType === type);
     if (items.length > 0) {
       const lastItem = items[items.length - 1];
       engineRef.current.removeFromQueue(lastItem.id);
@@ -30,9 +35,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Призывник" 
                     icon={<User className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('SOLDIER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'SOLDIER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'SOLDIER').length}
-                    locked={!engineRef.current.isUnlocked('SOLDIER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'SOLDIER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'SOLDIER').length}
+                    locked={!engineRef.current.isUnlocked('SOLDIER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('SOLDIER')}
                     onContextMenu={(e) => handleCancel('SOLDIER', e)}
                     title="Призывник: Базовая пехота."
@@ -41,9 +46,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Инженер" 
                     icon={<Wrench className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('ENGINEER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ENGINEER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ENGINEER').length}
-                    locked={!engineRef.current.isUnlocked('ENGINEER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ENGINEER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ENGINEER').length}
+                    locked={!engineRef.current.isUnlocked('ENGINEER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ENGINEER')}
                     onContextMenu={(e) => handleCancel('ENGINEER', e)}
                     title="Инженер: Захватывает вражеские здания или чинит свои."
@@ -52,9 +57,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Собака" 
                     icon={<Target className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('ATTACK_DOG')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ATTACK_DOG')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ATTACK_DOG').length}
-                    locked={!engineRef.current.isUnlocked('ATTACK_DOG', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ATTACK_DOG')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ATTACK_DOG').length}
+                    locked={!engineRef.current.isUnlocked('ATTACK_DOG', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ATTACK_DOG')}
                     onContextMenu={(e) => handleCancel('ATTACK_DOG', e)}
                     title="Боевой пес: Быстрый разведчик, мгновенно убивает пехоту."
@@ -63,9 +68,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Зенитчик" 
                     icon={<Crosshair className="w-5 h-5 text-zinc-400" />} 
                     cost={engineRef.current.getCost('FLAK_TROOPER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'FLAK_TROOPER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'FLAK_TROOPER').length}
-                    locked={!engineRef.current.isUnlocked('FLAK_TROOPER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'FLAK_TROOPER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'FLAK_TROOPER').length}
+                    locked={!engineRef.current.isUnlocked('FLAK_TROOPER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('FLAK_TROOPER')}
                     onContextMenu={(e) => handleCancel('FLAK_TROOPER', e)}
                     title="Зенитчик: Эффективен против авиации и техники."
@@ -74,9 +79,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Тесла-пехотинец" 
                     icon={<Zap className="w-5 h-5 text-blue-400" />} 
                     cost={engineRef.current.getCost('TESLA_TROOPER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'TESLA_TROOPER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'TESLA_TROOPER').length}
-                    locked={!engineRef.current.isUnlocked('TESLA_TROOPER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'TESLA_TROOPER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'TESLA_TROOPER').length}
+                    locked={!engineRef.current.isUnlocked('TESLA_TROOPER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TESLA_TROOPER')}
                     onContextMenu={(e) => handleCancel('TESLA_TROOPER', e)}
                     title="Тесла-пехотинец: Эффективен против техники, нельзя раздавить."
@@ -85,9 +90,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Безумный Иван" 
                     icon={<Bomb className="w-5 h-5 text-red-500" />} 
                     cost={engineRef.current.getCost('CRAZY_IVAN')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'CRAZY_IVAN')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'CRAZY_IVAN').length}
-                    locked={!engineRef.current.isUnlocked('CRAZY_IVAN', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'CRAZY_IVAN')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'CRAZY_IVAN').length}
+                    locked={!engineRef.current.isUnlocked('CRAZY_IVAN', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('CRAZY_IVAN')}
                     onContextMenu={(e) => handleCancel('CRAZY_IVAN', e)}
                     title="Безумный Иван: Минирует всё вокруг."
@@ -96,9 +101,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Юрий" 
                     icon={<Activity className="w-5 h-5 text-purple-500" />} 
                     cost={engineRef.current.getCost('YURI')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'YURI')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'YURI').length}
-                    locked={!engineRef.current.isUnlocked('YURI', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'YURI')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'YURI').length}
+                    locked={!engineRef.current.isUnlocked('YURI', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('YURI')}
                     onContextMenu={(e) => handleCancel('YURI', e)}
                     title="Юрий: Обладает способностью контролировать разум врагов."
@@ -107,9 +112,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Борис" 
                     icon={<Crosshair className="w-5 h-5 text-red-600" />} 
                     cost={engineRef.current.getCost('BORIS')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'BORIS')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'BORIS').length}
-                    locked={!engineRef.current.isUnlocked('BORIS', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'BORIS')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'BORIS').length}
+                    locked={!engineRef.current.isUnlocked('BORIS', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('BORIS')}
                     onContextMenu={(e) => handleCancel('BORIS', e)}
                     title="Борис: Элитный спецназ. Вызывает авиаудар по зданиям."
@@ -119,9 +124,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                       label="Дезолятор" 
                       icon={<Activity className="w-5 h-5 text-green-600" />} 
                       cost={engineRef.current.getCost('DESOLATOR')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'DESOLATOR')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'DESOLATOR').length}
-                      locked={!engineRef.current.isUnlocked('DESOLATOR', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'DESOLATOR')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'DESOLATOR').length}
+                      locked={!engineRef.current.isUnlocked('DESOLATOR', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('DESOLATOR')}
                       title="Дезолятор: Уникальный юнит Ирака. Создает зону радиации."
                     />
@@ -131,9 +136,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                       label="Террорист" 
                       icon={<Bomb className="w-5 h-5 text-red-500" />} 
                       cost={engineRef.current.getCost('TERRORIST')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'TERRORIST')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'TERRORIST').length}
-                      locked={!engineRef.current.isUnlocked('TERRORIST', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'TERRORIST')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'TERRORIST').length}
+                      locked={!engineRef.current.isUnlocked('TERRORIST', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('TERRORIST')}
                       title="Террорист: Уникальный юнит Кубы. Смертник с взрывчаткой."
                     />
@@ -145,9 +150,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Морпех" 
                     icon={<User className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('GI')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'GI')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'GI').length}
-                    locked={!engineRef.current.isUnlocked('GI', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'GI')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'GI').length}
+                    locked={!engineRef.current.isUnlocked('GI', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('GI')}
                     title="Морпех (G.I.): Базовая пехота Коалиции. Может окапываться для защиты."
                   />
@@ -156,9 +161,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                       label="Снайпер" 
                       icon={<Target className="w-5 h-5 text-zinc-400" />} 
                       cost={engineRef.current.getCost('SNIPER')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'SNIPER')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'SNIPER').length}
-                      locked={!engineRef.current.isUnlocked('SNIPER', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'SNIPER')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'SNIPER').length}
+                      locked={!engineRef.current.isUnlocked('SNIPER', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('SNIPER')}
                       title="Снайпер: Уникальный юнит Британии. Уничтожает пехоту с огромной дистанции."
                     />
@@ -167,9 +172,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Инженер" 
                     icon={<Wrench className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('ENGINEER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ENGINEER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ENGINEER').length}
-                    locked={!engineRef.current.isUnlocked('ENGINEER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ENGINEER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ENGINEER').length}
+                    locked={!engineRef.current.isUnlocked('ENGINEER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ENGINEER')}
                     title="Инженер: Захватывает вражеские здания или чинит свои."
                   />
@@ -177,9 +182,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Собака" 
                     icon={<Target className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('ATTACK_DOG')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ATTACK_DOG')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ATTACK_DOG').length}
-                    locked={!engineRef.current.isUnlocked('ATTACK_DOG', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ATTACK_DOG')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ATTACK_DOG').length}
+                    locked={!engineRef.current.isUnlocked('ATTACK_DOG', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ATTACK_DOG')}
                     title="Боевой пес: Быстрый разведчик, мгновенно убивает пехоту."
                   />
@@ -187,9 +192,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Ракетчик" 
                     icon={<Wind className="w-5 h-5 text-blue-400" />} 
                     cost={engineRef.current.getCost('ROCKETEER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ROCKETEER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ROCKETEER').length}
-                    locked={!engineRef.current.isUnlocked('ROCKETEER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ROCKETEER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ROCKETEER').length}
+                    locked={!engineRef.current.isUnlocked('ROCKETEER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ROCKETEER')}
                     title="Ракетчик: Летающий пехотинец."
                   />
@@ -197,9 +202,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Морпех" 
                     icon={<Target className="w-5 h-5 text-zinc-400" />} 
                     cost={engineRef.current.getCost('NAVY_SEAL')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'NAVY_SEAL')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'NAVY_SEAL').length}
-                    locked={!engineRef.current.isUnlocked('NAVY_SEAL', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'NAVY_SEAL')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'NAVY_SEAL').length}
+                    locked={!engineRef.current.isUnlocked('NAVY_SEAL', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('NAVY_SEAL')}
                     title="Морской котик: Элитный спецназ. Силен против пехоты и зданий."
                   />
@@ -207,9 +212,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Таня" 
                     icon={<Crosshair className="w-5 h-5 text-red-600" />} 
                     cost={engineRef.current.getCost('TANYA')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'TANYA')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'TANYA').length}
-                    locked={!engineRef.current.isUnlocked('TANYA', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'TANYA')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'TANYA').length}
+                    locked={!engineRef.current.isUnlocked('TANYA', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TANYA')}
                     title="Таня: Элитный спецназ. Мгновенно убивает пехоту и взрывает здания."
                   />
@@ -217,9 +222,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Шпион" 
                     icon={<Users className="w-5 h-5 text-zinc-500" />} 
                     cost={engineRef.current.getCost('SPY')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'SPY')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'SPY').length}
-                    locked={!engineRef.current.isUnlocked('SPY', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'SPY')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'SPY').length}
+                    locked={!engineRef.current.isUnlocked('SPY', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('SPY')}
                     title="Шпион: Проникает во вражеские здания для кражи технологий или саботажа."
                   />
@@ -227,9 +232,9 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     label="Хроно-легионер" 
                     icon={<Zap className="w-5 h-5 text-blue-200" />} 
                     cost={engineRef.current.getCost('CHRONO_LEGIONNAIRE')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'CHRONO_LEGIONNAIRE')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'CHRONO_LEGIONNAIRE').length}
-                    locked={!engineRef.current.isUnlocked('CHRONO_LEGIONNAIRE', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'CHRONO_LEGIONNAIRE')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'CHRONO_LEGIONNAIRE').length}
+                    locked={!engineRef.current.isUnlocked('CHRONO_LEGIONNAIRE', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('CHRONO_LEGIONNAIRE')}
                     title="Хроно-легионер: Стирает врагов из времени. Телепортируется по карте."
                   />

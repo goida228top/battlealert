@@ -121,9 +121,9 @@ export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingTy
 
   // 4. Consume from queue WITHOUT refunding
   const queue = owner === 'PLAYER' ? this.state.productionQueue : 
-                owner === 'PLAYER_2' ? this.state.p2ProductionQueue : 
-                owner === 'PLAYER_3' ? this.state.p3ProductionQueue : 
-                this.state.p4ProductionQueue;
+                owner === 'PLAYER_2' ? (this.state.p2ProductionQueue || []) : 
+                owner === 'PLAYER_3' ? (this.state.p3ProductionQueue || []) : 
+                (this.state.p4ProductionQueue || []);
   if (queue) {
     const qIndex = queue.findIndex((q: any) => q.subType === type && q.progress >= 100);
     if (qIndex !== -1) {

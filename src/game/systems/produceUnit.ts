@@ -7,6 +7,7 @@ export function produceUnit(this: any, type: UnitType, owner?: string) {
 
   if (actualOwner === 'PLAYER' && this.state.credits < cost) return;
   if (actualOwner === 'AI' && this.state.aiCredits < cost) return;
+  if (actualOwner === 'PLAYER_2' && (this.state.p2Credits || 0) < cost) return;
   if (actualOwner === 'PLAYER_3' && (!this.state.p3Credits || this.state.p3Credits < cost)) return;
   if (actualOwner === 'PLAYER_4' && (!this.state.p4Credits || this.state.p4Credits < cost)) return;
 
@@ -21,6 +22,7 @@ export function produceUnit(this: any, type: UnitType, owner?: string) {
     this.produceUnitAt(producer, type, actualOwner);
     if (actualOwner === 'PLAYER') this.state.credits -= cost;
     if (actualOwner === 'AI') this.state.aiCredits -= cost;
+    if (actualOwner === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) - cost;
     if (actualOwner === 'PLAYER_3') this.state.p3Credits -= cost;
     if (actualOwner === 'PLAYER_4') this.state.p4Credits -= cost;
   }

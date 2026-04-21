@@ -188,7 +188,12 @@ if (entity.targetId) {
       if (target.owner !== entity.owner) {
         if (target.subType === 'ORE_REFINERY' || target.subType === 'ALLIED_ORE_REFINERY') {
           // Steal money
-          this.state.credits += 2000;
+          const amount = 2000;
+          if (entity.owner === 'PLAYER') this.state.credits += amount;
+          else if (entity.owner === 'PLAYER_2') this.state.p2Credits = (this.state.p2Credits || 0) + amount;
+          else if (entity.owner === 'PLAYER_3') this.state.p3Credits = (this.state.p3Credits || 0) + amount;
+          else if (entity.owner === 'PLAYER_4') this.state.p4Credits = (this.state.p4Credits || 0) + amount;
+          
           this.state.effects.push({
             id: `spy-steal-${timestamp}-${Math.random()}`,
             type: 'EXPLOSION', // Reusing explosion for visual effect

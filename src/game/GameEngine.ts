@@ -392,32 +392,39 @@ export class GameEngine {
     return useNuclearStrikeAI.call(this, targetPos);
   }
 
-  public useIronCurtain(targetPos: Vector2, owner: string = 'PLAYER') {
-    return useIronCurtain.call(this, targetPos, owner);
+  public useIronCurtain(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return useIronCurtain.call(this, targetPos, actualOwner);
   }
 
-  public useChronosphere(targetPos: Vector2, owner: string = 'PLAYER') {
-    return useChronosphere.call(this, targetPos, owner);
+  public useChronosphere(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return useChronosphere.call(this, targetPos, actualOwner);
   }
 
-  public executeChronosphereTeleport(targetPos: Vector2, owner: string = 'PLAYER') {
-    return executeChronosphereTeleport.call(this, targetPos, owner);
+  public executeChronosphereTeleport(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return executeChronosphereTeleport.call(this, targetPos, actualOwner);
   }
 
-  public useWeatherStorm(targetPos: Vector2, owner: string = 'PLAYER') {
-    return useWeatherStorm.call(this, targetPos, owner);
+  public useWeatherStorm(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return useWeatherStorm.call(this, targetPos, actualOwner);
   }
 
-  public useSpyPlane(targetPos: Vector2, owner: string = 'PLAYER') {
-    return useSpyPlane.call(this, targetPos, owner);
+  public useSpyPlane(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return useSpyPlane.call(this, targetPos, actualOwner);
   }
 
-  public useParatroopers(targetPos: Vector2, owner: string = 'PLAYER') {
-    return useParatroopers.call(this, targetPos, owner);
+  public useParatroopers(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return useParatroopers.call(this, targetPos, actualOwner);
   }
 
-  public useNuclearStrike(targetPos: Vector2, owner: string = 'PLAYER') {
-    return useNuclearStrike.call(this, targetPos, owner);
+  public useNuclearStrike(targetPos: Vector2, owner?: string) {
+    const actualOwner = owner || this.localPlayerId || 'PLAYER';
+    return useNuclearStrike.call(this, targetPos, actualOwner);
   }
 
   public getPrerequisites(type: string): string[] {
@@ -428,7 +435,7 @@ export class GameEngine {
     return isUnlocked.call(this, type, owner);
   }
 
-  public startProduction(subType: UnitType | BuildingType, owner: string = 'PLAYER', processId?: string) {
+  public startProduction(subType: UnitType | BuildingType, owner?: string, processId?: string) {
     return startProduction.call(this, subType, owner, processId);
   }
 

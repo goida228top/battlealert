@@ -11,10 +11,15 @@ interface VehiclesTabProps {
 
 export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
+  const localPlayerId = engineRef.current.localPlayerId;
+  const activeQueue = localPlayerId === 'PLAYER' ? gameState.productionQueue : 
+                      localPlayerId === 'PLAYER_2' ? (gameState.p2ProductionQueue || []) :
+                      localPlayerId === 'PLAYER_3' ? (gameState.p3ProductionQueue || []) :
+                      (gameState.p4ProductionQueue || []);
 
   const handleCancel = (type: string, e: React.MouseEvent) => {
     e.preventDefault();
-    const items = gameState.productionQueue.filter(q => q.subType === type);
+    const items = activeQueue.filter(q => q.subType === type);
     if (items.length > 0) {
       const lastItem = items[items.length - 1];
       engineRef.current.removeFromQueue(lastItem.id);
@@ -30,9 +35,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Танк Рино" 
                     icon={<Car className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('RHINO_TANK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'RHINO_TANK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'RHINO_TANK').length}
-                    locked={!engineRef.current.isUnlocked('RHINO_TANK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'RHINO_TANK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'RHINO_TANK').length}
+                    locked={!engineRef.current.isUnlocked('RHINO_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('RHINO_TANK')}
                     onContextMenu={(e) => handleCancel('RHINO_TANK', e)}
                     title="Тяжелый танк Рино: Стандартный бронированный юнит."
@@ -41,9 +46,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Зенитный БТР" 
                     icon={<Truck className="w-5 h-5 text-zinc-400" />} 
                     cost={engineRef.current.getCost('FLAK_TRACK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'FLAK_TRACK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'FLAK_TRACK').length}
-                    locked={!engineRef.current.isUnlocked('FLAK_TRACK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'FLAK_TRACK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'FLAK_TRACK').length}
+                    locked={!engineRef.current.isUnlocked('FLAK_TRACK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('FLAK_TRACK')}
                     onContextMenu={(e) => handleCancel('FLAK_TRACK', e)}
                     title="Зенитный БТР: Быстрый транспорт, эффективен против авиации."
@@ -52,9 +57,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Пусковая V3" 
                     icon={<Target className="w-5 h-5 text-red-500" />} 
                     cost={engineRef.current.getCost('V3_LAUNCHER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'V3_LAUNCHER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'V3_LAUNCHER').length}
-                    locked={!engineRef.current.isUnlocked('V3_LAUNCHER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'V3_LAUNCHER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'V3_LAUNCHER').length}
+                    locked={!engineRef.current.isUnlocked('V3_LAUNCHER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('V3_LAUNCHER')}
                     onContextMenu={(e) => handleCancel('V3_LAUNCHER', e)}
                     title="Ракетная установка V3: Дальнобойная артиллерия."
@@ -63,9 +68,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Дрон-террорист" 
                     icon={<Crosshair className="w-5 h-5 text-zinc-400" />} 
                     cost={engineRef.current.getCost('TERROR_DRONE')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'TERROR_DRONE')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'TERROR_DRONE').length}
-                    locked={!engineRef.current.isUnlocked('TERROR_DRONE', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'TERROR_DRONE')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'TERROR_DRONE').length}
+                    locked={!engineRef.current.isUnlocked('TERROR_DRONE', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TERROR_DRONE')}
                     onContextMenu={(e) => handleCancel('TERROR_DRONE', e)}
                     title="Дрон-террорист: Быстрый механический паук. Разбирает технику изнутри."
@@ -74,9 +79,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Апокалипсис" 
                     icon={<Skull className="w-5 h-5 text-red-600" />} 
                     cost={engineRef.current.getCost('APOCALYPSE_TANK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'APOCALYPSE_TANK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'APOCALYPSE_TANK').length}
-                    locked={!engineRef.current.isUnlocked('APOCALYPSE_TANK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'APOCALYPSE_TANK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'APOCALYPSE_TANK').length}
+                    locked={!engineRef.current.isUnlocked('APOCALYPSE_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('APOCALYPSE_TANK')}
                     title="Танк Апокалипсис: Мощнейшая машина наземного штурма."
                   />
@@ -85,9 +90,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                       label="Тесла-танк" 
                       icon={<Zap className="w-5 h-5 text-blue-500" />} 
                       cost={engineRef.current.getCost('TESLA_TANK')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'TESLA_TANK')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'TESLA_TANK').length}
-                      locked={!engineRef.current.isUnlocked('TESLA_TANK', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'TESLA_TANK')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'TESLA_TANK').length}
+                      locked={!engineRef.current.isUnlocked('TESLA_TANK', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('TESLA_TANK')}
                       title="Тесла-танк: Уникальный танк России. Стреляет электрическими разрядами."
                     />
@@ -97,9 +102,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                       label="Грузовик-бомба" 
                       icon={<Bomb className="w-5 h-5 text-red-500" />} 
                       cost={engineRef.current.getCost('DEMOLITION_TRUCK')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'DEMOLITION_TRUCK')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'DEMOLITION_TRUCK').length}
-                      locked={!engineRef.current.isUnlocked('DEMOLITION_TRUCK', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'DEMOLITION_TRUCK')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'DEMOLITION_TRUCK').length}
+                      locked={!engineRef.current.isUnlocked('DEMOLITION_TRUCK', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('DEMOLITION_TRUCK')}
                       title="Грузовик-бомба: Уникальный юнит Ливии. Смертник на колесах."
                     />
@@ -108,9 +113,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Военный комбайн" 
                     icon={<Truck className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('HARVESTER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'HARVESTER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'HARVESTER').length}
-                    locked={!engineRef.current.isUnlocked('HARVESTER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'HARVESTER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'HARVESTER').length}
+                    locked={!engineRef.current.isUnlocked('HARVESTER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('HARVESTER')}
                     title="Военный комбайн: Собирает руду. Вооружен пулеметом."
                   />
@@ -118,9 +123,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="МСЦ" 
                     icon={<Truck className="w-5 h-5 text-green-500" />} 
                     cost={engineRef.current.getCost('MCV')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'MCV')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'MCV').length}
-                    locked={!engineRef.current.isUnlocked('MCV', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'MCV')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'MCV').length}
+                    locked={!engineRef.current.isUnlocked('MCV', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('MCV')}
                     title="Мобильный Сборочный Цех: Развертывается в новый Сборочный Двор."
                   />
@@ -128,9 +133,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Дирижабль Киров" 
                     icon={<Wind className="w-5 h-5 text-yellow-500" />} 
                     cost={engineRef.current.getCost('KIROV_AIRSHIP')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'KIROV_AIRSHIP')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'KIROV_AIRSHIP').length}
-                    locked={!engineRef.current.isUnlocked('KIROV_AIRSHIP', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'KIROV_AIRSHIP')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'KIROV_AIRSHIP').length}
+                    locked={!engineRef.current.isUnlocked('KIROV_AIRSHIP', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('KIROV_AIRSHIP')}
                     title="Дирижабль Киров: Тяжелый бомбардировщик. Медленный, но сокрушительный."
                   />
@@ -138,9 +143,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Подлодка" 
                     icon={<Waves className="w-5 h-5 text-blue-500" />} 
                     cost={engineRef.current.getCost('TYPHOON_SUB')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'TYPHOON_SUB')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'TYPHOON_SUB').length}
-                    locked={!engineRef.current.isUnlocked('TYPHOON_SUB', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'TYPHOON_SUB')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'TYPHOON_SUB').length}
+                    locked={!engineRef.current.isUnlocked('TYPHOON_SUB', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TYPHOON_SUB')}
                     title="Подлодка Тайфун: Скрытный морской юнит."
                   />
@@ -148,9 +153,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Дредноут" 
                     icon={<Anchor className="w-5 h-5 text-red-500" />} 
                     cost={engineRef.current.getCost('DREADNOUGHT')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'DREADNOUGHT')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'DREADNOUGHT').length}
-                    locked={!engineRef.current.isUnlocked('DREADNOUGHT', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'DREADNOUGHT')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'DREADNOUGHT').length}
+                    locked={!engineRef.current.isUnlocked('DREADNOUGHT', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('DREADNOUGHT')}
                     title="Дредноут: Дальнобойная морская бомбардировка."
                   />
@@ -161,9 +166,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Танк Гризли" 
                     icon={<Car className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('GRIZZLY_TANK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'GRIZZLY_TANK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'GRIZZLY_TANK').length}
-                    locked={!engineRef.current.isUnlocked('GRIZZLY_TANK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'GRIZZLY_TANK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'GRIZZLY_TANK').length}
+                    locked={!engineRef.current.isUnlocked('GRIZZLY_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('GRIZZLY_TANK')}
                     title="Танк Гризли: Стандартный боевой танк Коалиции."
                   />
@@ -171,9 +176,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Хроно-комбайн" 
                     icon={<Truck className="w-5 h-5" />} 
                     cost={engineRef.current.getCost('CHRONO_MINER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'CHRONO_MINER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'CHRONO_MINER').length}
-                    locked={!engineRef.current.isUnlocked('CHRONO_MINER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'CHRONO_MINER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'CHRONO_MINER').length}
+                    locked={!engineRef.current.isUnlocked('CHRONO_MINER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('CHRONO_MINER')}
                     title="Хроно-комбайн: Собирает руду и телепортируется обратно на базу."
                   />
@@ -181,9 +186,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="БМП" 
                     icon={<Target className="w-5 h-5 text-blue-500" />} 
                     cost={engineRef.current.getCost('IFV')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'IFV')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'IFV').length}
-                    locked={!engineRef.current.isUnlocked('IFV', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'IFV')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'IFV').length}
+                    locked={!engineRef.current.isUnlocked('IFV', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('IFV')}
                     title="БМП: Многоцелевая машина. Меняет оружие в зависимости от пехоты внутри."
                   />
@@ -191,9 +196,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Танк Мираж" 
                     icon={<Wind className="w-5 h-5 text-green-600" />} 
                     cost={engineRef.current.getCost('MIRAGE_TANK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'MIRAGE_TANK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'MIRAGE_TANK').length}
-                    locked={!engineRef.current.isUnlocked('MIRAGE_TANK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'MIRAGE_TANK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'MIRAGE_TANK').length}
+                    locked={!engineRef.current.isUnlocked('MIRAGE_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('MIRAGE_TANK')}
                     title="Танк Мираж: Маскируется под дерево, когда неподвижен."
                   />
@@ -201,9 +206,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Призма-танк" 
                     icon={<Zap className="w-5 h-5 text-blue-300" />} 
                     cost={engineRef.current.getCost('PRISM_TANK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'PRISM_TANK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'PRISM_TANK').length}
-                    locked={!engineRef.current.isUnlocked('PRISM_TANK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'PRISM_TANK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'PRISM_TANK').length}
+                    locked={!engineRef.current.isUnlocked('PRISM_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('PRISM_TANK')}
                     title="Призма-танк: Дальнобойное лучевое оружие, поражающее несколько целей."
                   />
@@ -212,9 +217,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                       label="Истр. танков" 
                       icon={<ShieldAlert className="w-5 h-5 text-zinc-400" />} 
                       cost={engineRef.current.getCost('TANK_DESTROYER')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'TANK_DESTROYER')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'TANK_DESTROYER').length}
-                      locked={!engineRef.current.isUnlocked('TANK_DESTROYER', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'TANK_DESTROYER')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'TANK_DESTROYER').length}
+                      locked={!engineRef.current.isUnlocked('TANK_DESTROYER', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('TANK_DESTROYER')}
                       title="Истребитель танков: Уникальный юнит Германии. Эффективен против бронетехники."
                     />
@@ -223,9 +228,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Робот-танк" 
                     icon={<Cpu className="w-5 h-5 text-blue-400" />} 
                     cost={engineRef.current.getCost('ROBOT_TANK')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ROBOT_TANK')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ROBOT_TANK').length}
-                    locked={!engineRef.current.isUnlocked('ROBOT_TANK', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ROBOT_TANK')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ROBOT_TANK').length}
+                    locked={!engineRef.current.isUnlocked('ROBOT_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ROBOT_TANK')}
                     title="Робот-танк: Беспилотный танк. Неуязвим для контроля разума."
                   />
@@ -233,9 +238,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Крепость" 
                     icon={<Skull className="w-5 h-5 text-zinc-600" />} 
                     cost={engineRef.current.getCost('BATTLE_FORTRESS')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'BATTLE_FORTRESS')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'BATTLE_FORTRESS').length}
-                    locked={!engineRef.current.isUnlocked('BATTLE_FORTRESS', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'BATTLE_FORTRESS')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'BATTLE_FORTRESS').length}
+                    locked={!engineRef.current.isUnlocked('BATTLE_FORTRESS', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('BATTLE_FORTRESS')}
                     title="Боевая крепость: Огромный транспорт, способный давить другую технику."
                   />
@@ -243,9 +248,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="МСЦ" 
                     icon={<Truck className="w-5 h-5 text-green-500" />} 
                     cost={engineRef.current.getCost('ALLIED_MCV')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'ALLIED_MCV')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'ALLIED_MCV').length}
-                    locked={!engineRef.current.isUnlocked('ALLIED_MCV', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'ALLIED_MCV')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'ALLIED_MCV').length}
+                    locked={!engineRef.current.isUnlocked('ALLIED_MCV', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ALLIED_MCV')}
                     title="Мобильный Сборочный Цех: Развертывается в Сборочный Двор Коалиции."
                   />
@@ -253,9 +258,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Эсминец" 
                     icon={<Waves className="w-5 h-5 text-blue-700" />} 
                     cost={engineRef.current.getCost('DESTROYER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'DESTROYER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'DESTROYER').length}
-                    locked={!engineRef.current.isUnlocked('DESTROYER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'DESTROYER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'DESTROYER').length}
+                    locked={!engineRef.current.isUnlocked('DESTROYER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('DESTROYER')}
                     title="Эсминец: Универсальный морской юнит с противолодочным самолетом."
                   />
@@ -263,9 +268,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Авианосец" 
                     icon={<Anchor className="w-5 h-5 text-blue-900" />} 
                     cost={engineRef.current.getCost('AIRCRAFT_CARRIER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'AIRCRAFT_CARRIER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'AIRCRAFT_CARRIER').length}
-                    locked={!engineRef.current.isUnlocked('AIRCRAFT_CARRIER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'AIRCRAFT_CARRIER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'AIRCRAFT_CARRIER').length}
+                    locked={!engineRef.current.isUnlocked('AIRCRAFT_CARRIER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('AIRCRAFT_CARRIER')}
                     title="Авианосец: Запускает самолеты для атаки с большой дистанции."
                   />
@@ -273,9 +278,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Харриер" 
                     icon={<Wind className="w-5 h-5 text-zinc-400" />} 
                     cost={engineRef.current.getCost('HARRIER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'HARRIER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'HARRIER').length}
-                    locked={!engineRef.current.isUnlocked('HARRIER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'HARRIER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'HARRIER').length}
+                    locked={!engineRef.current.isUnlocked('HARRIER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('HARRIER')}
                     title="Харриер: Реактивный истребитель-бомбардировщик."
                   />
@@ -284,9 +289,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                       label="Черный орел" 
                       icon={<Wind className="w-5 h-5 text-zinc-800" />} 
                       cost={engineRef.current.getCost('BLACK_EAGLE')} 
-                      progress={gameState.productionQueue.find(q => q.subType === 'BLACK_EAGLE')?.progress}
-                      count={gameState.productionQueue.filter(q => q.subType === 'BLACK_EAGLE').length}
-                      locked={!engineRef.current.isUnlocked('BLACK_EAGLE', engineRef.current.localPlayerId)}
+                      progress={activeQueue.find(q => q.subType === 'BLACK_EAGLE')?.progress}
+                      count={activeQueue.filter(q => q.subType === 'BLACK_EAGLE').length}
+                      locked={!engineRef.current.isUnlocked('BLACK_EAGLE', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('BLACK_EAGLE')}
                       title="Черный орел: Уникальный самолет Кореи. Мощнее и прочнее Харриера."
                     />
@@ -295,9 +300,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Ночной ястреб" 
                     icon={<Wind className="w-5 h-5 text-zinc-600" />} 
                     cost={engineRef.current.getCost('NIGHT_HAWK_TRANSPORT')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'NIGHT_HAWK_TRANSPORT')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'NIGHT_HAWK_TRANSPORT').length}
-                    locked={!engineRef.current.isUnlocked('NIGHT_HAWK_TRANSPORT', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'NIGHT_HAWK_TRANSPORT')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'NIGHT_HAWK_TRANSPORT').length}
+                    locked={!engineRef.current.isUnlocked('NIGHT_HAWK_TRANSPORT', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('NIGHT_HAWK_TRANSPORT')}
                     title="Ночной ястреб: Транспортный вертолет, невидимый для радаров."
                   />
@@ -305,9 +310,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Транспорт" 
                     icon={<Waves className="w-5 h-5 text-blue-400" />} 
                     cost={engineRef.current.getCost('AMPHIBIOUS_TRANSPORT')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'AMPHIBIOUS_TRANSPORT')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'AMPHIBIOUS_TRANSPORT').length}
-                    locked={!engineRef.current.isUnlocked('AMPHIBIOUS_TRANSPORT', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'AMPHIBIOUS_TRANSPORT')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'AMPHIBIOUS_TRANSPORT').length}
+                    locked={!engineRef.current.isUnlocked('AMPHIBIOUS_TRANSPORT', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('AMPHIBIOUS_TRANSPORT')}
                     title="Амфибия: Перевозит пехоту и технику по воде и суше."
                   />
@@ -315,9 +320,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Дельфин" 
                     icon={<Waves className="w-5 h-5 text-blue-300" />} 
                     cost={engineRef.current.getCost('DOLPHIN')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'DOLPHIN')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'DOLPHIN').length}
-                    locked={!engineRef.current.isUnlocked('DOLPHIN', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'DOLPHIN')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'DOLPHIN').length}
+                    locked={!engineRef.current.isUnlocked('DOLPHIN', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('DOLPHIN')}
                     title="Дельфин: Скрытный морской юнит, эффективен против подлодок и гигантских кальмаров."
                   />
@@ -325,9 +330,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     label="Крейсер Иджис" 
                     icon={<Shield className="w-5 h-5 text-blue-500" />} 
                     cost={engineRef.current.getCost('AEGIS_CRUISER')} 
-                    progress={gameState.productionQueue.find(q => q.subType === 'AEGIS_CRUISER')?.progress}
-                    count={gameState.productionQueue.filter(q => q.subType === 'AEGIS_CRUISER').length}
-                    locked={!engineRef.current.isUnlocked('AEGIS_CRUISER', engineRef.current.localPlayerId)}
+                    progress={activeQueue.find(q => q.subType === 'AEGIS_CRUISER')?.progress}
+                    count={activeQueue.filter(q => q.subType === 'AEGIS_CRUISER').length}
+                    locked={!engineRef.current.isUnlocked('AEGIS_CRUISER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('AEGIS_CRUISER')}
                     title="Крейсер Иджис: Мощная противовоздушная оборона на море."
                   />
