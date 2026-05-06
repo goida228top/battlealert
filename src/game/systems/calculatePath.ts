@@ -11,91 +11,255 @@ interface Node {
   parent: Node | null;
 }
 
-export function calculatePath(this: any, start: Vector2, endRaw: Vector2): Vector2[] {
-  const tileSize = this.state.map.tileSize;
-  const mapWidth = this.state.map.width;
-  const mapHeight = this.state.map.height;
+class BinaryHeap<T> {
+  private heap: T[] = [];
+  constructor(private scoreFn: (val: T) => number) {}
 
-  // Clamp desired end position so we never path out of bounds
-  const end = {
-    x: Math.max(0, Math.min(mapWidth * tileSize - 1, endRaw.x)),
-    y: Math.max(0, Math.min(mapHeight * tileSize - 1, endRaw.y))
-  };
+  push(element: T) {
+    this.heap.push(element);
+    this.bubbleUp(this.heap.length - 1);
+  }
 
-  // Convert world coordinates to tile coordinates
+  pop(): T | undefined {
+    if (this.heap.length === 0) return undefined;
+    const result = this.heap[0];
+    const end = this.heap.pop()!;
+    if (this.heap.length > 0) {
+      this.heap[0] = end;
+      this.sinkDown(0);
+    }
+    return result;
+  }
+
+  get length() {
+    return this.heap.length;
+  }
+
+  private bubbleUp(n: number) {
+    const element = this.heap[n];
+    const score = this.scoreFn(element);
+    while (n > 0) {
+      const parentN = Math.floor((n + 1) / 2) - 1;
+      const parent = this.heap[parentN];
+      if (score >= this.scoreFn(parent)) break;
+      this.heap[parentN] = element;
+      this.heap[n] = parent;
+      n = parentN;
+    }
+  }
+
+  private sinkDown(n: number) {
+    const length = this.heap.length;
+    const element = this.heap[n];
+    const elemScore = this.scoreFn(element);
+
+    while (true) {
+      const child2N = (n + 1) * 2;
+      const child1N = child2N - 1;
+      let swap: number | null = null;
+      let child1Score = 0;
+
+      if (child1N < length) {
+        const child1 = this.heap[child1N];
+        child1Score = this.scoreFn(child1);
+        if (child1Score < elemScore) swap = child1N;
+      }
+      if (child2N < length) {
+        const child2 = this.heap[child2N];
+        const child2Score = this.scoreFn(child2);
+        if (child2Score < (swap === null ? elemScore : child1Score)) swap = child2N;
+      }
+
+      if (swap === null) break;
+      this.heap[n] = this.heap[swap];
+      this.heap[swap] = element;
+      n = swap;
+    }
+  }
+}
+
+function hasLineOfSight(p1: Vector2, p2: Vector2, walkableFn: any): boolean {
+    const tileSize = 20;
+    let x0 = Math.floor(p1.x / tileSize);
+    let y0 = Math.floor(p1.y / tileSize);
+    const x1 = Math.floor(p2.x / tileSize);
+    const y1 = Math.floor(p2.y / tileSize);
+
+    let dx = Math.abs(x1 - x0);
+    let dy = Math.abs(y1 - y0);
+    let x = x0;
+    let y = y0;
+    let n = 1 + dx + dy;
+    let x_inc = (x1 > x0) ? 1 : -1;
+    let y_inc = (y1 > y0) ? 1 : -1;
+    let error = dx - dy;
+    dx *= 2;
+    dy *= 2;
+
+    for (; n > 0; --n) {
+      if (!walkableFn(x, y)) return false;
+      if (error > 0) { x += x_inc; error -= dy; } 
+      else if (error < 0) { y += y_inc; error += dx; } 
+      else { x += x_inc; y += y_inc; error -= dy; error += dx; n--; }
+    }
+    return true;
+}
+
+export function calculatePath(this: any, start: Vector2, endRaw: Vector2, entity?: any): Vector2[] {
+  const mapTileSize = this.state.map.tileSize;
+  const tileSize = 20; // High resolution pathfinding (half tile size)
+  const mapWidth = this.state.map.width * (mapTileSize / tileSize);
+  const mapHeight = this.state.map.height * (mapTileSize / tileSize);
+
+  const isBigUnit = entity && entity.type === 'UNIT' && !['SOLDIER', 'ENGINEER', 'ATTACK_DOG', 'FLAK_TROOPER', 'TESLA_TROOPER', 'CRAZY_IVAN', 'BORIS', 'DESOLATOR', 'TERRORIST', 'YURI', 'GI', 'ROCKETEER', 'NAVY_SEAL', 'CHRONO_LEGIONNAIRE', 'TANYA', 'SNIPER', 'CHRONO_IVAN', 'SPY', 'YURI_PRIME'].includes(entity.subType);
+
+  // Convert world coordinates to high-res tile coordinates
   const startTile = {
-    x: Math.floor(start.x / Math.max(1, tileSize)),
-    y: Math.floor(start.y / Math.max(1, tileSize))
+    x: Math.floor(start.x / tileSize),
+    y: Math.floor(start.y / tileSize)
   };
+
+  // Clamp desired end position
+  const end = {
+    x: Math.max(0, Math.min(this.state.map.width * mapTileSize - 1, endRaw.x)),
+    y: Math.max(0, Math.min(this.state.map.height * mapTileSize - 1, endRaw.y))
+  };
+
   const endTile = {
     x: Math.floor(end.x / tileSize),
     y: Math.floor(end.y / tileSize)
   };
 
-  // Clamp to map bounds
-  startTile.x = Math.max(0, Math.min(mapWidth - 1, startTile.x));
-  startTile.y = Math.max(0, Math.min(mapHeight - 1, startTile.y));
-  endTile.x = Math.max(0, Math.min(mapWidth - 1, endTile.x));
-  endTile.y = Math.max(0, Math.min(mapHeight - 1, endTile.y));
-
-  // If start and end are the same tile, just return the end position
-  if (startTile.x === endTile.x && startTile.y === endTile.y) {
-    return [{ ...end }];
+  const subType = entity ? entity.subType : null;
+  const isAir = entity?.isAir || ['KIROV_AIRSHIP', 'ROCKETEER', 'HARRIER', 'BLACK_EAGLE', 'NIGHT_HAWK_TRANSPORT', 'SIEGE_CHOPPER', 'SPY_PLANE'].includes(subType);
+  
+  if (isAir) {
+     return [ { ...end } ];
   }
 
-  // Create a grid of obstacles
-  const grid: boolean[][] = [];
-  for (let y = 0; y < mapHeight; y++) {
-    grid[y] = [];
-    for (let x = 0; x < mapWidth; x++) {
-      const tileType = this.state.map.tiles[y][x];
-      // Basic terrain check
-      let isWalkable = tileType === 'GRASS' || tileType === 'ORE' || tileType === 'GRASS_TO_WATER' || tileType === 'WATER_TO_GRASS';
-      grid[y][x] = isWalkable;
+  const isNaval = ['TYPHOON_SUB', 'SEA_SCORPION', 'GIANT_SQUID', 'DREADNOUGHT', 'DESTROYER', 'AEGIS_CRUISER', 'AIRCRAFT_CARRIER', 'DOLPHIN'].includes(subType);
+  const isAmphibious = ['AMPHIBIOUS_TRANSPORT', 'HOVER_TRANSPORT'].includes(subType);
+
+  // Use pre-calculated terrain grid from state
+  let baseGrid = isBigUnit ? this.state.map.bigUnitTerrainGrid : this.state.map.terrainGrid;
+  
+  if (isNaval && this.state.map.waterGrid) {
+     baseGrid = this.state.map.waterGrid;
+  } else if (isAmphibious && this.state.map.amphibiousGrid) {
+     baseGrid = this.state.map.amphibiousGrid;
+  }
+
+  const obstacleGrid = this.state.dynamicObstacleGrid;
+
+  // Pre-calculate bridge walkability once per engine update if needed (or just assume state has it)
+  // For now, we'll use a fast lookup.
+  const isWalkableBase = (tx: number, ty: number) => {
+    if (tx < 0 || tx >= mapWidth || ty < 0 || ty >= mapHeight) return false;
+    
+    // Check dynamic obstacles (buildings, trees)
+    // Amphibious and Naval units might ignore some obstacles, but for now we'll just check it.
+    if (obstacleGrid && obstacleGrid[ty * mapWidth + tx] === 1) {
+       // Naval units shouldn't be blocked by bridges on water unless the bridge has a pillar, but here it's simple.
+       // Actually buildings are added to obstacleGrid. Bridge walkability is separate.
+       return false;
+    }
+
+    // Bridges should actually be part of the baked walkability if possible.
+    // For now we still check but we'll optimize the logic.
+    const scale = mapTileSize / tileSize;
+    const bridges = this.state.map.bridges || [];
+    let onBridge = false;
+    let underBridge = false;
+    for (let i = 0; i < bridges.length; i++) {
+        const b = bridges[i];
+        const bx = Math.floor(b.x * scale);
+        const by = Math.floor(b.y * scale);
+        const bw = Math.floor(b.width * scale);
+        const bh = Math.floor(b.height * scale);
+        if (tx >= bx && tx < bx + bw && ty >= by && ty < by + bh) {
+            onBridge = true;
+            underBridge = true;
+            const isHorizontal = bw > bh;
+            if (isHorizontal) {
+                const mid = bh / 2;
+                if (ty - by < mid - 1 || ty - by > mid) return false; // railing
+            } else {
+                const mid = bw / 2;
+                if (tx - bx < mid - 1 || tx - bx > mid) return false; // railing
+            }
+            break;
+        }
+    }
+
+    if (isNaval) {
+       if (underBridge) {
+          // ships can pass under bridges if the water grid allows it, ignoring 'onBridge' logic.
+          // BUT obstacleGrid might block them if bridge railings are there? We return true if it's pure water underneath.
+          // For simplicity, we just lookup baseGrid.
+       } else if (onBridge) {
+          // Naval units can't walk "on" bridges.
+          return false;
+       }
+    } else if (onBridge) {
+       return true;
+    }
+
+    if (!baseGrid) return false; // Safety: default to non-walkable if grid is missing
+    return !!(baseGrid[ty] && baseGrid[ty][tx]);
+  };
+
+  // If end tile is blocked, find nearest walkable neighbor
+  if (!isWalkableBase(endTile.x, endTile.y)) {
+    const neighborsArr = [
+      { x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 },
+      { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
+    ];
+    let found = false;
+    for (let r = 1; r < 20; r++) { 
+      for (let i = 0; i < neighborsArr.length; i++) {
+         const d = neighborsArr[i];
+         for (let step = 1; step <= r; step++) {
+             const nx = endTile.x + d.x * step;
+             const ny = endTile.y + d.y * step;
+             if (isWalkableBase(nx, ny)) {
+               endTile.x = nx;
+               endTile.y = ny;
+               end.x = nx * tileSize + tileSize / 2;
+               end.y = ny * tileSize + tileSize / 2;
+               found = true;
+               break;
+             }
+         }
+         if (found) break;
+      }
+      if (found) break;
     }
   }
 
-  // Mark bridges as walkable
-  this.state.map.bridges.forEach((bridge: any) => {
-    for (let dy = 0; dy < bridge.height; dy++) {
-      for (let dx = 0; dx < bridge.width; dx++) {
-        const bx = bridge.x + dx;
-        const by = bridge.y + dy;
-        if (bx >= 0 && bx < mapWidth && by >= 0 && by < mapHeight) {
-          grid[by][bx] = true;
-        }
-      }
-    }
-  });
+  const isWalkableForSearch = (tx: number, ty: number) => {
+    // If unit is currently stuck in an obstacle, treat its current tile as walkable
+    if (tx === startTile.x && ty === startTile.y) return true;
+    return isWalkableBase(tx, ty);
+  };
 
-  // Mark buildings as obstacles
-  this.state.entities.forEach((entity: any) => {
-    if (entity.type === 'BUILDING' && entity.health > 0) {
-      const dims = getBuildingDimensions(entity.subType as BuildingType);
-      const tx = Math.floor((entity.position.x - (dims.w * tileSize) / 2) / tileSize);
-      const ty = Math.floor((entity.position.y - (dims.h * tileSize) / 2) / tileSize);
-      
-      for (let dy = 0; dy < dims.h; dy++) {
-        for (let dx = 0; dx < dims.w; dx++) {
-          const curX = tx + dx;
-          const curY = ty + dy;
-          if (curX >= 0 && curX < mapWidth && curY >= 0 && curY < mapHeight) {
-            grid[curY][curX] = false;
-          }
-        }
-      }
-    }
-  });
+  if (!isWalkableForSearch(endTile.x, endTile.y)) return [];
+  if (startTile.x === endTile.x && startTile.y === endTile.y) return [{ ...end }];
 
-  // Ensure start and end tiles are walkable for the algorithm to work
-  // (In case a unit is somehow stuck inside a building)
-  grid[startTile.y][startTile.x] = true;
-  grid[endTile.y][endTile.x] = true;
-
-  // A* Implementation
-  const openList: Node[] = [];
-  const closedList = new Set<string>();
-
+  // Efficient A* Binary Heap
+  const openList = new BinaryHeap<Node>(n => n.f);
+  const mapSize = mapWidth * mapHeight;
+  
+  if (!this.pfNodeStates || this.pfNodeStates.length < mapSize) {
+    this.pfNodeStates = new Int8Array(mapSize);
+    this.pfBestG = new Float32Array(mapSize);
+  }
+  
+  const nodeStates = this.pfNodeStates;
+  const bestG = this.pfBestG;
+  
+  nodeStates.fill(0);
+  bestG.fill(Infinity);
+  
   const startNode: Node = {
     x: startTile.x,
     y: startTile.y,
@@ -106,117 +270,50 @@ export function calculatePath(this: any, start: Vector2, endRaw: Vector2): Vecto
   };
   startNode.f = startNode.g + startNode.h;
   openList.push(startNode);
+  nodeStates[startTile.y * mapWidth + startTile.x] = 1;
+  bestG[startTile.y * mapWidth + startTile.x] = 0;
 
   let iterations = 0;
-  const maxIterations = 2000; // Increased for 100x60 map
+  const maxIterations = 15000; // Balanced
+  let bestNode: Node = startNode;
 
   while (openList.length > 0 && iterations < maxIterations) {
     iterations++;
+    const currentNode = openList.pop()!;
+    const currentIdx = currentNode.y * mapWidth + currentNode.x;
     
-    // Sort by f value
-    openList.sort((a, b) => a.f - b.f);
-    const currentNode = openList.shift()!;
-    
-    if (currentNode.x === endTile.x && currentNode.y === endTile.y) {
-      // Path found!
-      const path: Vector2[] = [];
-      let curr: Node | null = currentNode;
-      while (curr) {
-        path.push({ x: curr.x * tileSize + tileSize / 2, y: curr.y * tileSize + tileSize / 2 });
-        curr = curr.parent;
-      }
-      path.reverse();
-      
-      // Replace the first point with the exact start position to prevent initial jerk
-      if (path.length > 0) {
-        path[0] = { ...start };
-      }
-      
-      // Path Smoothing (String Pulling)
-      const hasLineOfSight = (p1: Vector2, p2: Vector2): boolean => {
-        let x0 = Math.floor(p1.x / tileSize);
-        let y0 = Math.floor(p1.y / tileSize);
-        const x1 = Math.floor(p2.x / tileSize);
-        const y1 = Math.floor(p2.y / tileSize);
-
-        let dx = Math.abs(x1 - x0);
-        let dy = Math.abs(y1 - y0);
-        let x = x0;
-        let y = y0;
-        let n = 1 + dx + dy;
-        let x_inc = (x1 > x0) ? 1 : -1;
-        let y_inc = (y1 > y0) ? 1 : -1;
-        let error = dx - dy;
-        dx *= 2;
-        dy *= 2;
-
-        for (; n > 0; --n) {
-          if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight || !grid[y][x]) {
-            return false;
-          }
-          if (error > 0) {
-            x += x_inc;
-            error -= dy;
-          } else if (error < 0) {
-            y += y_inc;
-            error += dx;
-          } else {
-            // error == 0, move diagonally
-            x += x_inc;
-            y += y_inc;
-            error -= dy;
-            error += dx;
-            n--;
-          }
-        }
-        return true;
-      };
-
-      const smoothedPath: Vector2[] = [path[0]];
-      let currentIdx = 0;
-      while (currentIdx < path.length - 1) {
-        let furthest = currentIdx + 1;
-        for (let i = currentIdx + 2; i < path.length; i++) {
-          if (hasLineOfSight(path[currentIdx], path[i])) {
-            furthest = i;
-          }
-        }
-        smoothedPath.push(path[furthest]);
-        currentIdx = furthest;
-      }
-
-      // Replace the last point with the exact target position
-      if (smoothedPath.length > 0) {
-        smoothedPath[smoothedPath.length - 1] = { ...end };
-      }
-      return smoothedPath;
+    if (currentNode.h < bestNode.h) {
+      bestNode = currentNode;
     }
 
-    closedList.add(`${currentNode.x},${currentNode.y}`);
+    if (currentNode.x === endTile.x && currentNode.y === endTile.y) {
+       bestNode = currentNode;
+       break;
+    }
 
-    // Neighbors (8 directions)
-    const neighbors = [
+    nodeStates[currentIdx] = 2; // closed
+
+    const dirs = [
       { x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 },
       { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
     ];
 
-    for (const neighbor of neighbors) {
-      const nx = currentNode.x + neighbor.x;
-      const ny = currentNode.y + neighbor.y;
+    for (let i = 0; i < dirs.length; i++) {
+      const nx = currentNode.x + dirs[i].x;
+      const ny = currentNode.y + dirs[i].y;
+      const nIdx = ny * mapWidth + nx;
 
       if (nx < 0 || nx >= mapWidth || ny < 0 || ny >= mapHeight) continue;
-      if (!grid[ny][nx]) continue;
-      if (closedList.has(`${nx},${ny}`)) continue;
+      if (!isWalkableForSearch(nx, ny)) continue;
+      if (nodeStates[nIdx] === 2) continue;
 
-      // Diagonal movement check (prevent cutting corners of obstacles)
-      if (Math.abs(neighbor.x) === 1 && Math.abs(neighbor.y) === 1) {
-        if (!grid[currentNode.y][nx] || !grid[ny][currentNode.x]) continue;
+      if (Math.abs(dirs[i].x) === 1 && Math.abs(dirs[i].y) === 1) {
+        if (!isWalkableForSearch(currentNode.x, ny) || !isWalkableForSearch(nx, currentNode.y)) continue;
       }
 
-      const gScore = currentNode.g + (Math.abs(neighbor.x) === 1 && Math.abs(neighbor.y) === 1 ? 1.4 : 1);
-      const existingOpen = openList.find(n => n.x === nx && n.y === ny);
-
-      if (!existingOpen) {
+      const gScore = currentNode.g + (Math.abs(dirs[i].x) === 1 && Math.abs(dirs[i].y) === 1 ? 1.4 : 1);
+      
+      if (nodeStates[nIdx] === 0 || gScore < bestG[nIdx]) {
         const h = Math.abs(nx - endTile.x) + Math.abs(ny - endTile.y);
         openList.push({
           x: nx,
@@ -226,14 +323,45 @@ export function calculatePath(this: any, start: Vector2, endRaw: Vector2): Vecto
           f: gScore + h,
           parent: currentNode
         });
-      } else if (gScore < existingOpen.g) {
-        existingOpen.g = gScore;
-        existingOpen.f = gScore + existingOpen.h;
-        existingOpen.parent = currentNode;
+        nodeStates[nIdx] = 1;
+        bestG[nIdx] = gScore;
       }
     }
   }
 
-  // If no path found, just return the end point (fallback)
-  return [{ ...end }];
+  // Reconstruction
+  const path: Vector2[] = [];
+  let curr: Node | null = bestNode;
+  while (curr) {
+    path.push({ x: curr.x * tileSize + tileSize / 2, y: curr.y * tileSize + tileSize / 2 });
+    curr = curr.parent;
+  }
+  path.reverse();
+  path[0] = { ...start };
+  
+  if (path.length > 1) {
+    // Smoothing
+    const smoothedPath: Vector2[] = [path[0]];
+    let cursorIdx = 0;
+    while (cursorIdx < path.length - 1) {
+      let furthest = cursorIdx + 1;
+      const maxCheck = Math.min(path.length, cursorIdx + 30);
+      for (let i = cursorIdx + 2; i < maxCheck; i++) {
+        if (hasLineOfSight(path[cursorIdx], path[i], isWalkableForSearch)) {
+          furthest = i;
+        }
+      }
+      smoothedPath.push(path[furthest]);
+      cursorIdx = furthest;
+    }
+    
+    // Only use end if we actually reached it
+    if (bestNode.x === endTile.x && bestNode.y === endTile.y) {
+       smoothedPath[smoothedPath.length - 1] = { ...end };
+    }
+    return smoothedPath;
+  }
+  
+  return path;
 }
+

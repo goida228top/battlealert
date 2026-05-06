@@ -65,6 +65,10 @@ export function getBuildingDimensions(type: BuildingType): { w: number, h: numbe
       return { w: 2, h: 2 };
     case 'OIL_DERRICK':
       return { w: 2, h: 2 };
+    case 'TREE':
+      return { w: 1, h: 1 };
+    case 'MOUNTAIN':
+      return { w: 1, h: 1 };
     default:
       return { w: 2, h: 2 };
   }

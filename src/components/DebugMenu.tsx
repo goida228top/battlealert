@@ -31,6 +31,12 @@ export const DebugMenu: React.FC<DebugMenuProps> = ({ engineRef }) => {
     forceUpdate();
   };
 
+  const toggleFPS = () => {
+    if (!engineRef.current.state.debugFlags) engineRef.current.state.debugFlags = {};
+    engineRef.current.state.debugFlags.showFPS = !engineRef.current.state.debugFlags.showFPS;
+    forceUpdate();
+  };
+
   return (
     <>
       <div 
@@ -77,6 +83,12 @@ export const DebugMenu: React.FC<DebugMenuProps> = ({ engineRef }) => {
                   onClick={toggleZoom}
                 >
                   {engineRef.current.state.debugFlags?.freeZoom ? '🔍 Free Zoom: ON' : '🔍 Free Zoom: OFF'}
+                </button>
+                <button 
+                  className={`p-2 rounded text-left border transition-colors ${engineRef.current.state.debugFlags?.showFPS ? 'bg-green-900/50 border-green-500 text-green-200' : 'bg-zinc-800 hover:bg-zinc-700 border-zinc-700/50'}`}
+                  onClick={toggleFPS}
+                >
+                  {engineRef.current.state.debugFlags?.showFPS ? '📊 FPS Counter: ON' : '📊 FPS Counter: OFF'}
                 </button>
               </div>
             </section>

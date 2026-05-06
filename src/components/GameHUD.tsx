@@ -18,19 +18,26 @@ interface GameHUDProps {
 export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameState }) => {
   const [displayedCredits, setDisplayedCredits] = useState(gameState.credits);
   const animationRef = useRef<number>();
+  const creditsTargetRef = useRef(gameState.credits);
+
+  // Update target ref when gameState changes
+  useEffect(() => {
+    const owner = engineRef.current.localPlayerId;
+    const currentCredits = owner === 'PLAYER_2' ? (gameState.p2Credits || 0) : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits;
+    creditsTargetRef.current = currentCredits;
+  }, [gameState.credits, gameState.p2Credits, gameState.p3Credits, gameState.p4Credits, engineRef]);
 
   useEffect(() => {
     const updateCredits = () => {
-      setDisplayedCredits(prev => {
-        const owner = engineRef.current.localPlayerId;
-        const currentCredits = owner === 'PLAYER_2' ? (gameState.p2Credits || 0) : owner === 'PLAYER_3' ? (gameState.p3Credits || 0) : owner === 'PLAYER_4' ? (gameState.p4Credits || 0) : gameState.credits;
+      const target = creditsTargetRef.current;
 
-        if (prev === currentCredits) return prev;
-        const diff = currentCredits - prev;
-        const step = Math.sign(diff) * Math.max(1, Math.floor(Math.abs(diff) * 0.1));
+      setDisplayedCredits(prev => {
+        if (prev === target) return prev;
+        const diff = target - prev;
+        const step = Math.sign(diff) * Math.max(1, Math.floor(Math.abs(diff) * 0.15));
         
         if (Math.abs(diff) <= Math.abs(step)) {
-          return currentCredits;
+          return target;
         }
         return prev + step;
       });
@@ -41,7 +48,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
     };
-  }, [gameState.credits, gameState.p2Credits, gameState.p3Credits, gameState.p4Credits, engineRef]);
+  }, []); 
 
   const owner = engineRef.current.localPlayerId;
   const localGameState = {
@@ -142,90 +149,6 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
             <DollarSign className="w-4 h-4" />
           </button>
         </div>
-        
-        {/* Special Abilities Row */}
-        {(localGameState.specialAbilities.IRON_CURTAIN.ready || localGameState.specialAbilities.NUCLEAR_SILO.ready || localGameState.specialAbilities.CHRONOSPHERE?.ready || localGameState.specialAbilities.WEATHER_DEVICE?.ready || localGameState.specialAbilities.PARATROOPERS?.ready || localGameState.specialAbilities.SPY_PLANE?.ready) && (
-          <div className="flex gap-1 w-full justify-center flex-wrap">
-            {localGameState.specialAbilities.IRON_CURTAIN.ready && (
-              <button 
-                onClick={() => {
-                  engineRef.current.state.interactionMode = 'USE_IRON_CURTAIN';
-                  setGameState({ ...engineRef.current.state });
-                }}
-                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_IRON_CURTAIN' ? 'bg-red-600 border-white shadow-[0_0_10px_rgba(220,38,38,0.5)]' : 'bg-red-900/40 border-red-800 hover:bg-red-900/60'}`}
-                title="Iron Curtain Ready!"
-              >
-                <ShieldAlert className="w-3 h-3 text-white" />
-                <span className="text-[5px] font-black text-white uppercase mt-0.5">ЗАНАВЕС</span>
-              </button>
-            )}
-            {localGameState.specialAbilities.NUCLEAR_SILO.ready && (
-              <button 
-                onClick={() => {
-                  engineRef.current.state.interactionMode = 'USE_NUCLEAR_STRIKE';
-                  setGameState({ ...engineRef.current.state });
-                }}
-                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_NUCLEAR_STRIKE' ? 'bg-yellow-600 border-white shadow-[0_0_10px_rgba(202,138,4,0.5)]' : 'bg-yellow-900/40 border-yellow-800 hover:bg-yellow-900/60'}`}
-                title="Ядерный удар готов!"
-              >
-                <Bomb className="w-3 h-3 text-white" />
-                <span className="text-[5px] font-black text-white uppercase mt-0.5">ЯДЕРКА</span>
-              </button>
-            )}
-            {localGameState.specialAbilities.PARATROOPERS?.ready && (
-              <button 
-                onClick={() => {
-                  engineRef.current.state.interactionMode = 'USE_PARATROOPERS';
-                  setGameState({ ...engineRef.current.state });
-                }}
-                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_PARATROOPERS' ? 'bg-green-600 border-white shadow-[0_0_10px_rgba(34,197,94,0.5)]' : 'bg-green-900/40 border-green-800 hover:bg-green-900/60'}`}
-                title="Десант готов!"
-              >
-                <MoveDown className="w-3 h-3 text-white" />
-                <span className="text-[5px] font-black text-white uppercase mt-0.5">ДЕСАНТ</span>
-              </button>
-            )}
-            {localGameState.specialAbilities.SPY_PLANE?.ready && (
-              <button 
-                onClick={() => {
-                  engineRef.current.state.interactionMode = 'USE_SPY_PLANE';
-                  setGameState({ ...engineRef.current.state });
-                }}
-                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_SPY_PLANE' ? 'bg-zinc-600 border-white shadow-[0_0_10px_rgba(113,113,122,0.5)]' : 'bg-zinc-800 border-zinc-700 hover:bg-zinc-700'}`}
-                title="Шпионский самолет готов!"
-              >
-                <Radar className="w-3 h-3 text-white" />
-                <span className="text-[5px] font-black text-white uppercase mt-0.5">ШПИОН</span>
-              </button>
-            )}
-            {localGameState.specialAbilities.CHRONOSPHERE?.ready && (
-              <button 
-                onClick={() => {
-                  engineRef.current.state.interactionMode = 'USE_CHRONOSPHERE';
-                  setGameState({ ...engineRef.current.state });
-                }}
-                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_CHRONOSPHERE' ? 'bg-purple-600 border-white shadow-[0_0_10px_rgba(168,85,247,0.5)]' : 'bg-purple-900/40 border-purple-800 hover:bg-purple-900/60'}`}
-                title="Хроносфера готова!"
-              >
-                <Activity className="w-3 h-3 text-white" />
-                <span className="text-[5px] font-black text-white uppercase mt-0.5">ХРОНО</span>
-              </button>
-            )}
-            {localGameState.specialAbilities.WEATHER_DEVICE?.ready && (
-              <button 
-                onClick={() => {
-                  engineRef.current.state.interactionMode = 'USE_WEATHER_STORM';
-                  setGameState({ ...engineRef.current.state });
-                }}
-                className={`flex-1 min-w-[50px] py-1 rounded border flex flex-col items-center justify-center transition-all ${gameState.interactionMode === 'USE_WEATHER_STORM' ? 'bg-sky-600 border-white shadow-[0_0_10px_rgba(56,189,248,0.5)]' : 'bg-sky-900/40 border-sky-800 hover:bg-sky-900/60'}`}
-                title="Устройство контроля погоды готово!"
-              >
-                <Wind className="w-3 h-3 text-white" />
-                <span className="text-[5px] font-black text-white uppercase mt-0.5">ШТОРМ</span>
-              </button>
-            )}
-          </div>
-        )}
       </div>
       
       {/* Tab Row */}
@@ -260,6 +183,25 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
         </button>
       </div>
 
+      {/* Selected MCV Action Button */}
+      {gameState.entities.some(e => e.selected && e.owner === engineRef.current.localPlayerId && (e.subType === 'MCV' || e.subType === 'ALLIED_MCV')) && (
+        <div className="p-2 bg-zinc-900 border-b border-zinc-800">
+          <button 
+            onClick={() => {
+              const selectedMCV = gameState.entities.find(e => e.selected && e.owner === engineRef.current.localPlayerId && (e.subType === 'MCV' || e.subType === 'ALLIED_MCV'));
+              if (selectedMCV) {
+                engineRef.current.deployMCV(selectedMCV.id);
+                setGameState({ ...engineRef.current.state });
+              }
+            }}
+            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-black rounded border-2 border-white/20 shadow-[0_0_15px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 animate-pulse"
+          >
+            <Factory className="w-5 h-5" />
+            РАЗВЕРНУТЬ БАЗУ (D)
+          </button>
+        </div>
+      )}
+
       {/* Build Area with Power Bar */}
       <div className="flex-1 flex overflow-hidden bg-black">
         {/* Power Bar (Vertical) */}
@@ -291,10 +233,10 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
 
         {/* Build Grid */}
         <div className="flex-1 p-2 overflow-y-auto custom-scrollbar">
-          {localGameState.sidebarTab === 'BUILDINGS' && <BuildingsTab gameState={localGameState} engineRef={engineRef} />}
-          {localGameState.sidebarTab === 'INFANTRY' && <InfantryTab gameState={localGameState} engineRef={engineRef} />}
-          {localGameState.sidebarTab === 'VEHICLES' && <VehiclesTab gameState={localGameState} engineRef={engineRef} />}
-          {localGameState.sidebarTab === 'DEFENSE' && <DefenseTab gameState={localGameState} engineRef={engineRef} />}
+          {localGameState.sidebarTab === 'BUILDINGS' && <BuildingsTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}
+          {localGameState.sidebarTab === 'INFANTRY' && <InfantryTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}
+          {localGameState.sidebarTab === 'VEHICLES' && <VehiclesTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}
+          {localGameState.sidebarTab === 'DEFENSE' && <DefenseTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}
         </div>
       </div>
     </div>

@@ -6,49 +6,99 @@ export function placeBuildingAt(this: GameEngine, pos: Vector2, type: BuildingTy
   const tileSize = this.state.map.tileSize;
   const dims = getBuildingDimensions(type);
 
-  // Calculate top-left tile based on provided position
-  const tx = Math.floor((pos.x - (dims.w * tileSize) / 2) / tileSize);
-  const ty = Math.floor((pos.y - (dims.h * tileSize) / 2) / tileSize);
+  // Determine effective tile size (the "step") based on terrain at target position
+  const baseTx = Math.floor(pos.x / tileSize);
+  const baseTy = Math.floor(pos.y / tileSize);
+  const isOverMountain = this.state.map.tiles[baseTy]?.[baseTx] === 'MOUNTAIN_GRASS';
+  const effectiveTileSize = isOverMountain ? tileSize * 1.2 : tileSize;
+
+  // Calculate top-left tile based on provided position using the scaled step
+  const tx = Math.floor((pos.x - (dims.w * effectiveTileSize) / 2) / effectiveTileSize);
+  const ty = Math.floor((pos.y - (dims.h * effectiveTileSize) / 2) / effectiveTileSize);
+
+  // Determine the bounding box in raw tile coordinates
+  const startTileX = Math.floor((tx * effectiveTileSize) / tileSize);
+  const endTileX = Math.floor(((tx + dims.w) * effectiveTileSize - 1) / tileSize);
+  const startTileY = Math.floor((ty * effectiveTileSize) / tileSize);
+  const endTileY = Math.floor(((ty + dims.h) * effectiveTileSize - 1) / tileSize);
 
   // 1. Bounds and Terrain Check
-  for (let dy = 0; dy < dims.h; dy++) {
-    for (let dx = 0; dx < dims.w; dx++) {
-      const curX = tx + dx;
-      const curY = ty + dy;
-
-      if (curX < 0 || curX >= this.state.map.width || curY < 0 || curY >= this.state.map.height) {
+  let baseElevation: 'GROUND' | 'PLATEAU' | 'MOUNTAIN_PLATEAU' | null = null;
+  
+  for (let ry = startTileY; ry <= endTileY; ry++) {
+    for (let rx = startTileX; rx <= endTileX; rx++) {
+      if (rx < 0 || rx >= this.state.map.width || ry < 0 || ry >= this.state.map.height) {
         return false; // Out of bounds
       }
 
-      const tileType = this.state.map.tiles[curY][curX];
-      if (tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE') {
-        return false; // Cannot build on water or ore
+      const tileType = this.state.map.tiles[ry][rx];
+      const visibility = this.state.map.visibility[ry][rx];
+      
+      const isFoggy = !this.state.debugFlags?.disableFog && visibility === 0;
+      const isNavalYard = type === 'NAVAL_YARD' || type === 'ALLIED_NAVAL_YARD';
+      
+      // Block impossible terrain
+      let isInvalidTerrain = false;
+      
+      if (isNavalYard) {
+          if (tileType !== 'WATER' && tileType !== 'WATER_TO_GRASS' && tileType !== 'GRASS_TO_WATER') {
+              isInvalidTerrain = true;
+          }
+      } else {
+          if (tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE' || tileType.startsWith('CLIFF') || tileType.startsWith('RAMP_') || tileType === 'DEBUG_RED' || tileType === 'MOUNTAIN_DECOR') {
+              isInvalidTerrain = true;
+          }
+      }
+
+      if (isInvalidTerrain || isFoggy) {
+        return false; 
+      }
+
+      // Block bridges
+      const onBridge = this.state.map.bridges.some((b: any) => {
+        return rx >= b.x && rx < b.x + b.width && ry >= b.y && ry < b.y + b.height;
+      });
+      if (onBridge) return false;
+
+      // Check elevation consistency
+      const curElevation = (tileType === 'MOUNTAIN_GRASS') ? 'MOUNTAIN_PLATEAU' : ((tileType === 'ELEVATED_GRASS') ? 'PLATEAU' : 'GROUND');
+      if (baseElevation === null) {
+        baseElevation = curElevation;
+      } else if (baseElevation !== curElevation) {
+        return false; // Building must be on uniform terrain level
       }
     }
   }
 
-  // Calculate snapped center position
-  const snappedX = (tx + dims.w / 2) * tileSize;
-  const snappedY = (ty + dims.h / 2) * tileSize;
+  // Calculate snapped center position using the scaled step
+  const snappedX = (tx + dims.w / 2) * effectiveTileSize;
+  const snappedY = (ty + dims.h / 2) * effectiveTileSize;
   const snappedPos = { x: snappedX, y: snappedY };
 
   // 2. Overlap Check
   const margin = 5;
   const bounds = {
-    minX: snappedX - (dims.w * tileSize) / 2 + margin,
-    maxX: snappedX + (dims.w * tileSize) / 2 - margin,
-    minY: snappedY - (dims.h * tileSize) / 2 + margin,
-    maxY: snappedY + (dims.h * tileSize) / 2 - margin
+    minX: snappedX - (dims.w * effectiveTileSize) / 2 + margin,
+    maxX: snappedX + (dims.w * effectiveTileSize) / 2 - margin,
+    minY: snappedY - (dims.h * effectiveTileSize) / 2 + margin,
+    maxY: snappedY + (dims.h * effectiveTileSize) / 2 - margin
   };
 
   const hasOverlap = this.state.entities.some((e: any) => {
     if (e.type !== 'BUILDING') return false;
     const eDims = getBuildingDimensions(e.subType as BuildingType);
+    
+    // We need to know the effective tile size of the EXISTING building to check overlap correctly
+    const eBaseTx = Math.floor(e.position.x / tileSize);
+    const eBaseTy = Math.floor(e.position.y / tileSize);
+    const eIsOverMountain = this.state.map.tiles[eBaseTy]?.[eBaseTx] === 'MOUNTAIN_GRASS';
+    const eEffectiveTileSize = eIsOverMountain ? tileSize * 1.2 : tileSize;
+
     const eBounds = {
-      minX: e.position.x - (eDims.w * tileSize) / 2 + margin,
-      maxX: e.position.x + (eDims.w * tileSize) / 2 - margin,
-      minY: e.position.y - (eDims.h * tileSize) / 2 + margin,
-      maxY: e.position.y + (eDims.h * tileSize) / 2 - margin
+      minX: e.position.x - (eDims.w * eEffectiveTileSize) / 2 + margin,
+      maxX: e.position.x + (eDims.w * eEffectiveTileSize) / 2 - margin,
+      minY: e.position.y - (eDims.h * eEffectiveTileSize) / 2 + margin,
+      maxY: e.position.y + (eDims.h * eEffectiveTileSize) / 2 - margin
     };
     return !(bounds.maxX < eBounds.minX || bounds.minX > eBounds.maxX || bounds.maxY < eBounds.minY || bounds.minY > eBounds.maxY);
   });

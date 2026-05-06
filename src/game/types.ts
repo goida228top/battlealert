@@ -3,7 +3,7 @@ export type EntityType = 'UNIT' | 'BUILDING';
 export type Faction = 'FEDERATION' | 'COALITION';
 export type Country = 'RUSSIA' | 'CUBA' | 'LIBYA' | 'IRAQ' | 'AMERICA' | 'BRITAIN' | 'FRANCE' | 'GERMANY' | 'KOREA';
 export type UnitType = 'TANK' | 'SOLDIER' | 'HARVESTER' | 'MCV' | 'ALLIED_MCV' | 'APOCALYPSE_TANK' | 'TESLA_TROOPER' | 'ENGINEER' | 'ATTACK_DOG' | 'FLAK_TROOPER' | 'V3_LAUNCHER' | 'TERROR_DRONE' | 'RHINO_TANK' | 'FLAK_TRACK' | 'BORIS' | 'CRAZY_IVAN' | 'KIROV_AIRSHIP' | 'TYPHOON_SUB' | 'ATTACK_SUB' | 'SEA_SCORPION' | 'GIANT_SQUID' | 'DREADNOUGHT' | 'DESOLATOR' | 'TESLA_TANK' | 'TERRORIST' | 'SIEGE_CHOPPER' | 'YURI' | 'YURI_PRIME' | 'HOVER_TRANSPORT' | 'DEMOLITION_TRUCK' | 'GI' | 'ROCKETEER' | 'NAVY_SEAL' | 'CHRONO_LEGIONNAIRE' | 'TANYA' | 'SNIPER' | 'CHRONO_IVAN' | 'CHRONO_COMMANDO' | 'PSI_COMMANDO' | 'SPY' | 'GRIZZLY_TANK' | 'IFV' | 'MIRAGE_TANK' | 'PRISM_TANK' | 'ROBOT_TANK' | 'BATTLE_FORTRESS' | 'CHRONO_MINER' | 'TANK_DESTROYER' | 'AMPHIBIOUS_TRANSPORT' | 'DESTROYER' | 'AEGIS_CRUISER' | 'AIRCRAFT_CARRIER' | 'DOLPHIN' | 'HARRIER' | 'BLACK_EAGLE' | 'NIGHT_HAWK_TRANSPORT';
-export type BuildingType = 'CONSTRUCTION_YARD' | 'POWER_PLANT' | 'BARRACKS' | 'ORE_REFINERY' | 'WAR_FACTORY' | 'SENTRY_GUN' | 'BATTLE_LAB' | 'TESLA_COIL' | 'RADAR' | 'SERVICE_DEPOT' | 'ORE_PURIFIER' | 'FLAK_CANNON' | 'INDUSTRIAL_PLANT' | 'NUCLEAR_REACTOR' | 'PSYCHIC_SENSOR' | 'CLONING_VATS' | 'IRON_CURTAIN' | 'NUCLEAR_SILO' | 'NAVAL_YARD' | 'SOVIET_WALL' | 'BATTLE_BUNKER' | 'ALLIED_CONSTRUCTION_YARD' | 'ALLIED_POWER_PLANT' | 'ALLIED_ORE_REFINERY' | 'ALLIED_BARRACKS' | 'ALLIED_WAR_FACTORY' | 'ALLIED_NAVAL_YARD' | 'AIR_FORCE_COMMAND' | 'ALLIED_BATTLE_LAB' | 'ALLIED_ORE_PURIFIER' | 'PATRIOT_MISSILE' | 'PILLBOX' | 'PRISM_TOWER' | 'GRAND_CANNON' | 'GAP_GENERATOR' | 'CHRONOSPHERE' | 'WEATHER_DEVICE' | 'ALLIED_WALL' | 'OIL_DERRICK' | 'SPY_SATELLITE' | 'ROBOT_CONTROL_CENTER';
+export type BuildingType = 'CONSTRUCTION_YARD' | 'POWER_PLANT' | 'BARRACKS' | 'ORE_REFINERY' | 'WAR_FACTORY' | 'SENTRY_GUN' | 'BATTLE_LAB' | 'TESLA_COIL' | 'RADAR' | 'SERVICE_DEPOT' | 'ORE_PURIFIER' | 'FLAK_CANNON' | 'INDUSTRIAL_PLANT' | 'NUCLEAR_REACTOR' | 'PSYCHIC_SENSOR' | 'CLONING_VATS' | 'IRON_CURTAIN' | 'NUCLEAR_SILO' | 'NAVAL_YARD' | 'SOVIET_WALL' | 'BATTLE_BUNKER' | 'ALLIED_CONSTRUCTION_YARD' | 'ALLIED_POWER_PLANT' | 'ALLIED_ORE_REFINERY' | 'ALLIED_BARRACKS' | 'ALLIED_WAR_FACTORY' | 'ALLIED_NAVAL_YARD' | 'AIR_FORCE_COMMAND' | 'ALLIED_BATTLE_LAB' | 'ALLIED_ORE_PURIFIER' | 'PATRIOT_MISSILE' | 'PILLBOX' | 'PRISM_TOWER' | 'GRAND_CANNON' | 'GAP_GENERATOR' | 'CHRONOSPHERE' | 'WEATHER_DEVICE' | 'ALLIED_WALL' | 'OIL_DERRICK' | 'SPY_SATELLITE' | 'ROBOT_CONTROL_CENTER' | 'TREE' | 'MOUNTAIN';
 
 export interface Vector2 {
   x: number;
@@ -24,7 +24,7 @@ export interface Entity {
   speed?: number;
   rotation?: number; // in radians
   targetId?: string;
-  harvestState?: 'IDLE' | 'MOVING_TO_ORE' | 'MINING' | 'RETURNING' | 'WAITING_IN_QUEUE' | 'UNLOADING';
+  harvestState?: 'IDLE' | 'MOVING' | 'MOVING_TO_ORE' | 'MINING' | 'RETURNING' | 'WAITING_IN_QUEUE' | 'UNLOADING';
   harvestAmount?: number;
   unloadStartTime?: number;
   occupiedBy?: string | null;
@@ -47,6 +47,10 @@ export interface Entity {
   lastRepairTime?: number;
   lastRepath?: number;
   explicitAttack?: boolean;
+  stuckTime?: number;
+  lastTargetSearch?: number; 
+  lastPathCalc?: number;
+  lastOreSearch?: number;
 }
 
 export interface Crate {
@@ -55,7 +59,7 @@ export interface Crate {
   type: 'MONEY' | 'HEAL' | 'UNIT' | 'ARMOR' | 'SPEED';
 }
 
-export type TileType = 'GRASS' | 'WATER' | 'GRASS_TO_WATER' | 'WATER_TO_GRASS' | 'ORE';
+export type TileType = 'GRASS' | 'WATER' | 'GRASS_TO_WATER' | 'WATER_TO_GRASS' | 'ORE' | 'ELEVATED_GRASS' | 'CLIFF_N' | 'CLIFF_S' | 'CLIFF_E' | 'CLIFF_W' | 'RAMP_N' | 'RAMP_S' | 'RAMP_E' | 'RAMP_W' | 'MOUNTAIN_DECOR' | 'DEBUG_RED' | 'MOUNTAIN_GRASS';
 export type MapTheme = 'TEMPERATE' | 'SNOW' | 'DESERT';
 
 export interface MapTile {
@@ -146,8 +150,17 @@ export interface GameState {
     bridges: Bridge[];
     visibility: number[][]; // 0: hidden, 1: explored, 2: visible
     theme: MapTheme;
+    terrainGrid?: boolean[][];
+    bigUnitTerrainGrid?: boolean[][];
+    waterGrid?: boolean[][];
+    amphibiousGrid?: boolean[][];
+    generation?: number;
+    oreTiles?: Vector2[];
+    heightGrid?: number[][];
   };
   gameOver?: 'WIN' | 'LOSS';
+  lastOreRegen?: number;
+  visibilityGeneration?: number;
   ironCurtainActive?: boolean;
   superWeapons?: any; // or appropriate type if it exists separately, though specialAbilities is here
   specialAbilities: {
@@ -189,5 +202,11 @@ export interface GameState {
   debugFlags?: {
     disableFog?: boolean;
     freeZoom?: boolean;
+    showFPS?: boolean;
   };
+  entityMap?: Map<string, Entity>;
+  visUnits?: Entity[];
+  visBuildings?: Entity[];
+  visScenery?: Entity[];
+  dynamicObstacleGrid?: Uint8Array;
 }

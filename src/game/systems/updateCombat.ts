@@ -45,10 +45,15 @@ if (entity.subType === 'DESOLATOR' && entity.isDeployed) {
       color: '#22c55e', // green
     });
     // Area of effect damage to infantry
-    this.state.entities.forEach(e => {
-      if (e.id !== entity.id && e.health > 0 && Math.hypot(e.position.x - entity.position.x, e.position.y - entity.position.y) < 150) {
-        if (e.type === 'UNIT' && ['SOLDIER', 'ENGINEER', 'ATTACK_DOG', 'FLAK_TROOPER', 'TESLA_TROOPER', 'CRAZY_IVAN', 'BORIS', 'TERRORIST', 'YURI', 'GI', 'ROCKETEER', 'NAVY_SEAL', 'CHRONO_LEGIONNAIRE', 'TANYA', 'SNIPER', 'CHRONO_IVAN'].includes(e.subType || '')) {
-          e.health -= 20; // Splash damage to infantry
+    const nearby = this.frameCache.allUnits;
+    nearby.forEach(e => {
+      if (e.id !== entity.id && e.health > 0) {
+        const dx = e.position.x - entity.position.x;
+        const dy = e.position.y - entity.position.y;
+        if (dx * dx + dy * dy < 22500) { // 150^2
+          if (['SOLDIER', 'ENGINEER', 'ATTACK_DOG', 'FLAK_TROOPER', 'TESLA_TROOPER', 'CRAZY_IVAN', 'BORIS', 'TERRORIST', 'YURI', 'GI', 'ROCKETEER', 'NAVY_SEAL', 'CHRONO_LEGIONNAIRE', 'TANYA', 'SNIPER', 'CHRONO_IVAN'].includes(e.subType || '')) {
+            e.health -= 20; // Splash damage to infantry
+          }
         }
       }
     });
@@ -57,18 +62,29 @@ if (entity.subType === 'DESOLATOR' && entity.isDeployed) {
 }
 
 if (!entity.targetId) {
+  // Throttling: Only search for targets every ~500ms
+  if (entity.lastTargetSearch && timestamp - entity.lastTargetSearch < 500) {
+    return;
+  }
+  entity.lastTargetSearch = timestamp;
+
   // Prioritize movement: Don't auto-acquire if moving (unless attack-moving)
   if (entity.targetPosition && !entity.isAttackMoving) {
     return;
   }
 
   // Look for nearest enemy within range
-  const searchRange = entity.isAttackMoving ? 500 : 400;
+  const searchRange = entity.isAttackMoving ? 800 : 400;
+  const searchRangeSq = searchRange * searchRange;
   let nearestEnemy: Entity | null = null;
-  let minDist = searchRange;
+  let minDistSq = searchRangeSq;
 
-  for (const e of this.state.entities) {
-    if (e.owner !== entity.owner && e.health > 0 && !e.isDisguised) {
+  const potentialTargets = (this as any).frameCache.enemiesByOwner[entity.owner] || [];
+  for (const e of potentialTargets) {
+    // Skip scenery
+    if (e.subType === 'TREE') continue;
+
+    if (!e.isDisguised) {
       // Basic anti-air check
       if (e.isAir && !['ROCKETEER', 'IFV', 'PATRIOT_MISSILE', 'FLAK_TROOPER', 'FLAK_TRACK', 'FLAK_CANNON', 'SEA_SCORPION', 'AEGIS_CRUISER', 'APOCALYPSE_TANK'].includes(entity.subType || '')) {
         continue; // Cannot attack air
@@ -78,12 +94,14 @@ if (!entity.targetId) {
         continue; // Cannot attack subs
       }
 
-      const dist = Math.hypot(entity.position.x - e.position.x, entity.position.y - e.position.y);
-      if (dist < minDist) {
+      const dx = entity.position.x - e.position.x;
+      const dy = entity.position.y - e.position.y;
+      const distSq = dx * dx + dy * dy;
+      if (distSq < minDistSq) {
         // Prioritize units over buildings slightly
-        const priorityBonus = e.type === 'UNIT' ? 50 : 0;
-        if (dist - priorityBonus < minDist) {
-          minDist = dist - priorityBonus;
+        const priorityBonusSq = e.type === 'UNIT' ? 2500 : 0; // sqrt(2500) = 50
+        if (distSq - priorityBonusSq < minDistSq) {
+          minDistSq = distSq - priorityBonusSq;
           nearestEnemy = e;
         }
       }
@@ -93,14 +111,17 @@ if (!entity.targetId) {
   if (nearestEnemy) {
     entity.targetId = nearestEnemy.id;
   } else if (entity.isAttackMoving && entity.attackMoveTarget && !entity.targetPosition) {
-    entity.path = this.calculatePath(entity.position, entity.attackMoveTarget);
-    entity.targetPosition = entity.path[0];
+    if (!entity.lastPathCalc || timestamp - entity.lastPathCalc > 1000 + Math.random() * 500) {
+        entity.path = this.calculatePath(entity.position, entity.attackMoveTarget, entity);
+        entity.targetPosition = entity.path?.[0];
+        entity.lastPathCalc = timestamp;
+    }
   }
 }
 
 if (entity.targetId) {
-  const target = this.state.entities.find(e => e.id === entity.targetId);
-  if (!target || target.health <= 0) {
+  const target = (this.state as any).entityMap.get(entity.targetId);
+  if (!target || target.health <= 0 || target.owner === 'NEUTRAL') {
     if (target && target.health <= 0) {
       this.state.effects.push({
         id: `exp-${timestamp}-${Math.random()}`,
@@ -113,10 +134,23 @@ if (entity.targetId) {
     entity.targetId = undefined;
     return;
   }
+  
+  if (target.owner === entity.owner) {
+    return; // Don't attack friendly targets (e.g. Service Depot repairing)
+  }
 
   const dx = target.position.x - entity.position.x;
   const dy = target.position.y - entity.position.y;
-  const dist = Math.sqrt(dx * dx + dy * dy);
+  let dist = Math.sqrt(dx * dx + dy * dy);
+  
+  // Account for building/unit size so we check range against the edges, not just the center
+  if (target.size) {
+      dist -= target.size / 2;
+  }
+  if (entity.size) {
+      dist -= entity.size / 2;
+  }
+  dist = Math.max(0, dist);
   
   let range = 150;
   if (entity.subType === 'TANK') range = 250;
@@ -175,10 +209,21 @@ if (entity.targetId) {
 
   if (dist > range) {
     if (entity.type === 'UNIT') {
+      // Re-evaluate target periodically if out of range to avoid chasing endlessly 
+      // when there's a closer threat or obstacle right in front of us
+      if (timestamp - (entity.lastTargetSearch || 0) > 1500) {
+          entity.targetId = undefined;
+          return; // Let next frame find a new closest target
+      }
+
       // Only override path if not already moving or if in attack-move mode
+      // Throttling path calculation so they don't stutter and recalculate every frame!
       if (!entity.targetPosition || entity.isAttackMoving || entity.explicitAttack) {
-        entity.path = this.calculatePath(entity.position, target.position);
-        entity.targetPosition = entity.path[0];
+        if (!entity.lastPathCalc || timestamp - entity.lastPathCalc > 1000 + Math.random() * 500) {
+            entity.path = this.calculatePath(entity.position, target.position, entity);
+            entity.targetPosition = entity.path?.[0];
+            entity.lastPathCalc = timestamp;
+        }
       }
       if (entity.subType === 'MIRAGE_TANK') entity.isDisguised = false; // Reveal when moving
     }
@@ -390,10 +435,14 @@ if (entity.targetId) {
         });
         
         // Area damage
-        this.state.entities.forEach(e => {
+        const areaUnits = (this as any).frameCache.allUnits;
+        areaUnits.forEach((e: any) => {
           if (e.id !== entity.id) {
-            const dist = Math.hypot(e.position.x - entity.position.x, e.position.y - entity.position.y);
-            if (dist < 200) {
+            const dx = e.position.x - entity.position.x;
+            const dy = e.position.y - entity.position.y;
+            const distSq = dx * dx + dy * dy;
+            if (distSq < 40000) { // 200^2
+              const dist = Math.sqrt(distSq);
               e.health -= damage * (1 - dist / 200);
             }
           }
@@ -460,6 +509,11 @@ if (entity.targetId) {
       const isLaser = ['PRISM_TANK', 'PRISM_TOWER'].includes(entity.subType);
       
       if (isMissile || isCannon || isLaser) {
+        // Skip scenery targets for projectiles just in case
+        if (target.subType === 'TREE') {
+          entity.targetId = undefined;
+          return;
+        }
         this.state.projectiles.push({
           id: `proj-${timestamp}-${Math.random()}`,
           type: isLaser ? 'LASER' : (isMissile ? 'MISSILE' : 'CANNONBALL'),
@@ -571,10 +625,15 @@ if (entity.targetId) {
           color: '#22c55e', // green
         });
         // Area of effect damage to infantry
-        this.state.entities.forEach(e => {
-          if (e.id !== entity.id && e.health > 0 && Math.hypot(e.position.x - target.position.x, e.position.y - target.position.y) < 80) {
-            if (e.type === 'UNIT' && ['SOLDIER', 'ENGINEER', 'ATTACK_DOG', 'FLAK_TROOPER', 'TESLA_TROOPER', 'CRAZY_IVAN', 'BORIS', 'TERRORIST', 'YURI', 'GI', 'ROCKETEER', 'NAVY_SEAL', 'CHRONO_LEGIONNAIRE', 'TANYA', 'SNIPER', 'CHRONO_IVAN'].includes(e.subType || '')) {
-              e.health -= damage * 0.5; // Splash damage to infantry
+        const targets = (this as any).frameCache.allUnits;
+        targets.forEach((e: any) => {
+          if (e.id !== entity.id && e.health > 0) {
+            const dx = e.position.x - target.position.x;
+            const dy = e.position.y - target.position.y;
+            if (dx * dx + dy * dy < 6400) { // 80^2
+              if (['SOLDIER', 'ENGINEER', 'ATTACK_DOG', 'FLAK_TROOPER', 'TESLA_TROOPER', 'CRAZY_IVAN', 'BORIS', 'TERRORIST', 'YURI', 'GI', 'ROCKETEER', 'NAVY_SEAL', 'CHRONO_LEGIONNAIRE', 'TANYA', 'SNIPER', 'CHRONO_IVAN'].includes(e.subType || '')) {
+                e.health -= damage * 0.5; // Splash damage to infantry
+              }
             }
           }
         });

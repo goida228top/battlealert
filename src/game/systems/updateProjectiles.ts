@@ -7,7 +7,7 @@ for (let i = this.state.projectiles.length - 1; i >= 0; i--) {
   let targetPos = proj.targetPosition;
 
   if (proj.targetId) {
-    const targetEntity = this.state.entities.find(e => e.id === proj.targetId);
+    const targetEntity = this.state.entityMap?.get(proj.targetId);
     if (targetEntity) {
       targetPos = { ...targetEntity.position };
     }
@@ -25,13 +25,13 @@ for (let i = this.state.projectiles.length - 1; i >= 0; i--) {
   if (dist < proj.speed * dt) {
     // Hit
     if (proj.targetId) {
-      const targetEntity = this.state.entities.find(e => e.id === proj.targetId);
+      const targetEntity = this.state.entityMap?.get(proj.targetId);
       if (targetEntity && (!targetEntity.invulnerableUntil || timestamp > targetEntity.invulnerableUntil)) {
         targetEntity.health -= proj.damage;
         
         // Check for kill and apply veterancy to source
         if (targetEntity.health <= 0) {
-          const sourceEntity = this.state.entities.find(e => e.id === proj.sourceId);
+          const sourceEntity = this.state.entityMap?.get(proj.sourceId);
           if (sourceEntity) {
             sourceEntity.kills = (sourceEntity.kills || 0) + 1;
             if (sourceEntity.kills >= 7 && sourceEntity.rank !== 'ELITE') {
@@ -60,10 +60,16 @@ for (let i = this.state.projectiles.length - 1; i >= 0; i--) {
 
       if (proj.type === 'MISSILE') {
         const splashRadius = 60;
-        this.state.entities.forEach(e => {
-          if (e.id !== proj.targetId && Math.hypot(e.position.x - targetPos!.x, e.position.y - targetPos!.y) < splashRadius) {
-            if (!e.invulnerableUntil || timestamp > e.invulnerableUntil) {
-              e.health -= proj.damage * 0.5;
+        const splashRadiusSq = splashRadius * splashRadius;
+        const potentialTargets = (this as any).frameCache.allUnits;
+        potentialTargets.forEach((e: any) => {
+          if (e.id !== proj.targetId && e.health > 0) {
+            const dx = e.position.x - targetPos!.x;
+            const dy = e.position.y - targetPos!.y;
+            if (dx * dx + dy * dy < splashRadiusSq) {
+              if (!e.invulnerableUntil || timestamp > e.invulnerableUntil) {
+                e.health -= proj.damage * 0.5;
+              }
             }
           }
         });

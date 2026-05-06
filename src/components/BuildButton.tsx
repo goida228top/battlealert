@@ -14,10 +14,11 @@ interface BuildButtonProps {
   progress?: number;
   stuck?: boolean;
   count?: number;
+  cannotAfford?: boolean;
 }
 
 export const BuildButton: React.FC<BuildButtonProps> = ({ 
-  label, icon, cost, onClick, onContextMenu, active, disabled, locked, title, progress, stuck, count 
+  label, icon, cost, onClick, onContextMenu, active, disabled, locked, title, progress, stuck, count, cannotAfford
 }) => {
   return (
     <button 
@@ -69,7 +70,7 @@ export const BuildButton: React.FC<BuildButtonProps> = ({
 
       {/* Cost (Top Right) */}
       <div className="absolute top-0.5 right-1 z-30">
-        <span className="text-[7px] font-mono font-bold text-zinc-400 tracking-tighter">
+        <span className={`text-[7px] font-mono font-bold tracking-tighter ${cannotAfford ? 'text-yellow-500 font-extrabold' : 'text-zinc-400'}`}>
           ${cost}
         </span>
       </div>

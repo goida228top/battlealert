@@ -13,6 +13,7 @@ import { GameOverScreen } from './components/GameOverScreen';
 import { BuildButton } from './components/BuildButton';
 import { GameHUD } from './components/GameHUD';
 import { DebugMenu } from './components/DebugMenu';
+import { FPSCounter } from './components/FPSCounter';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -40,6 +41,24 @@ export default function App() {
   const [activeRoomId, setActiveRoomId] = useState<string | undefined>(undefined);
   const [playerName, setPlayerName] = useState<string>('Командир_' + Math.floor(Math.random() * 100));
   const mousePosRef = useRef<Vector2 | null>(null);
+
+  const globalMousePosRef = useRef<Vector2 | null>(null);
+
+  useEffect(() => {
+    const handleGlobalMouseMove = (e: MouseEvent) => {
+      globalMousePosRef.current = { x: e.clientX, y: e.clientY };
+    };
+    const handleGlobalMouseLeave = () => {
+      globalMousePosRef.current = null;
+    };
+    window.addEventListener('mousemove', handleGlobalMouseMove);
+    document.addEventListener('mouseleave', handleGlobalMouseLeave);
+    
+    return () => {
+      window.removeEventListener('mousemove', handleGlobalMouseMove);
+      document.removeEventListener('mouseleave', handleGlobalMouseLeave);
+    };
+  }, []);
 
   useEffect(() => {
     const loadTexture = (name: string, url: string) => {
@@ -87,20 +106,68 @@ export default function App() {
 
   // Add ref to track last UI update
   const lastUiUpdateRef = useRef<number>(0);
+  const lastFrameTimeRef = useRef<number>(0);
+
+  const updateRef = useRef<(time: number) => void>(() => {});
 
   const update = (time: number) => {
-    engineRef.current.update(time);
-    
-    // Optimization: Render visually at 60fps, but update React UI at 10fps
-    if (time - lastUiUpdateRef.current > 100) {
-      setGameState({ ...engineRef.current.state });
-      lastUiUpdateRef.current = time;
+    let dt = time - (lastFrameTimeRef.current || time);
+    if (dt > 100) dt = 16;
+    lastFrameTimeRef.current = time;
+
+    // Edge panning
+    if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current) {
+      const maxScrollSpeed = 1.0 * dt;
+      const edgeThreshold = 60;
+      const { camera, map } = engineRef.current.state; 
+      const x = globalMousePosRef.current.x;
+      const y = globalMousePosRef.current.y;
+
+      let dx = 0;
+      let dy = 0;
+
+      if (x < edgeThreshold) {
+        dx = maxScrollSpeed * (1 - Math.max(0, x) / edgeThreshold);
+      } else if (x > windowSize.width - edgeThreshold) {
+        dx = -maxScrollSpeed * (1 - Math.max(0, windowSize.width - x) / edgeThreshold);
+      }
+
+      if (y < edgeThreshold) {
+        dy = maxScrollSpeed * (1 - Math.max(0, y) / edgeThreshold);
+      } else if (y > windowSize.height - edgeThreshold) {
+        dy = -maxScrollSpeed * (1 - Math.max(0, windowSize.height - y) / edgeThreshold);
+      }
+      
+      camera.x += dx;
+      camera.y += dy;
+    }
+
+    try {
+      engineRef.current.update(time);
+      
+      if (time - lastUiUpdateRef.current > 100) {
+        setGameState({ ...engineRef.current.state });
+        lastUiUpdateRef.current = time;
+      }
+      
+      draw();
+    } catch (err) {
+      console.error("Game loop error:", err);
     }
     
-    draw();
-    requestRef.current = requestAnimationFrame(update);
+    requestRef.current = requestAnimationFrame(updateRef.current);
   };
 
+  useEffect(() => {
+    updateRef.current = update;
+  });
+
+  useEffect(() => {
+    if (appState === 'PLAYING') {
+      requestRef.current = requestAnimationFrame(updateRef.current);
+      return () => cancelAnimationFrame(requestRef.current);
+    }
+  }, [appState]);
   const draw = () => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -110,6 +177,21 @@ export default function App() {
     // USE ENGINE STATE DIRECTLY FOR RENDERING - Avoids React state synchronization lag
     const gameState = engineRef.current.state;
     const { camera, map } = gameState;
+
+    // Clamp camera to map boundaries
+    const mapWidthPx = map.width * map.tileSize * camera.zoom;
+    const mapHeightPx = map.height * map.tileSize * camera.zoom;
+    
+    let minCamX = canvas.width - mapWidthPx;
+    let maxCamX = 0;
+    if (minCamX > maxCamX) minCamX = maxCamX = (canvas.width - mapWidthPx) / 2;
+
+    let minCamY = canvas.height - mapHeightPx;
+    let maxCamY = 0;
+    if (minCamY > maxCamY) minCamY = maxCamY = (canvas.height - mapHeightPx) / 2;
+
+    camera.x = Math.max(minCamX, Math.min(maxCamX, camera.x));
+    camera.y = Math.max(minCamY, Math.min(maxCamY, camera.y));
 
     // Use black for void outside the map
     ctx.fillStyle = '#000000';
@@ -134,7 +216,8 @@ export default function App() {
     // --- MAP CACHING LOGIC ---
     if (!cachedMapCanvasRef.current || 
         cachedMapCanvasRef.current.width !== mapWidthVal * mapTileSize || 
-        cachedMapCanvasRef.current.getAttribute('data-textures') !== String(texturesLoadedCountRef.current)) {
+        cachedMapCanvasRef.current.getAttribute('data-textures') !== String(texturesLoadedCountRef.current) ||
+        cachedMapCanvasRef.current.getAttribute('data-generation') !== String(gameState.map.generation || 0)) {
       
       const cacheCanvas = document.createElement('canvas');
       cacheCanvas.width = mapWidthVal * mapTileSize;
@@ -195,11 +278,72 @@ export default function App() {
               } else {
                 cacheCtx.drawImage(texture, x * mapTileSize, y * mapTileSize, mapTileSize + 0.5, mapTileSize + 0.5);
               }
+            } else if (type === 'ELEVATED_GRASS' || type.startsWith('CLIFF_') || type.startsWith('RAMP_')) {
+              // RENDER PLATEAUS AND CLIFFS
+              const baseX = x * mapTileSize;
+              const baseY = y * mapTileSize;
+              const PLATEAU_H = 30; // Increased height for better perspective depth
+
+              if (type === 'ELEVATED_GRASS' || type.startsWith('CLIFF_')) {
+                // Elevated grass (surface) is shifted UP by PLATEAU_H pixels
+                if (grassTexture && grassTexture.width > 0) {
+                  cacheCtx.drawImage(grassTexture, baseX, baseY - PLATEAU_H, mapTileSize + 0.5, mapTileSize + 0.5);
+                } else {
+                  cacheCtx.fillStyle = map.theme === 'DESERT' ? '#d2b48c' : map.theme === 'SNOW' ? '#ffffff' : '#4ade80';
+                  cacheCtx.fillRect(baseX, baseY - PLATEAU_H, mapTileSize + 0.5, mapTileSize + 0.5);
+                }
+
+                // Draw vertical cliff walls
+                if (type === 'CLIFF_S') {
+                  cacheCtx.fillStyle = '#475569'; // Main Rock Face
+                  cacheCtx.fillRect(baseX, baseY - PLATEAU_H + mapTileSize, mapTileSize + 0.5, PLATEAU_H);
+                  cacheCtx.fillStyle = '#334155'; // Darker crags details
+                  cacheCtx.fillRect(baseX + 10, baseY - PLATEAU_H + mapTileSize, 15, PLATEAU_H);
+                } else if (type === 'CLIFF_W') {
+                  cacheCtx.fillStyle = '#334155'; // Side rock face (darker for shading)
+                  cacheCtx.fillRect(baseX, baseY - PLATEAU_H + mapTileSize, mapTileSize, PLATEAU_H);
+                } else if (type === 'CLIFF_E') {
+                  cacheCtx.fillStyle = '#1e293b'; // East side rock face (even darker)
+                  cacheCtx.fillRect(baseX, baseY - PLATEAU_H + mapTileSize, mapTileSize, PLATEAU_H);
+                }
+                // Note: CLIFF_N intentionally draws no wall. Its surface grass perfectly covers 
+                // the tiles behind it natively, creating the exact pseudo-isometric hidden back-slope effect.
+              } else if (type === 'RAMP_S') {
+                // Ramps are drawn as geometric slopes connecting top to bottom
+                cacheCtx.fillStyle = '#78350f'; // Dirt track
+                cacheCtx.beginPath();
+                cacheCtx.moveTo(baseX, baseY - PLATEAU_H); 
+                cacheCtx.lineTo(baseX + mapTileSize, baseY - PLATEAU_H); 
+                cacheCtx.lineTo(baseX + mapTileSize, baseY + mapTileSize); 
+                cacheCtx.lineTo(baseX, baseY + mapTileSize); 
+                cacheCtx.fill();
+                cacheCtx.strokeStyle = '#451a03';
+                cacheCtx.lineWidth = 2;
+                cacheCtx.stroke();
+              } else if (type === 'RAMP_N') {
+                cacheCtx.fillStyle = '#78350f';
+                cacheCtx.beginPath();
+                cacheCtx.moveTo(baseX, baseY); 
+                cacheCtx.lineTo(baseX + mapTileSize, baseY); 
+                cacheCtx.lineTo(baseX + mapTileSize, baseY + mapTileSize - PLATEAU_H); 
+                cacheCtx.lineTo(baseX, baseY + mapTileSize - PLATEAU_H); 
+                cacheCtx.fill();
+                cacheCtx.strokeStyle = '#451a03';
+                cacheCtx.lineWidth = 2;
+                cacheCtx.stroke();
+              } else if (type === 'RAMP_E' || type === 'RAMP_W') {
+                // Simplified side ramps
+                cacheCtx.fillStyle = '#78350f';
+                cacheCtx.fillRect(baseX, baseY - PLATEAU_H/2, mapTileSize, mapTileSize + PLATEAU_H/2);
+              }
             } else if (type !== 'ORE') {
               // Fallback colors
               if (type === 'GRASS') cacheCtx.fillStyle = map.theme === 'DESERT' ? '#d2b48c' : map.theme === 'SNOW' ? '#ffffff' : '#2d5a27';
               else if (type === 'WATER') cacheCtx.fillStyle = map.theme === 'DESERT' ? '#4682b4' : map.theme === 'SNOW' ? '#add8e6' : '#00008b';
               else if (type === 'GRASS_TO_WATER' || type === 'WATER_TO_GRASS') cacheCtx.fillStyle = map.theme === 'DESERT' ? '#8b7355' : map.theme === 'SNOW' ? '#b0e0e6' : '#1a4a4a';
+              else if (type === 'MOUNTAIN_DECOR') cacheCtx.fillStyle = '#1e3a1a'; // Very dark green
+              else if (type === 'DEBUG_RED') cacheCtx.fillStyle = '#ff0000'; // Red debugging
+              else if (type === 'MOUNTAIN_GRASS') cacheCtx.fillStyle = map.theme === 'DESERT' ? '#b4956d' : map.theme === 'SNOW' ? '#e2e8f0' : '#224a1e';
               cacheCtx.fillRect(x * mapTileSize, y * mapTileSize, mapTileSize + 0.5, mapTileSize + 0.5);
             } else if (type === 'ORE' && (!texture || texture.width === 0)) {
               // Gold fallback for ORE if texture is missing
@@ -211,8 +355,8 @@ export default function App() {
 
         // Render Bridges
         const bridgeTexture = texturesRef.current['BRIDGE'];
-        if (bridgeTexture && bridgeTexture.width > 0) {
-          gameState.map.bridges.forEach(bridge => {
+        gameState.map.bridges.forEach(bridge => {
+          if (bridgeTexture && bridgeTexture.width > 0) {
             // Draw bridge as a single image to avoid stretching/tiling issues
             cacheCtx.drawImage(
               bridgeTexture,
@@ -221,8 +365,102 @@ export default function App() {
               bridge.width * mapTileSize,
               bridge.height * mapTileSize
             );
-          });
-        }
+          } else {
+            // Draw a nice procedurally generated bridge
+            cacheCtx.save();
+            const bx = bridge.x * mapTileSize;
+            const by = bridge.y * mapTileSize;
+            const bw = bridge.width * mapTileSize;
+            const bh = bridge.height * mapTileSize;
+
+            // Main bridge base (Shadow/Structural)
+            cacheCtx.fillStyle = '#27272a'; // Dark grey
+            cacheCtx.fillRect(bx, by, bw, bh);
+
+            // bridge floor (Reddish Brown / Wood)
+            cacheCtx.fillStyle = '#78350f'; // Dark brown
+            const floorMargin = 2;
+            cacheCtx.fillRect(bx + floorMargin, by + floorMargin, bw - floorMargin*2, bh - floorMargin*2);
+
+            // Wood planks effect / texture
+            cacheCtx.lineWidth = 1;
+            if (bw > bh) {
+              // Horizontal bridge, planks are vertical
+              for (let x = bx + 4; x < bx + bw - 4; x += 8) {
+                cacheCtx.strokeStyle = '#451a03'; // Darker brown
+                cacheCtx.beginPath();
+                cacheCtx.moveTo(x, by + floorMargin);
+                cacheCtx.lineTo(x, by + bh - floorMargin);
+                cacheCtx.stroke();
+                
+                // Highlight on plank edge
+                cacheCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                cacheCtx.beginPath();
+                cacheCtx.moveTo(x + 1, by + floorMargin);
+                cacheCtx.lineTo(x + 1, by + bh - floorMargin);
+                cacheCtx.stroke();
+              }
+            } else {
+              // Vertical bridge, planks are horizontal
+              for (let y = by + 4; y < by + bh - 4; y += 8) {
+                cacheCtx.strokeStyle = '#451a03';
+                cacheCtx.beginPath();
+                cacheCtx.moveTo(bx + floorMargin, y);
+                cacheCtx.lineTo(bx + bw - floorMargin, y);
+                cacheCtx.stroke();
+
+                // Highlight
+                cacheCtx.strokeStyle = 'rgba(255, 255, 255, 0.05)';
+                cacheCtx.beginPath();
+                cacheCtx.moveTo(bx + floorMargin, y + 1);
+                cacheCtx.lineTo(bx + bw - floorMargin, y + 1);
+                cacheCtx.stroke();
+              }
+            }
+
+            // High-quality side railings
+            const railW = 4;
+            if (bw > bh) {
+              // Horizontal bridge railings (top and bottom)
+              cacheCtx.fillStyle = '#92400e'; // Mid brown
+              cacheCtx.fillRect(bx, by, bw, railW); // Top rail
+              cacheCtx.fillRect(bx, by + bh - railW, bw, railW); // Bottom rail
+              
+              // Detail line on railings
+              cacheCtx.strokeStyle = '#451a03';
+              cacheCtx.lineWidth = 1;
+              cacheCtx.strokeRect(bx, by, bw, railW);
+              cacheCtx.strokeRect(bx, by + bh - railW, bw, railW);
+
+              // Posts
+              cacheCtx.fillStyle = '#451a03';
+              for (let x = bx; x <= bx + bw; x += 20) {
+                cacheCtx.fillRect(x - 3, by - 2, 6, 8); // Top post
+                cacheCtx.fillRect(x - 3, by + bh - 6, 6, 8); // Bottom post
+              }
+            } else {
+              // Vertical bridge railings (left and right)
+              cacheCtx.fillStyle = '#92400e';
+              cacheCtx.fillRect(bx, by, railW, bh); // Left rail
+              cacheCtx.fillRect(bx + bw - railW, by, railW, bh); // Right rail
+
+              // Detail line
+              cacheCtx.strokeStyle = '#451a03';
+              cacheCtx.lineWidth = 1;
+              cacheCtx.strokeRect(bx, by, railW, bh);
+              cacheCtx.strokeRect(bx + bw - railW, by, railW, bh);
+
+              // Posts
+              cacheCtx.fillStyle = '#451a03';
+              for (let y = by; y <= by + bh; y += 20) {
+                cacheCtx.fillRect(bx - 2, y - 3, 8, 6); // Left post
+                cacheCtx.fillRect(bx + bw - 6, y - 3, 8, 6); // Right post
+              }
+            }
+
+            cacheCtx.restore();
+          }
+        });
 
         // Render Roads (Above grass, below base circles)
         const roadTexture = texturesRef.current['ROAD'];
@@ -308,21 +546,53 @@ export default function App() {
       }
       
       cacheCanvas.setAttribute('data-textures', String(texturesLoadedCountRef.current));
+      cacheCanvas.setAttribute('data-generation', String(gameState.map.generation || 0));
       cachedMapCanvasRef.current = cacheCanvas;
     }
 
+    // Calculate view bounds for culling
+    const vx = -camera.x / camera.zoom;
+    const vy = -camera.y / camera.zoom;
+    const vw = canvas.width / camera.zoom;
+    const vh = canvas.height / camera.zoom;
+    const padding = 60; // Padding for map drawing
+    
+    // Extened bounds for entity frustum culling
+    const cullingMargin = 150; 
+    const viewLeft = vx - cullingMargin;
+    const viewRight = vx + vw + cullingMargin;
+    const viewTop = vy - cullingMargin;
+    const viewBottom = vy + vh + cullingMargin;
+
     // Draw the cached map
     if (cachedMapCanvasRef.current) {
-      ctx.drawImage(cachedMapCanvasRef.current, 0, 0);
+      const sx = Math.max(0, vx - padding);
+      const sy = Math.max(0, vy - padding);
+      const sw = Math.min(cachedMapCanvasRef.current.width - sx, vw + padding * 2);
+      const sh = Math.min(cachedMapCanvasRef.current.height - sy, vh + padding * 2);
+
+      if (sw > 0 && sh > 0) {
+        ctx.drawImage(
+          cachedMapCanvasRef.current,
+          Math.floor(sx), Math.floor(sy), Math.floor(sw), Math.floor(sh),
+          Math.floor(sx), Math.floor(sy), Math.floor(sw), Math.floor(sh)
+        );
+      }
     }
 
     // Crates
     gameState.crates.forEach(crate => {
-      const tx = Math.floor(crate.position.x / mapTileSize);
-      const ty = Math.floor(crate.position.y / mapTileSize);
-      const vis = visibility[ty]?.[tx];
-      if (vis === 0) return; // Hide in shroud
-
+      if (
+        crate.position.x < viewLeft ||
+        crate.position.x > viewRight ||
+        crate.position.y < viewTop ||
+        crate.position.y > viewBottom
+      ) {
+        return;
+      }
+      // CRITICAL: CRATES ARE ALWAYS VISIBLE REGARDLESS OF FOG.
+      // NEVER HIDE CRATES BASED ON VISIBILITY AGAIN.
+      
       ctx.save();
       ctx.translate(crate.position.x, crate.position.y);
       
@@ -354,40 +624,47 @@ export default function App() {
       ctx.restore();
     });
 
+    // Sorting for rendering
+    const getZOffset = (pos: {x: number, y: number}) => engineRef.current?.getZOffset(pos) || 0;
+    
+    // Use pre-sorted list from engine if available (calculated every 10 frames)
+    const sortedEntities = (gameState as any).sortedVisEntities || gameState.entities;
+
     // Entities
-    gameState.entities.forEach(entity => {
-      let vis = 0;
-      if (entity.type === 'BUILDING') {
-        const dims = getBuildingDimensions(entity.subType as BuildingType);
-        const w = dims.w;
-        const h = dims.h;
-        const startX = Math.floor((entity.position.x - w * mapTileSize / 2) / mapTileSize);
-        const startY = Math.floor((entity.position.y - h * mapTileSize / 2) / mapTileSize);
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            const v = visibility[startY + y]?.[startX + x] ?? 0;
-            if (v > vis) vis = v;
-          }
-        }
-      } else {
-        const tx = Math.floor(entity.position.x / mapTileSize);
-        const ty = Math.floor(entity.position.y / mapTileSize);
-        vis = visibility[ty]?.[tx] ?? 0;
+    sortedEntities.forEach(entity => {
+      // Frustum Culling
+      if (
+        entity.position.x < viewLeft ||
+        entity.position.x > viewRight ||
+        entity.position.y < viewTop ||
+        entity.position.y > viewBottom
+      ) {
+        return;
       }
+
+      const zOffset = (entity as any).zOffset ?? getZOffset(entity.position);
       
-      // If it's a building, we show it always (but shaded if vis < 2)
-      if (entity.type === 'UNIT') {
-        if (vis === 0 && entity.owner !== engineRef.current.localPlayerId) return; // Hide units in shroud
-        if (vis === 1 && entity.owner !== engineRef.current.localPlayerId) return; // Hide enemy units in fog
-      }
-      
-      // Buildings are ALWAYS rendered now (they will be under the fog layer if vis < 2)
+      const tx = Math.floor(entity.position.x / mapTileSize);
+      const ty = Math.floor(entity.position.y / mapTileSize);
+      const vis = visibility[ty]?.[tx] ?? 2;
 
       ctx.save();
-      ctx.translate(entity.position.x, entity.position.y);
+      
+      // CRITICAL: ENTITIES ARE ALWAYS FULLY VISIBLE AND BRIGHT REGARDLESS OF FOG.
+      // NEVER APPLY FOG FILTERS OR GRAYSCALE EFFECTS AGAIN.
+      
+      ctx.translate(entity.position.x, entity.position.y + zOffset);
+      
+      let isOnMountainGrass = gameState.map.tiles[ty]?.[tx] === 'MOUNTAIN_GRASS';
+
+      // Pseudo-Isometric Perspective Scale (Elevated objects appear slightly closer/larger)
+      let scaleMag = 1.0 + (Math.abs(zOffset) / 200); 
+      if (isOnMountainGrass) scaleMag *= 1.2;
 
       if (entity.type === 'UNIT') {
-        ctx.save(); // Save before rotation
+        ctx.save(); // Save before body scale and rotation
+        ctx.scale(scaleMag, scaleMag);
+        
         // Apply rotation for units
         if (entity.rotation !== undefined) {
           ctx.rotate(entity.rotation + Math.PI / 2); // Adjust for tank facing up by default
@@ -588,6 +865,8 @@ export default function App() {
         }
       } else {
         // Building
+        ctx.save();
+        ctx.scale(scaleMag, scaleMag);
         const dims = getBuildingDimensions(entity.subType as BuildingType);
         const width = dims.w * mapTileSize;
         const height = dims.h * mapTileSize;
@@ -607,10 +886,34 @@ export default function App() {
             ctx.fillStyle = darkColor;
           if (entity.subType === 'SOVIET_WALL') ctx.fillStyle = '#4b5563';
           if (entity.subType === 'BATTLE_BUNKER') ctx.fillStyle = '#3f3f46';
-          ctx.fillRect(-width/2, -height/2, width, height);
-          ctx.strokeStyle = '#60a5fa';
-          ctx.lineWidth = 2 / camera.zoom;
-          ctx.strokeRect(-width/2, -height/2, width, height);
+          
+          if (entity.subType === 'TREE') {
+            // Trunk: Brown Rectangle
+            ctx.fillStyle = '#78350f'; 
+            ctx.fillRect(-10, -30, 20, 30);
+            
+            // Top: Green Square
+            ctx.fillStyle = '#22c55e';
+            ctx.fillRect(-40, -110, 80, 80);
+            
+            // Stroke for visibility
+            ctx.strokeStyle = '#15803d';
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-40, -110, 80, 80);
+          } else if (entity.subType === 'MOUNTAIN') {
+            // Simple gray square of 1 cell size
+            ctx.fillStyle = '#6b7280'; // gray-500
+            ctx.fillRect(-20, -20, 40, 40);
+            
+            ctx.strokeStyle = '#4b5563'; // gray-600 outline
+            ctx.lineWidth = 2;
+            ctx.strokeRect(-20, -20, 40, 40);
+          } else {
+            ctx.fillRect(-width/2, -height/2, width, height);
+            ctx.strokeStyle = '#60a5fa';
+            ctx.lineWidth = 2 / camera.zoom;
+            ctx.strokeRect(-width/2, -height/2, width, height);
+          }
           
           if (entity.subType === 'TESLA_COIL') {
             ctx.fillStyle = '#60a5fa';
@@ -655,15 +958,20 @@ export default function App() {
           }
 
           // Label for building type
-          ctx.fillStyle = 'white';
-          ctx.font = `${8 / camera.zoom}px Arial`;
-          ctx.textAlign = 'center';
-          ctx.fillText(entity.subType.replace('_', ' '), 0, 5);
+          if (entity.subType !== 'TREE' && entity.subType !== 'MOUNTAIN') {
+            ctx.fillStyle = 'white';
+            ctx.font = `${8 / camera.zoom}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText(entity.subType.replace('_', ' '), 0, 5);
+          }
         }
+        ctx.restore();
       }
 
       // Selection ring
       if (entity.selected && entity.type === 'UNIT') {
+        ctx.save();
+        ctx.scale(scaleMag, scaleMag);
         ctx.strokeStyle = '#22c55e';
         ctx.lineWidth = 2 / camera.zoom;
         ctx.setLineDash([2 / camera.zoom, 2 / camera.zoom]);
@@ -671,6 +979,7 @@ export default function App() {
         ctx.arc(0, 0, entity.size * 0.8, 0, Math.PI * 2);
         ctx.stroke();
         ctx.setLineDash([]);
+        ctx.restore();
 
         // Draw Rally Point Line
         if (entity.rallyPoint) {
@@ -698,16 +1007,18 @@ export default function App() {
           ctx.beginPath();
           ctx.moveTo(0, 0); // Start at entity position
           for (const node of entity.path) {
-            ctx.lineTo(node.x - entity.position.x, node.y - entity.position.y);
+            const nodeZ = getZOffset({x: node.x, y: node.y});
+            ctx.lineTo(node.x - entity.position.x, node.y - entity.position.y + nodeZ - zOffset);
           }
           ctx.stroke();
           ctx.setLineDash([]);
           
           // Draw Destination Marker
           const dest = entity.path[entity.path.length - 1];
+          const destZ = getZOffset({x: dest.x, y: dest.y});
           ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
           ctx.beginPath();
-          ctx.arc(dest.x - entity.position.x, dest.y - entity.position.y, 3 / camera.zoom, 0, Math.PI * 2);
+          ctx.arc(dest.x - entity.position.x, dest.y - entity.position.y + destZ - zOffset, 3 / camera.zoom, 0, Math.PI * 2);
           ctx.fill();
         }
       }
@@ -717,7 +1028,7 @@ export default function App() {
       const isInvulnerable = entity.invulnerableUntil && entity.invulnerableUntil > timestamp;
 
       // Health bar
-      if (entity.selected || entity.health < entity.maxHealth) {
+      if ((entity.selected || entity.health < entity.maxHealth) && entity.subType !== 'TREE' && entity.subType !== 'MOUNTAIN') {
         const healthWidth = entity.size;
         const currentHealthWidth = (entity.health / entity.maxHealth) * healthWidth;
         ctx.fillStyle = 'rgba(0,0,0,0.5)';
@@ -773,7 +1084,7 @@ export default function App() {
 
     // Render highly optimized Fog of War AFTER entities so they are "under" the fog
     if (!gameState.debugFlags?.disableFog) {
-      fogOfWarRef.current.render(ctx, visibility, map);
+      fogOfWarRef.current.render(ctx, visibility, map, gameState);
     }
 
     // Building Placement Ghost
@@ -784,27 +1095,58 @@ export default function App() {
       const type = gameState.placingBuilding;
       const dims = getBuildingDimensions(type);
       
-      // Calculate top-left tile based on mouse position
-      const tx = Math.floor((worldX - (dims.w * mapTileSize) / 2) / mapTileSize);
-      const ty = Math.floor((worldY - (dims.h * mapTileSize) / 2) / mapTileSize);
+      // Determine effective tile size (the "step") based on terrain under cursor
+      const rawMouseX = Math.floor(worldX / mapTileSize);
+      const rawMouseY = Math.floor(worldY / mapTileSize);
+      const isOverMountain = gameState.map.tiles[rawMouseY]?.[rawMouseX] === 'MOUNTAIN_GRASS';
+      const effectiveTileSize = isOverMountain ? mapTileSize * 1.2 : mapTileSize;
+
+      // Calculate top-left tile based on mouse position using the scaled step
+      const tx = Math.floor((worldX - (dims.w * effectiveTileSize) / 2) / effectiveTileSize);
+      const ty = Math.floor((worldY - (dims.h * effectiveTileSize) / 2) / effectiveTileSize);
+
+      // Determine the bounding box in raw tile coordinates - CLAMPED TO MAP BOUNDARIES
+      const startTileX = Math.max(0, Math.floor((tx * effectiveTileSize) / mapTileSize));
+      const endTileX = Math.min(mapWidthVal - 1, Math.floor(((tx + dims.w) * effectiveTileSize - 1) / mapTileSize));
+      const startTileY = Math.max(0, Math.floor((ty * effectiveTileSize) / mapTileSize));
+      const endTileY = Math.min(mapHeightVal - 1, Math.floor(((ty + dims.h) * effectiveTileSize - 1) / mapTileSize));
 
       // Calculate snapped center position
-      const snappedX = (tx + dims.w / 2) * mapTileSize;
-      const snappedY = (ty + dims.h / 2) * mapTileSize;
+      const snappedX = (tx + dims.w / 2) * effectiveTileSize;
+      const snappedY = (ty + dims.h / 2) * effectiveTileSize;
+
+      let isOnMountainGrass = true;
+      // Skip loop if ranges are invalid (e.g. completely outside map)
+      if (startTileX > endTileX || startTileY > endTileY) {
+        isOnMountainGrass = false;
+      } else {
+        for (let ry = startTileY; ry <= endTileY; ry++) {
+          for (let rx = startTileX; rx <= endTileX; rx++) {
+             const row = gameState.map.tiles[ry];
+             if (!row) { isOnMountainGrass = false; continue; }
+             const tile = row[rx];
+             if (tile !== 'MOUNTAIN_GRASS') isOnMountainGrass = false;
+          }
+        }
+      }
+      const placeScale = isOnMountainGrass ? 1.2 : 1.0;
 
       // Draw Grid around placement area
       ctx.save();
+      ctx.translate(snappedX, snappedY);
+      ctx.scale(placeScale, placeScale);
+      
       ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
-      ctx.lineWidth = 1 / camera.zoom;
+      ctx.lineWidth = 1 / (camera.zoom * placeScale);
       const gridRange = 8;
       for (let i = -gridRange; i <= gridRange; i++) {
         ctx.beginPath();
-        ctx.moveTo(snappedX - gridRange * mapTileSize, snappedY + i * mapTileSize - (dims.h % 2 === 0 ? 0 : mapTileSize/2));
-        ctx.lineTo(snappedX + gridRange * mapTileSize, snappedY + i * mapTileSize - (dims.h % 2 === 0 ? 0 : mapTileSize/2));
+        ctx.moveTo(-gridRange * mapTileSize, i * mapTileSize - (dims.h % 2 === 0 ? 0 : mapTileSize/2));
+        ctx.lineTo(gridRange * mapTileSize, i * mapTileSize - (dims.h % 2 === 0 ? 0 : mapTileSize/2));
         ctx.stroke();
         ctx.beginPath();
-        ctx.moveTo(snappedX + i * mapTileSize - (dims.w % 2 === 0 ? 0 : mapTileSize/2), snappedY - gridRange * mapTileSize);
-        ctx.lineTo(snappedX + i * mapTileSize - (dims.w % 2 === 0 ? 0 : mapTileSize/2), snappedY + gridRange * mapTileSize);
+        ctx.moveTo(i * mapTileSize - (dims.w % 2 === 0 ? 0 : mapTileSize/2), -gridRange * mapTileSize);
+        ctx.lineTo(i * mapTileSize - (dims.w % 2 === 0 ? 0 : mapTileSize/2), gridRange * mapTileSize);
         ctx.stroke();
       }
       ctx.restore();
@@ -814,40 +1156,93 @@ export default function App() {
       
       ctx.save();
       ctx.translate(snappedX, snappedY);
+      ctx.scale(placeScale, placeScale);
       ctx.globalAlpha = 0.5;
       
       // Check if placement is valid
       let isValid = true;
+      let ghostBaseElevation: 'GROUND' | 'PLATEAU' | 'MOUNTAIN_PLATEAU' | null = null;
       
-      for (let dy = 0; dy < dims.h; dy++) {
-        for (let dx = 0; dx < dims.w; dx++) {
-          const curX = tx + dx;
-          const curY = ty + dy;
-          
-          if (curX >= 0 && curX < mapWidthVal && curY >= 0 && curY < mapHeightVal) {
-            const tileType = gameState.map.tiles[curY][curX];
-            const visibility = gameState.map.visibility[curY][curX];
-            if (tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE' || visibility === 0) {
-              isValid = false;
-            }
-          } else {
-            isValid = false;
+      if (startTileX > endTileX || startTileY > endTileY) {
+        isValid = false;
+      } else {
+        for (let ry = startTileY; ry <= endTileY; ry++) {
+          for (let rx = startTileX; rx <= endTileX; rx++) {
+              const row = gameState.map.tiles[ry];
+              const tileType = row ? row[rx] : null;
+              const visibilityRow = gameState.map.visibility[ry];
+              const visibilityValue = visibilityRow ? visibilityRow[rx] : 0;
+              
+              // Basic terrain block
+              const isFoggy = !gameState.debugFlags?.disableFog && visibilityValue === 0;
+              if (!tileType || tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE' || tileType.startsWith('CLIFF') || tileType.startsWith('RAMP_') || isFoggy || tileType === 'MOUNTAIN_DECOR') {
+                isValid = false;
+              }
+
+              // Block bridges
+              const onBridge = gameState.map.bridges.some((b: any) => {
+                return rx >= b.x && rx < b.x + b.width && ry >= b.y && ry < b.y + b.height;
+              });
+              if (onBridge) isValid = false;
+
+              // Elevation consistency check for ghost
+              const curElevation = (tileType === 'MOUNTAIN_GRASS') ? 'MOUNTAIN_PLATEAU' : ((tileType === 'ELEVATED_GRASS') ? 'PLATEAU' : 'GROUND');
+              if (ghostBaseElevation === null) {
+                ghostBaseElevation = curElevation;
+              } else if (ghostBaseElevation !== curElevation) {
+                isValid = false;
+              }
           }
         }
       }
 
+      // Overlap check with other entities
       if (isValid) {
-        // Collision Check
+        const overlap = gameState.entities.some(e => {
+          if (e.owner === 'NEUTRAL' && e.subType === 'TREE') return false; 
+          const dx = Math.abs(e.position.x - snappedX);
+          const dy = Math.abs(e.position.y - snappedY);
+          const collisionDist = (e.type === 'BUILDING' ? 60 : 25);
+          return dx < collisionDist && dy < collisionDist;
+        });
+        if (overlap) isValid = false;
+      }
+
+      if (isValid) {
+        // Collision Check (Using world-space bounds for accuracy)
+        const margin = 2;
+        const ghostRect = {
+          left: snappedX - (dims.w * effectiveTileSize) / 2 + margin,
+          right: snappedX + (dims.w * effectiveTileSize) / 2 - margin,
+          top: snappedY - (dims.h * effectiveTileSize) / 2 + margin,
+          bottom: snappedY + (dims.h * effectiveTileSize) / 2 - margin
+        };
+
         const collision = gameState.entities.find(e => {
           if (e.type !== 'BUILDING') return false;
           const eDims = getBuildingDimensions(e.subType as BuildingType);
           
-          const rect1 = { left: tx, top: ty, right: tx + dims.w, bottom: ty + dims.h };
-          const eTx = Math.floor((e.position.x - (eDims.w * mapTileSize) / 2) / mapTileSize);
-          const eTy = Math.floor((e.position.y - (eDims.h * mapTileSize) / 2) / mapTileSize);
-          const rect2 = { left: eTx, top: eTy, right: eTx + eDims.w, bottom: eTy + eDims.h };
+          let eIsOnMountainGrass = true;
+          const ebTx_raw = Math.floor((e.position.x - (eDims.w * mapTileSize) / 2) / mapTileSize);
+          const ebTy_raw = Math.floor((e.position.y - (eDims.h * mapTileSize) / 2) / mapTileSize);
+          for (let edy = 0; edy < eDims.h; edy++) {
+            for (let edx = 0; edx < eDims.w; edx++) {
+              if (gameState.map.tiles[ebTy_raw + edy]?.[ebTx_raw + edx] !== 'MOUNTAIN_GRASS') {
+                eIsOnMountainGrass = false;
+              }
+            }
+          }
+          const eEffSize = eIsOnMountainGrass ? mapTileSize * 1.2 : mapTileSize;
 
-          return !(rect1.right <= rect2.left || rect1.left >= rect2.right || rect1.bottom <= rect2.top || rect1.top >= rect2.bottom);
+          const eRect = {
+            left: e.position.x - (eDims.w * eEffSize) / 2 + margin,
+            right: e.position.x + (eDims.w * eEffSize) / 2 - margin,
+            top: e.position.y - (eDims.h * eEffSize) / 2 + margin,
+            bottom: e.position.y + (eDims.h * eEffSize) / 2 - margin
+          };
+
+          return !(ghostRect.right < eRect.left || ghostRect.left > eRect.right || 
+                   ghostRect.bottom < eRect.top || ghostRect.top > eRect.bottom);
         });
         if (collision) isValid = false;
       }
@@ -911,6 +1306,14 @@ export default function App() {
 
     // Projectiles
     gameState.projectiles.forEach(proj => {
+      if (
+        proj.position.x < viewLeft ||
+        proj.position.x > viewRight ||
+        proj.position.y < viewTop ||
+        proj.position.y > viewBottom
+      ) {
+        return;
+      }
       ctx.save();
       ctx.translate(proj.position.x, proj.position.y);
       if (proj.type === 'MISSILE') {
@@ -939,6 +1342,14 @@ export default function App() {
 
     // Combat Effects
     gameState.effects.forEach(effect => {
+      if (
+        effect.position.x < viewLeft ||
+        effect.position.x > viewRight ||
+        effect.position.y < viewTop ||
+        effect.position.y > viewBottom
+      ) {
+        return;
+      }
       ctx.save();
       const age = (performance.now() - effect.startTime);
       const progress = Math.min(1, Math.max(0, age / effect.duration));
@@ -995,9 +1406,10 @@ export default function App() {
     // Move Markers
     gameState.moveMarkers.forEach(marker => {
       ctx.save();
+      const mz = getZOffset(marker.position);
       const age = performance.now() - marker.startTime;
       const progress = age / 500;
-      ctx.translate(marker.position.x, marker.position.y);
+      ctx.translate(marker.position.x, marker.position.y + mz);
       ctx.strokeStyle = `rgba(34, 197, 94, ${1 - progress})`;
       ctx.lineWidth = 2;
       const s = 10 * (1 + progress);
@@ -1125,13 +1537,6 @@ export default function App() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
-  useEffect(() => {
-    if (appState === 'PLAYING') {
-      requestRef.current = requestAnimationFrame(update);
-      return () => cancelAnimationFrame(requestRef.current);
-    }
-  }, [appState]);
-
   const handleMouseDown = (e: React.MouseEvent) => {
     const rect = canvasRef.current?.getBoundingClientRect();
     if (!rect) return;
@@ -1166,6 +1571,12 @@ export default function App() {
     engineRef.current.handleMouseUp();
   };
 
+  const handleMouseLeave = () => {
+    // Keep mousePosRef so selection drag works even if slightly out of div bounds, but 
+    // handleMouseUp will cancel the selection box.
+    engineRef.current.handleMouseUp(); // Stop dragging selection
+  };
+
   const handleWheel = (e: React.WheelEvent) => {
     // Zooming is disabled per user request, but freeZoom allows it for debugging
     if (!engineRef.current.state.debugFlags?.freeZoom) return;
@@ -1182,8 +1593,11 @@ export default function App() {
     newZoom = Math.max(0.05, Math.min(5, newZoom));
     
     // Zoom toward cursor
-    const mouseX = e.clientX - 280; // HUD offset
-    const mouseY = e.clientY;
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+    const rect = canvas.getBoundingClientRect();
+    const mouseX = e.clientX - rect.left;
+    const mouseY = e.clientY - rect.top;
     
     camera.x = mouseX - (mouseX - camera.x) * (newZoom / oldZoom);
     camera.y = mouseY - (mouseY - camera.y) * (newZoom / oldZoom);
@@ -1248,6 +1662,7 @@ export default function App() {
       {appState === 'PLAYING' && (
         <>
           <DebugMenu engineRef={engineRef} />
+          {gameState.debugFlags?.showFPS && <FPSCounter />}
 
           {/* Main Game Area */}
           <div className="relative flex-1 bg-zinc-900 cursor-crosshair overflow-hidden">
@@ -1258,6 +1673,7 @@ export default function App() {
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
           onContextMenu={onContextMenu}
           className="block w-full h-full"

@@ -11,11 +11,14 @@ import { updateProduction } from "./systems/updateProduction";
 import { updateVisibility } from "./systems/updateVisibility";
 import { updateHarvester } from "./systems/updateHarvester";
 import { updateCombat } from "./systems/updateCombat";
+import { updateOreRegen } from "./systems/updateOreRegen";
 import { updateAI } from "./systems/updateAI";
 import { placeBuildingAt } from "./systems/placeBuildingAt";
 import { produceUnitAt } from "./systems/produceUnitAt";
 import { updateResources } from "./systems/updateResources";
 import { updateCrates } from "./systems/updateCrates";
+import { updateMovement } from "./systems/updateMovement";
+import { updateSeparation } from "./systems/updateSeparation";
 import { checkWinLoss } from "./systems/checkWinLoss";
 import { sellBuilding } from "./systems/sellBuilding";
 import { repairBuilding } from "./systems/repairBuilding";
@@ -23,6 +26,7 @@ import { placeBuilding } from "./systems/placeBuilding";
 import { getCategory } from "./systems/getCategory";
 import { getCost } from "./systems/getCost";
 import { getBuildTime } from "./systems/getBuildTime";
+import { updateClientRenderingGroups } from "./systems/updateClientRenderingGroups";
 
 import { getBuildingDimensions } from "./systems/getBuildingDimensions";
  
@@ -76,11 +80,17 @@ export class GameEngine {
   public aiKnownPlayerBase: Vector2 | null = null;
   public aiScoutTime: number = 0;
 
+  // Pathfinding buffers to avoid GC pressure
+  public pfNodeStates: Int8Array | null = null;
+  public pfBestG: Float32Array | null = null;
+
   public lastClickTime: number = 0;
   public lastClickedEntityId: string | null = null;
 
   public playerFaction: Faction = 'FEDERATION';
   public playerCountry: Country = 'RUSSIA';
+  public frameCounter: number = 0;
+  public frameCache: any;
 
   constructor(faction: Faction = 'FEDERATION', country: Country = 'RUSSIA') {
     this.playerFaction = faction;
@@ -100,8 +110,38 @@ export class GameEngine {
     return screenToWorld.call(this, pos);
   }
 
-  public calculatePath(start: Vector2, end: Vector2): Vector2[] {
-    return calculatePath.call(this, start, end);
+  public calculatePath(start: Vector2, end: Vector2, entity?: any): Vector2[] {
+    return calculatePath.call(this, start, end, entity);
+  }
+
+  public getZOffset(pos: {x: number, y: number}): number {
+    const mapTileSize = this.state.map.tileSize;
+    const mapWidthVal = this.state.map.width;
+    const mapHeightVal = this.state.map.height;
+    const tiles = this.state.map.tiles;
+    const PLATEAU_H = 30;
+
+    let zOffset = 0;
+    const ttx = Math.floor(pos.x / mapTileSize);
+    const tty = Math.floor(pos.y / mapTileSize);
+    if (tty >= 0 && tty < mapHeightVal && ttx >= 0 && ttx < mapWidthVal) {
+      const tType = tiles[tty][ttx];
+      if (tType === 'ELEVATED_GRASS' || tType.startsWith('CLIFF_')) zOffset = -PLATEAU_H;
+      else if (tType === 'RAMP_N') {
+         const pct = (pos.y % mapTileSize) / mapTileSize;
+         zOffset = -PLATEAU_H * pct;
+      } else if (tType === 'RAMP_S') {
+         const pct = (pos.y % mapTileSize) / mapTileSize;
+         zOffset = -PLATEAU_H * (1 - pct);
+      } else if (tType === 'RAMP_E') {
+         const pct = (pos.x % mapTileSize) / mapTileSize;
+         zOffset = -PLATEAU_H * (1 - pct);
+      } else if (tType === 'RAMP_W') {
+         const pct = (pos.x % mapTileSize) / mapTileSize;
+         zOffset = -PLATEAU_H * pct;
+      }
+    }
+    return zOffset;
   }
 
    public initMultiplayer(role: 'HOST' | 'CLIENT', roomId: string, socket: any, roomInfo: any) {
@@ -356,9 +396,12 @@ export class GameEngine {
     
     if (numUnits === 1) {
       const u = selectedUnits[0];
-      u.path = this.calculatePath(u.position, worldPos);
+      u.path = this.calculatePath(u.position, worldPos, u);
       u.targetPosition = u.path[0];
       u.targetId = undefined;
+      if (u.subType === 'HARVESTER' || u.subType === 'CHRONO_MINER') {
+        u.harvestState = 'MOVING';
+      }
       return;
     }
 
@@ -377,9 +420,12 @@ export class GameEngine {
         y: worldPos.y + offsetY
       };
       
-      u.path = this.calculatePath(u.position, individualTargetPos);
+      u.path = this.calculatePath(u.position, individualTargetPos, u);
       u.targetPosition = u.path[0];
       u.targetId = undefined;
+      if (u.subType === 'HARVESTER' || u.subType === 'CHRONO_MINER') {
+        u.harvestState = 'MOVING';
+      }
     });
   }
 
@@ -462,12 +508,24 @@ export class GameEngine {
     return getBuildTime.call(this, type);
   }
 
+  public updateClientRenderingGroups() {
+    return updateClientRenderingGroups.call(this);
+  }
+
   public updateVisibility() {
     return updateVisibility.call(this);
   }
 
   public updateHarvester(harvester: Entity, dt: number) {
     return updateHarvester.call(this, harvester, dt);
+  }
+
+  public updateMovement(entity: Entity, dt: number) {
+    return updateMovement.call(this, entity, dt);
+  }
+
+  public updateSeparation(entity: Entity, dt: number) {
+    return updateSeparation.call(this, entity, dt);
   }
 
   public updateCombat(entity: Entity, dt: number, timestamp: number) {

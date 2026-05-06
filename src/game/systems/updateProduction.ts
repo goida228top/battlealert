@@ -24,13 +24,13 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
             const yard = this.state.entities.find(e => (e.subType === 'CONSTRUCTION_YARD' || e.subType === 'ALLIED_CONSTRUCTION_YARD') && e.owner === owner);
             if (yard) {
               const isDefense = ['SENTRY_GUN', 'FLAK_CANNON', 'TESLA_COIL', 'PILLBOX', 'PATRIOT_MISSILE', 'PRISM_TOWER'].includes(item.subType);
-              const radius = isDefense ? 600 : 400;
+              const radius = isDefense ? 800 : 500;
               
               let placed = false;
-              for (let attempts = 0; attempts < 30; attempts++) {
+              for (let attempts = 0; attempts < 60; attempts++) {
                 const pos = { 
-                  x: yard.position.x + (Math.random() - 0.5) * radius, 
-                  y: yard.position.y + (Math.random() - 0.5) * radius 
+                  x: yard.position.x + (Math.random() - 0.5) * radius * 2, 
+                  y: yard.position.y + (Math.random() - 0.5) * radius * 2 
                 };
                 
                 const tx = Math.floor(pos.x / this.state.map.tileSize);
@@ -38,7 +38,7 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
                 
                 if (tx >= 0 && tx < this.state.map.width && ty >= 0 && ty < this.state.map.height) {
                   const tile = this.state.map.tiles[ty][tx];
-                  if (tile === 'GRASS') {
+                  if (tile === 'GRASS' || tile === 'MOUNTAIN_GRASS') {
                     // Quick overlap check
                     const overlap = this.state.entities.some(e => {
                       if (e.type !== 'BUILDING') return false;
@@ -50,6 +50,16 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
                       const success = this.placeBuildingAt(pos, item.subType as BuildingType, owner);
                       if (success) {
                         placed = true;
+                        // For AI, we need to remove the finished building from the queue
+                        if (owner === 'PLAYER') {
+                          this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== item.id);
+                        } else if (owner === 'PLAYER_2') {
+                          this.state.p2ProductionQueue = this.state.p2ProductionQueue!.filter(q => q.id !== item.id);
+                        } else if (owner === 'PLAYER_3') {
+                          this.state.p3ProductionQueue = this.state.p3ProductionQueue!.filter(q => q.id !== item.id);
+                        } else if (owner === 'PLAYER_4') {
+                          this.state.p4ProductionQueue = this.state.p4ProductionQueue!.filter(q => q.id !== item.id);
+                        }
                         break;
                       }
                     }

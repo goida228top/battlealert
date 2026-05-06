@@ -110,18 +110,6 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
                 >
                   Разделение рекой (Умеренный)
                 </button>
-                <button 
-                  onClick={() => setSelectedMap('DESERT_OASIS')}
-                  className={`py-3 px-4 text-left font-bold uppercase tracking-widest border-2 transition-all ${selectedMap === 'DESERT_OASIS' ? 'bg-zinc-700 text-white border-zinc-400' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'}`}
-                >
-                  Пустынный оазис (Пустыня)
-                </button>
-                <button 
-                  onClick={() => setSelectedMap('SNOWY_PASS')}
-                  className={`py-3 px-4 text-left font-bold uppercase tracking-widest border-2 transition-all ${selectedMap === 'SNOWY_PASS' ? 'bg-zinc-700 text-white border-zinc-400' : 'bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700'}`}
-                >
-                  Снежный перевал (Снег)
-                </button>
               </div>
             </div>
 
@@ -142,8 +130,6 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
               <span className="mb-2">Превью карты (Недоступно)</span>
               <span className="text-xs text-zinc-600 text-center">
                 {selectedMap === 'RIVER_DIVIDE' && 'Река делит поле боя с двумя стратегическими мостами.'}
-                {selectedMap === 'DESERT_OASIS' && 'Открытая пустыня с центральным оазисом и разбросанными ресурсами.'}
-                {selectedMap === 'SNOWY_PASS' && 'Замерзший ландшафт с горизонтальной рекой и узкими переправами.'}
               </span>
             </div>
           </div>

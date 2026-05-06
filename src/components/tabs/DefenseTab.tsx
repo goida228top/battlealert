@@ -2,14 +2,15 @@ import React from 'react';
 import { GameState } from '../../game/types';
 import { GameEngine } from '../../game/GameEngine';
 import { BuildButton } from '../BuildButton';
-import { Zap, Shield, Factory, Coins, Radar, Wrench, Activity, Layers, Anchor, Users, Crosshair, Target, Skull, Bomb, Wind, Truck, Waves, Car, Square, ShieldAlert } from 'lucide-react';
+import { Zap, Shield, Factory, Coins, Radar, Wrench, Activity, Layers, Anchor, Users, Crosshair, Target, Skull, Bomb, Wind, Truck, Waves, Car, Square, ShieldAlert, Plane } from 'lucide-react';
 
 interface DefenseTabProps {
   gameState: GameState;
   engineRef: React.MutableRefObject<GameEngine>;
+  setGameState: (state: any) => void;
 }
 
-export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) => {
+export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, setGameState }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
   const localPlayerId = engineRef.current.localPlayerId;
   const activeQueue = localPlayerId === 'PLAYER' ? gameState.productionQueue : 
@@ -36,7 +37,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Стена" 
                     icon={<Square className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('SOVIET_WALL')} 
+                    cost={engineRef.current.getCost('SOVIET_WALL')} cannotAfford={gameState.credits < engineRef.current.getCost('SOVIET_WALL')} 
                     progress={activeQueue.find(q => q.subType === 'SOVIET_WALL')?.progress}
                     active={gameState.placingBuilding === 'SOVIET_WALL'}
                     locked={!engineRef.current.isUnlocked('SOVIET_WALL', localPlayerId)}
@@ -55,7 +56,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Пулемет" 
                     icon={<Target className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('SENTRY_GUN')} 
+                    cost={engineRef.current.getCost('SENTRY_GUN')} cannotAfford={gameState.credits < engineRef.current.getCost('SENTRY_GUN')} 
                     progress={activeQueue.find(q => q.subType === 'SENTRY_GUN')?.progress}
                     active={gameState.placingBuilding === 'SENTRY_GUN'}
                     locked={!engineRef.current.isUnlocked('SENTRY_GUN', localPlayerId)}
@@ -74,7 +75,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Зенитка" 
                     icon={<Crosshair className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('FLAK_CANNON')} 
+                    cost={engineRef.current.getCost('FLAK_CANNON')} cannotAfford={gameState.credits < engineRef.current.getCost('FLAK_CANNON')} 
                     progress={activeQueue.find(q => q.subType === 'FLAK_CANNON')?.progress}
                     active={gameState.placingBuilding === 'FLAK_CANNON'}
                     locked={!engineRef.current.isUnlocked('FLAK_CANNON', localPlayerId)}
@@ -93,7 +94,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Катушка Теслы" 
                     icon={<Zap className="w-5 h-5 text-blue-400" />} 
-                    cost={engineRef.current.getCost('TESLA_COIL')} 
+                    cost={engineRef.current.getCost('TESLA_COIL')} cannotAfford={gameState.credits < engineRef.current.getCost('TESLA_COIL')} 
                     progress={activeQueue.find(q => q.subType === 'TESLA_COIL')?.progress}
                     active={gameState.placingBuilding === 'TESLA_COIL'}
                     locked={!engineRef.current.isUnlocked('TESLA_COIL', localPlayerId)}
@@ -112,7 +113,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Пси-сенсор" 
                     icon={<Activity className="w-5 h-5 text-purple-400" />} 
-                    cost={engineRef.current.getCost('PSYCHIC_SENSOR')} 
+                    cost={engineRef.current.getCost('PSYCHIC_SENSOR')} cannotAfford={gameState.credits < engineRef.current.getCost('PSYCHIC_SENSOR')} 
                     progress={activeQueue.find(q => q.subType === 'PSYCHIC_SENSOR')?.progress}
                     active={gameState.placingBuilding === 'PSYCHIC_SENSOR'}
                     locked={!engineRef.current.isUnlocked('PSYCHIC_SENSOR', localPlayerId)}
@@ -130,7 +131,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Железный занавес" 
                     icon={<ShieldAlert className="w-5 h-5 text-red-500" />} 
-                    cost={engineRef.current.getCost('IRON_CURTAIN')} 
+                    cost={engineRef.current.getCost('IRON_CURTAIN')} cannotAfford={gameState.credits < engineRef.current.getCost('IRON_CURTAIN')} 
                     progress={activeQueue.find(q => q.subType === 'IRON_CURTAIN')?.progress}
                     active={gameState.placingBuilding === 'IRON_CURTAIN'}
                     locked={!engineRef.current.isUnlocked('IRON_CURTAIN', localPlayerId)}
@@ -146,9 +147,23 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     title="Железный занавес: Делает технику неуязвимой на короткое время."
                   />
                   <BuildButton 
+                    label="Шпионский самолет" 
+                    icon={<Plane className="w-5 h-5 text-zinc-400" />} 
+                    cost={0} 
+                    progress={gameState.specialAbilities.SPY_PLANE?.ready ? 100 : (Date.now() - (gameState.specialAbilities.SPY_PLANE?.lastUsed || 0)) / (gameState.specialAbilities.SPY_PLANE?.cooldown || 1000) * 100}
+                    active={gameState.interactionMode === 'USE_SPY_PLANE'}
+                    locked={!gameState.specialAbilities.SPY_PLANE?.ready}
+                    onClick={() => {
+                      if (gameState.specialAbilities.SPY_PLANE?.ready) {
+                        engineRef.current.state.interactionMode = 'USE_SPY_PLANE';
+                      }
+                    }}
+                    title="Запуск самолета разведчика. Раскрывает туман войны в выбранной области."
+                  />
+                  <BuildButton 
                     label="Ядерная шахта" 
                     icon={<Bomb className="w-5 h-5 text-yellow-500" />} 
-                    cost={engineRef.current.getCost('NUCLEAR_SILO')} 
+                    cost={engineRef.current.getCost('NUCLEAR_SILO')} cannotAfford={gameState.credits < engineRef.current.getCost('NUCLEAR_SILO')} 
                     progress={activeQueue.find(q => q.subType === 'NUCLEAR_SILO')?.progress}
                     active={gameState.placingBuilding === 'NUCLEAR_SILO'}
                     locked={!engineRef.current.isUnlocked('NUCLEAR_SILO', localPlayerId)}
@@ -163,6 +178,38 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     }}
                     title="Ядерная шахта: Запускает разрушительную ядерную ракету."
                   />
+                  {gameState.specialAbilities.IRON_CURTAIN && (
+                    <BuildButton 
+                      label="Запуск: Железный занавес" 
+                      icon={<ShieldAlert className="w-5 h-5 text-red-500" />} 
+                      cost={0} 
+                      progress={gameState.specialAbilities.IRON_CURTAIN.ready ? 100 : (Date.now() - gameState.specialAbilities.IRON_CURTAIN.lastUsed) / gameState.specialAbilities.IRON_CURTAIN.cooldown * 100}
+                      active={gameState.interactionMode === 'USE_IRON_CURTAIN'}
+                      locked={!gameState.specialAbilities.IRON_CURTAIN.ready}
+                      onClick={() => {
+                        if (gameState.specialAbilities.IRON_CURTAIN.ready) {
+                          engineRef.current.state.interactionMode = 'USE_IRON_CURTAIN';
+                        }
+                      }}
+                      title="Активировать Железный занавес"
+                    />
+                  )}
+                  {gameState.specialAbilities.NUCLEAR_SILO && (
+                    <BuildButton 
+                      label="Запуск: Ядерная ракета" 
+                      icon={<Bomb className="w-5 h-5 text-yellow-500" />} 
+                      cost={0} 
+                      progress={gameState.specialAbilities.NUCLEAR_SILO.ready ? 100 : (Date.now() - gameState.specialAbilities.NUCLEAR_SILO.lastUsed) / gameState.specialAbilities.NUCLEAR_SILO.cooldown * 100}
+                      active={gameState.interactionMode === 'USE_NUCLEAR_STRIKE'}
+                      locked={!gameState.specialAbilities.NUCLEAR_SILO.ready}
+                      onClick={() => {
+                        if (gameState.specialAbilities.NUCLEAR_SILO.ready) {
+                          engineRef.current.state.interactionMode = 'USE_NUCLEAR_STRIKE';
+                        }
+                      }}
+                      title="Запустить ядерную ракету"
+                    />
+                  )}
                 </>
               ) : (
                 <>
@@ -186,7 +233,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     <BuildButton 
                       label="Гранд-Канон" 
                       icon={<Target className="w-5 h-5 text-zinc-600" />} 
-                      cost={engineRef.current.getCost('GRAND_CANNON')} 
+                      cost={engineRef.current.getCost('GRAND_CANNON')} cannotAfford={gameState.credits < engineRef.current.getCost('GRAND_CANNON')} 
                       progress={activeQueue.find(q => q.subType === 'GRAND_CANNON')?.progress}
                       active={gameState.placingBuilding === 'GRAND_CANNON'}
                       locked={!engineRef.current.isUnlocked('GRAND_CANNON', localPlayerId)}
@@ -205,7 +252,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Дот" 
                     icon={<Target className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('PILLBOX')} 
+                    cost={engineRef.current.getCost('PILLBOX')} cannotAfford={gameState.credits < engineRef.current.getCost('PILLBOX')} 
                     progress={activeQueue.find(q => q.subType === 'PILLBOX')?.progress}
                     active={gameState.placingBuilding === 'PILLBOX'}
                     locked={!engineRef.current.isUnlocked('PILLBOX', localPlayerId)}
@@ -223,7 +270,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Патриот" 
                     icon={<Crosshair className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('PATRIOT_MISSILE')} 
+                    cost={engineRef.current.getCost('PATRIOT_MISSILE')} cannotAfford={gameState.credits < engineRef.current.getCost('PATRIOT_MISSILE')} 
                     progress={activeQueue.find(q => q.subType === 'PATRIOT_MISSILE')?.progress}
                     active={gameState.placingBuilding === 'PATRIOT_MISSILE'}
                     locked={!engineRef.current.isUnlocked('PATRIOT_MISSILE', localPlayerId)}
@@ -241,7 +288,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Призма" 
                     icon={<Zap className="w-5 h-5 text-blue-300" />} 
-                    cost={engineRef.current.getCost('PRISM_TOWER')} 
+                    cost={engineRef.current.getCost('PRISM_TOWER')} cannotAfford={gameState.credits < engineRef.current.getCost('PRISM_TOWER')} 
                     progress={activeQueue.find(q => q.subType === 'PRISM_TOWER')?.progress}
                     active={gameState.placingBuilding === 'PRISM_TOWER'}
                     locked={!engineRef.current.isUnlocked('PRISM_TOWER', localPlayerId)}
@@ -259,7 +306,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Хроносфера" 
                     icon={<Zap className="w-5 h-5 text-purple-500" />} 
-                    cost={engineRef.current.getCost('CHRONOSPHERE')} 
+                    cost={engineRef.current.getCost('CHRONOSPHERE')} cannotAfford={gameState.credits < engineRef.current.getCost('CHRONOSPHERE')} 
                     progress={activeQueue.find(q => q.subType === 'CHRONOSPHERE')?.progress}
                     active={gameState.placingBuilding === 'CHRONOSPHERE'}
                     locked={!engineRef.current.isUnlocked('CHRONOSPHERE', localPlayerId)}
@@ -277,7 +324,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Грозовая туча" 
                     icon={<Wind className="w-5 h-5 text-blue-600" />} 
-                    cost={engineRef.current.getCost('WEATHER_DEVICE')} 
+                    cost={engineRef.current.getCost('WEATHER_DEVICE')} cannotAfford={gameState.credits < engineRef.current.getCost('WEATHER_DEVICE')} 
                     progress={activeQueue.find(q => q.subType === 'WEATHER_DEVICE')?.progress}
                     active={gameState.placingBuilding === 'WEATHER_DEVICE'}
                     locked={!engineRef.current.isUnlocked('WEATHER_DEVICE', localPlayerId)}
@@ -295,7 +342,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Генератор помех" 
                     icon={<Layers className="w-5 h-5 text-zinc-400" />} 
-                    cost={engineRef.current.getCost('GAP_GENERATOR')} 
+                    cost={engineRef.current.getCost('GAP_GENERATOR')} cannotAfford={gameState.credits < engineRef.current.getCost('GAP_GENERATOR')} 
                     progress={activeQueue.find(q => q.subType === 'GAP_GENERATOR')?.progress}
                     active={gameState.placingBuilding === 'GAP_GENERATOR'}
                     locked={!engineRef.current.isUnlocked('GAP_GENERATOR', localPlayerId)}
@@ -313,7 +360,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Спутник-шпион" 
                     icon={<Radar className="w-5 h-5 text-blue-400" />} 
-                    cost={engineRef.current.getCost('SPY_SATELLITE')} 
+                    cost={engineRef.current.getCost('SPY_SATELLITE')} cannotAfford={gameState.credits < engineRef.current.getCost('SPY_SATELLITE')} 
                     progress={activeQueue.find(q => q.subType === 'SPY_SATELLITE')?.progress}
                     active={gameState.placingBuilding === 'SPY_SATELLITE'}
                     locked={!engineRef.current.isUnlocked('SPY_SATELLITE', localPlayerId)}
@@ -331,7 +378,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                   <BuildButton 
                     label="Стена" 
                     icon={<Square className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('ALLIED_WALL')} 
+                    cost={engineRef.current.getCost('ALLIED_WALL')} cannotAfford={gameState.credits < engineRef.current.getCost('ALLIED_WALL')} 
                     progress={activeQueue.find(q => q.subType === 'ALLIED_WALL')?.progress}
                     active={gameState.placingBuilding === 'ALLIED_WALL'}
                     locked={!engineRef.current.isUnlocked('ALLIED_WALL', localPlayerId)}
@@ -346,6 +393,38 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef }) 
                     }}
                     title="Стена: Базовая защита от пехоты и техники."
                   />
+                  {gameState.specialAbilities.CHRONOSPHERE && (
+                    <BuildButton 
+                      label="Запуск: Хроносфера" 
+                      icon={<Activity className="w-5 h-5 text-purple-500" />} 
+                      cost={0} 
+                      progress={gameState.specialAbilities.CHRONOSPHERE.ready ? 100 : (Date.now() - gameState.specialAbilities.CHRONOSPHERE.lastUsed) / (gameState.specialAbilities.CHRONOSPHERE.cooldown || 1000) * 100}
+                      active={gameState.interactionMode === 'USE_CHRONOSPHERE'}
+                      locked={!gameState.specialAbilities.CHRONOSPHERE.ready}
+                      onClick={() => {
+                        if (gameState.specialAbilities.CHRONOSPHERE.ready) {
+                          engineRef.current.state.interactionMode = 'USE_CHRONOSPHERE';
+                        }
+                      }}
+                      title="Активировать Хроносферу"
+                    />
+                  )}
+                  {gameState.specialAbilities.WEATHER_DEVICE && (
+                    <BuildButton 
+                      label="Запуск: Грозовая туча" 
+                      icon={<Wind className="w-5 h-5 text-blue-500" />} 
+                      cost={0} 
+                      progress={gameState.specialAbilities.WEATHER_DEVICE.ready ? 100 : (Date.now() - gameState.specialAbilities.WEATHER_DEVICE.lastUsed) / (gameState.specialAbilities.WEATHER_DEVICE.cooldown || 1000) * 100}
+                      active={gameState.interactionMode === 'USE_WEATHER_STORM'}
+                      locked={!gameState.specialAbilities.WEATHER_DEVICE.ready}
+                      onClick={() => {
+                        if (gameState.specialAbilities.WEATHER_DEVICE.ready) {
+                          engineRef.current.state.interactionMode = 'USE_WEATHER_STORM';
+                        }
+                      }}
+                      title="Активировать Грозовую тучу"
+                    />
+                  )}
                 </>
               )}
             </div>

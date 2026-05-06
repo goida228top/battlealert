@@ -12,10 +12,13 @@ export class FogOfWar {
     this.ctx = this.canvas.getContext('2d', { alpha: true })!;
   }
 
+  private lastVisibilityGeneration: number = -1;
+
   public render(
     mainCtx: CanvasRenderingContext2D,
     visibility: number[][],
-    map: GameState['map']
+    map: any,
+    gameState?: any
   ) {
     const { width, height, tileSize } = map;
     
@@ -24,8 +27,11 @@ export class FogOfWar {
     const fW = width + pad * 2;
     const fH = height + pad * 2;
 
+    const currentGen = gameState?.visibilityGeneration || 0;
+    const sizeChanged = this.lastWidth !== fW || this.lastHeight !== fH;
+
     // Resize internal canvas if map size changes
-    if (this.lastWidth !== fW || this.lastHeight !== fH) {
+    if (sizeChanged) {
       this.canvas.width = fW;
       this.canvas.height = fH;
       this.lastWidth = fW;
@@ -35,44 +41,47 @@ export class FogOfWar {
 
     if (!this.imageData) return;
 
-    const data = this.imageData.data;
-    
-    // 1. Build the low-res fog map
-    for (let y = 0; y < fH; y++) {
-      for (let x = 0; x < fW; x++) {
-        const mapX = x - pad;
-        const mapY = y - pad;
-        let vis = 0; // Default to unexplored
+    if (sizeChanged || this.lastVisibilityGeneration !== currentGen) {
+      this.lastVisibilityGeneration = currentGen;
+      const data = this.imageData.data;
+      
+      // 1. Build the low-res fog map
+      for (let y = 0; y < fH; y++) {
+        for (let x = 0; x < fW; x++) {
+          const mapX = x - pad;
+          const mapY = y - pad;
+          let vis = 0; // Default to unexplored
 
-        if (mapX >= 0 && mapX < width && mapY >= 0 && mapY < height) {
-          vis = visibility[mapY]?.[mapX] ?? 0;
-        }
+          if (mapX >= 0 && mapX < width && mapY >= 0 && mapY < height) {
+            vis = visibility[mapY]?.[mapX] ?? 0;
+          }
 
-        const idx = (y * fW + x) * 4;
-        
-        if (vis === 0) {
-          // Unexplored (Shroud): Translucent black
-          data[idx] = 10;
-          data[idx + 1] = 10;
-          data[idx + 2] = 10;
-          data[idx + 3] = 225; // Dark shroud
-        } else if (vis === 1) {
-          // Explored (Fog of War): Semi-transparent black
-          data[idx] = 20;
-          data[idx + 1] = 20;
-          data[idx + 2] = 20;
-          data[idx + 3] = 140; // Visible but fogged
-        } else {
-          // Visible: Fully transparent
-          data[idx] = 0;
-          data[idx + 1] = 0;
-          data[idx + 2] = 0;
-          data[idx + 3] = 0;
+          const idx = (y * fW + x) * 4;
+          
+          if (vis === 0) {
+            // Unexplored (Shroud): Solid black
+            data[idx] = 0;
+            data[idx + 1] = 0;
+            data[idx + 2] = 0;
+            data[idx + 3] = 255; 
+          } else if (vis === 1) {
+            // Explored (Fog of War): Dark semi-transparent black
+            data[idx] = 0;
+            data[idx + 1] = 0;
+            data[idx + 2] = 0;
+            data[idx + 3] = 180; // Dark fog
+          } else {
+            // Visible: Fully transparent
+            data[idx] = 0;
+            data[idx + 1] = 0;
+            data[idx + 2] = 0;
+            data[idx + 3] = 0;
+          }
         }
       }
-    }
 
-    this.ctx.putImageData(this.imageData, 0, 0);
+      this.ctx.putImageData(this.imageData, 0, 0);
+    }
 
     mainCtx.save();
     

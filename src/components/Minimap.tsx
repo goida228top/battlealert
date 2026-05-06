@@ -13,6 +13,13 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState, onMinimapClick }) =
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
+    
+    // Throttle minimap updates to ~10fps
+    const now = Date.now();
+    const lastUpdate = (canvas as any).lastDrawTime || 0;
+    if (now - lastUpdate < 100) return;
+    (canvas as any).lastDrawTime = now;
+
     const ctx = canvas.getContext('2d');
     if (!ctx) return;
 
@@ -36,6 +43,10 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState, onMinimapClick }) =
           ctx.fillStyle = '#1e3a8a';
         } else if (tile === 'ORE') {
           ctx.fillStyle = '#fbbf24';
+        } else if (tile === 'DEBUG_RED') {
+          ctx.fillStyle = '#ef4444';
+        } else if (tile === 'MOUNTAIN_GRASS') {
+          ctx.fillStyle = map.theme === 'DESERT' ? '#b4956d' : map.theme === 'SNOW' ? '#cbd5e1' : '#224a1e';
         } else {
           ctx.fillStyle = map.theme === 'DESERT' ? '#78350f' : map.theme === 'SNOW' ? '#e2e8f0' : '#14532d';
         }
@@ -59,13 +70,22 @@ export const Minimap: React.FC<MinimapProps> = ({ gameState, onMinimapClick }) =
 
     // Draw Entities
     entities.forEach(entity => {
-      const tx = Math.floor(entity.position.x / map.tileSize);
-      const ty = Math.floor(entity.position.y / map.tileSize);
-      if (map.visibility[ty]?.[tx] !== 2 && entity.owner !== 'PLAYER') return;
+      // Don't show scenery as dots
+      if (entity.subType === 'TREE' || entity.subType === 'MOUNTAIN') return;
+      if (entity.owner === 'NEUTRAL') return;
 
-      const slotColor = gameState.playerColors?.[entity.owner] || (entity.owner === 'PLAYER' ? 'BLUE' : 'RED');
-      ctx.fillStyle = slotColor === 'BLUE' ? '#3b82f6' : slotColor === 'RED' ? '#ef4444' : slotColor === 'GREEN' ? '#22c55e' : slotColor === 'ORANGE' ? '#f97316' : '#ef4444';
+      let color = '#ef4444'; // Enemy Red
+      if (entity.owner === 'PLAYER') color = '#3b82f6'; // Player Blue
+      else if (gameState.playerColors?.[entity.owner]) {
+        const pc = gameState.playerColors[entity.owner];
+        if (pc === 'BLUE') color = '#3b82f6';
+        else if (pc === 'GREEN') color = '#22c55e';
+        else if (pc === 'ORANGE') color = '#f97316';
+        else if (pc === 'PURPLE') color = '#a855f7';
+      }
+
       const size = entity.type === 'BUILDING' ? 4 : 2;
+      ctx.fillStyle = color;
       ctx.fillRect(
         (entity.position.x / mapWidth) * width - size / 2,
         (entity.position.y / mapHeight) * height - size / 2,

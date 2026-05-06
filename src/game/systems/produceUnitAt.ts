@@ -87,7 +87,7 @@ this.state.entities.push(entity);
 // Handle Rally Point
 if (producer.rallyPoint) {
   entity.targetPosition = { ...producer.rallyPoint };
-  entity.path = this.calculatePath(entity.position, entity.targetPosition);
+  entity.path = this.calculatePath(entity.position, entity.targetPosition, entity);
 }
 
 // Cloning Vats Logic
@@ -102,7 +102,7 @@ if (isInfantry && hasCloningVats) {
   };
   if (producer.rallyPoint) {
     clone.targetPosition = { ...producer.rallyPoint };
-    clone.path = this.calculatePath(clone.position, clone.targetPosition);
+    clone.path = this.calculatePath(clone.position, clone.targetPosition, clone);
   }
   this.state.entities.push(clone);
 }

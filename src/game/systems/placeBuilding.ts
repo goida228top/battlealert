@@ -9,38 +9,57 @@ export function placeBuilding(this: GameEngine, pos: Vector2, serverEntityId?: s
   const tileSize = this.state.map.tileSize;
   const dims = getBuildingDimensions(type);
 
-  // Calculate top-left tile based on mouse position (aiming for center-ish)
-  const tx = Math.floor((pos.x - (dims.w * tileSize) / 2) / tileSize);
-  const ty = Math.floor((pos.y - (dims.h * tileSize) / 2) / tileSize);
+  // Determine effective tile size (the "step") based on terrain at target position
+  const baseTx = Math.floor(pos.x / tileSize);
+  const baseTy = Math.floor(pos.y / tileSize);
+  const isOverMountain = this.state.map.tiles[baseTy]?.[baseTx] === 'MOUNTAIN_GRASS';
+  const effectiveTileSize = isOverMountain ? tileSize * 1.2 : tileSize;
+
+  // Calculate top-left tile based on mouse position using the scaled step
+  const tx = Math.floor((pos.x - (dims.w * effectiveTileSize) / 2) / effectiveTileSize);
+  const ty = Math.floor((pos.y - (dims.h * effectiveTileSize) / 2) / effectiveTileSize);
+
+  // Determine the bounding box in raw tile coordinates
+  const startTileX = Math.floor((tx * effectiveTileSize) / tileSize);
+  const endTileX = Math.floor(((tx + dims.w) * effectiveTileSize - 1) / tileSize);
+  const startTileY = Math.floor((ty * effectiveTileSize) / tileSize);
+  const endTileY = Math.floor(((ty + dims.h) * effectiveTileSize - 1) / tileSize);
 
   // 1. Bounds and Terrain Check for ALL tiles
-  for (let dy = 0; dy < dims.h; dy++) {
-    for (let dx = 0; dx < dims.w; dx++) {
-      const curX = tx + dx;
-      const curY = ty + dy;
-
-      if (curX < 0 || curX >= this.state.map.width || curY < 0 || curY >= this.state.map.height) {
+  let baseElevation: 'GROUND' | 'PLATEAU' | 'MOUNTAIN_PLATEAU' | null = null;
+  for (let ry = startTileY; ry <= endTileY; ry++) {
+    for (let rx = startTileX; rx <= endTileX; rx++) {
+      if (rx < 0 || rx >= this.state.map.width || ry < 0 || ry >= this.state.map.height) {
         return; // Out of bounds
       }
 
-      const tileType = this.state.map.tiles[curY][curX];
-      const visibility = this.state.map.visibility[curY][curX];
+      const tileType = this.state.map.tiles[ry][rx];
+      const visibility = this.state.map.visibility[ry][rx];
       
-      if (tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE') {
-        return; // Cannot build on water or ore
+      const isFoggy = !this.state.debugFlags?.disableFog && visibility === 0;
+      if (tileType === 'WATER' || tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER' || tileType === 'ORE' || tileType.startsWith('CLIFF') || tileType.startsWith('RAMP_') || isFoggy || tileType === 'MOUNTAIN_DECOR') {
+        return; // Cannot build on blocked terrain or fog
       }
-      
-      /* 
-      if (visibility === 0) {
-        return; // Cannot build in the dark (unexplored area)
+
+      // Block bridges
+      const onBridge = this.state.map.bridges.some((b: any) => {
+        return rx >= b.x && rx < b.x + b.width && ry >= b.y && ry < b.y + b.height;
+      });
+      if (onBridge) return;
+
+      // Check elevation consistency
+      const curElevation = (tileType === 'MOUNTAIN_GRASS') ? 'MOUNTAIN_PLATEAU' : ((tileType === 'ELEVATED_GRASS') ? 'PLATEAU' : 'GROUND');
+      if (baseElevation === null) {
+        baseElevation = curElevation;
+      } else if (baseElevation !== curElevation) {
+        return; // Building must be on uniform terrain level
       }
-      */
     }
   }
 
-  // Calculate snapped center position
-  const snappedX = (tx + dims.w / 2) * tileSize;
-  const snappedY = (ty + dims.h / 2) * tileSize;
+  // Calculate snapped center position using the scaled step
+  const snappedX = (tx + dims.w / 2) * effectiveTileSize;
+  const snappedY = (ty + dims.h / 2) * effectiveTileSize;
   const snappedPos = { x: snappedX, y: snappedY };
 
   // 2. Collision Check with other buildings
@@ -48,22 +67,25 @@ export function placeBuilding(this: GameEngine, pos: Vector2, serverEntityId?: s
     if (e.type !== 'BUILDING') return false;
     const eDims = getBuildingDimensions(e.subType as BuildingType);
     
-    // Check for overlap between the two rectangles
+    // Check for overlap using effective sizes
     const rect1 = {
-      left: tx,
-      top: ty,
-      right: tx + dims.w,
-      bottom: ty + dims.h
+      left: snappedX - (dims.w * effectiveTileSize) / 2,
+      top: snappedY - (dims.h * effectiveTileSize) / 2,
+      right: snappedX + (dims.w * effectiveTileSize) / 2,
+      bottom: snappedY + (dims.h * effectiveTileSize) / 2
     };
     
-    const eTx = Math.floor((e.position.x - (eDims.w * tileSize) / 2) / tileSize);
-    const eTy = Math.floor((e.position.y - (eDims.h * tileSize) / 2) / tileSize);
-    
+    // Existing building effective size
+    const ebTx = Math.floor(e.position.x / tileSize);
+    const ebTy = Math.floor(e.position.y / tileSize);
+    const eScale = this.state.map.tiles[ebTy]?.[ebTx] === 'MOUNTAIN_GRASS' ? 1.2 : 1.0;
+    const eEffectiveTileSize = tileSize * eScale;
+
     const rect2 = {
-      left: eTx,
-      top: eTy,
-      right: eTx + eDims.w,
-      bottom: eTy + eDims.h
+      left: e.position.x - (eDims.w * eEffectiveTileSize) / 2,
+      top: e.position.y - (eDims.h * eEffectiveTileSize) / 2,
+      right: e.position.x + (eDims.w * eEffectiveTileSize) / 2,
+      bottom: e.position.y + (eDims.h * eEffectiveTileSize) / 2
     };
 
     return !(rect1.right <= rect2.left || 

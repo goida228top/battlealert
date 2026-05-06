@@ -7,9 +7,10 @@ import { Zap, Shield, Factory, Coins, Radar, Wrench, Activity, Layers, Anchor, U
 interface VehiclesTabProps {
   gameState: GameState;
   engineRef: React.MutableRefObject<GameEngine>;
+  setGameState: (state: any) => void;
 }
 
-export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }) => {
+export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, setGameState }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
   const localPlayerId = engineRef.current.localPlayerId;
   const activeQueue = localPlayerId === 'PLAYER' ? gameState.productionQueue : 
@@ -34,7 +35,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Танк Рино" 
                     icon={<Car className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('RHINO_TANK')} 
+                    cost={engineRef.current.getCost('RHINO_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('RHINO_TANK')} 
                     progress={activeQueue.find(q => q.subType === 'RHINO_TANK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'RHINO_TANK').length}
                     locked={!engineRef.current.isUnlocked('RHINO_TANK', localPlayerId)}
@@ -45,7 +46,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Зенитный БТР" 
                     icon={<Truck className="w-5 h-5 text-zinc-400" />} 
-                    cost={engineRef.current.getCost('FLAK_TRACK')} 
+                    cost={engineRef.current.getCost('FLAK_TRACK')} cannotAfford={gameState.credits < engineRef.current.getCost('FLAK_TRACK')} 
                     progress={activeQueue.find(q => q.subType === 'FLAK_TRACK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'FLAK_TRACK').length}
                     locked={!engineRef.current.isUnlocked('FLAK_TRACK', localPlayerId)}
@@ -56,7 +57,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Пусковая V3" 
                     icon={<Target className="w-5 h-5 text-red-500" />} 
-                    cost={engineRef.current.getCost('V3_LAUNCHER')} 
+                    cost={engineRef.current.getCost('V3_LAUNCHER')} cannotAfford={gameState.credits < engineRef.current.getCost('V3_LAUNCHER')} 
                     progress={activeQueue.find(q => q.subType === 'V3_LAUNCHER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'V3_LAUNCHER').length}
                     locked={!engineRef.current.isUnlocked('V3_LAUNCHER', localPlayerId)}
@@ -67,7 +68,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Дрон-террорист" 
                     icon={<Crosshair className="w-5 h-5 text-zinc-400" />} 
-                    cost={engineRef.current.getCost('TERROR_DRONE')} 
+                    cost={engineRef.current.getCost('TERROR_DRONE')} cannotAfford={gameState.credits < engineRef.current.getCost('TERROR_DRONE')} 
                     progress={activeQueue.find(q => q.subType === 'TERROR_DRONE')?.progress}
                     count={activeQueue.filter(q => q.subType === 'TERROR_DRONE').length}
                     locked={!engineRef.current.isUnlocked('TERROR_DRONE', localPlayerId)}
@@ -78,7 +79,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Апокалипсис" 
                     icon={<Skull className="w-5 h-5 text-red-600" />} 
-                    cost={engineRef.current.getCost('APOCALYPSE_TANK')} 
+                    cost={engineRef.current.getCost('APOCALYPSE_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('APOCALYPSE_TANK')} 
                     progress={activeQueue.find(q => q.subType === 'APOCALYPSE_TANK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'APOCALYPSE_TANK').length}
                     locked={!engineRef.current.isUnlocked('APOCALYPSE_TANK', localPlayerId)}
@@ -89,7 +90,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Тесла-танк" 
                       icon={<Zap className="w-5 h-5 text-blue-500" />} 
-                      cost={engineRef.current.getCost('TESLA_TANK')} 
+                      cost={engineRef.current.getCost('TESLA_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('TESLA_TANK')} 
                       progress={activeQueue.find(q => q.subType === 'TESLA_TANK')?.progress}
                       count={activeQueue.filter(q => q.subType === 'TESLA_TANK').length}
                       locked={!engineRef.current.isUnlocked('TESLA_TANK', localPlayerId)}
@@ -101,7 +102,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Грузовик-бомба" 
                       icon={<Bomb className="w-5 h-5 text-red-500" />} 
-                      cost={engineRef.current.getCost('DEMOLITION_TRUCK')} 
+                      cost={engineRef.current.getCost('DEMOLITION_TRUCK')} cannotAfford={gameState.credits < engineRef.current.getCost('DEMOLITION_TRUCK')} 
                       progress={activeQueue.find(q => q.subType === 'DEMOLITION_TRUCK')?.progress}
                       count={activeQueue.filter(q => q.subType === 'DEMOLITION_TRUCK').length}
                       locked={!engineRef.current.isUnlocked('DEMOLITION_TRUCK', localPlayerId)}
@@ -112,7 +113,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Военный комбайн" 
                     icon={<Truck className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('HARVESTER')} 
+                    cost={engineRef.current.getCost('HARVESTER')} cannotAfford={gameState.credits < engineRef.current.getCost('HARVESTER')} 
                     progress={activeQueue.find(q => q.subType === 'HARVESTER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'HARVESTER').length}
                     locked={!engineRef.current.isUnlocked('HARVESTER', localPlayerId)}
@@ -122,7 +123,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="МСЦ" 
                     icon={<Truck className="w-5 h-5 text-green-500" />} 
-                    cost={engineRef.current.getCost('MCV')} 
+                    cost={engineRef.current.getCost('MCV')} cannotAfford={gameState.credits < engineRef.current.getCost('MCV')} 
                     progress={activeQueue.find(q => q.subType === 'MCV')?.progress}
                     count={activeQueue.filter(q => q.subType === 'MCV').length}
                     locked={!engineRef.current.isUnlocked('MCV', localPlayerId)}
@@ -132,7 +133,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Дирижабль Киров" 
                     icon={<Wind className="w-5 h-5 text-yellow-500" />} 
-                    cost={engineRef.current.getCost('KIROV_AIRSHIP')} 
+                    cost={engineRef.current.getCost('KIROV_AIRSHIP')} cannotAfford={gameState.credits < engineRef.current.getCost('KIROV_AIRSHIP')} 
                     progress={activeQueue.find(q => q.subType === 'KIROV_AIRSHIP')?.progress}
                     count={activeQueue.filter(q => q.subType === 'KIROV_AIRSHIP').length}
                     locked={!engineRef.current.isUnlocked('KIROV_AIRSHIP', localPlayerId)}
@@ -142,7 +143,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Подлодка" 
                     icon={<Waves className="w-5 h-5 text-blue-500" />} 
-                    cost={engineRef.current.getCost('TYPHOON_SUB')} 
+                    cost={engineRef.current.getCost('TYPHOON_SUB')} cannotAfford={gameState.credits < engineRef.current.getCost('TYPHOON_SUB')} 
                     progress={activeQueue.find(q => q.subType === 'TYPHOON_SUB')?.progress}
                     count={activeQueue.filter(q => q.subType === 'TYPHOON_SUB').length}
                     locked={!engineRef.current.isUnlocked('TYPHOON_SUB', localPlayerId)}
@@ -152,7 +153,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Дредноут" 
                     icon={<Anchor className="w-5 h-5 text-red-500" />} 
-                    cost={engineRef.current.getCost('DREADNOUGHT')} 
+                    cost={engineRef.current.getCost('DREADNOUGHT')} cannotAfford={gameState.credits < engineRef.current.getCost('DREADNOUGHT')} 
                     progress={activeQueue.find(q => q.subType === 'DREADNOUGHT')?.progress}
                     count={activeQueue.filter(q => q.subType === 'DREADNOUGHT').length}
                     locked={!engineRef.current.isUnlocked('DREADNOUGHT', localPlayerId)}
@@ -165,7 +166,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Танк Гризли" 
                     icon={<Car className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('GRIZZLY_TANK')} 
+                    cost={engineRef.current.getCost('GRIZZLY_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('GRIZZLY_TANK')} 
                     progress={activeQueue.find(q => q.subType === 'GRIZZLY_TANK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'GRIZZLY_TANK').length}
                     locked={!engineRef.current.isUnlocked('GRIZZLY_TANK', localPlayerId)}
@@ -175,7 +176,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Хроно-комбайн" 
                     icon={<Truck className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('CHRONO_MINER')} 
+                    cost={engineRef.current.getCost('CHRONO_MINER')} cannotAfford={gameState.credits < engineRef.current.getCost('CHRONO_MINER')} 
                     progress={activeQueue.find(q => q.subType === 'CHRONO_MINER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'CHRONO_MINER').length}
                     locked={!engineRef.current.isUnlocked('CHRONO_MINER', localPlayerId)}
@@ -185,7 +186,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="БМП" 
                     icon={<Target className="w-5 h-5 text-blue-500" />} 
-                    cost={engineRef.current.getCost('IFV')} 
+                    cost={engineRef.current.getCost('IFV')} cannotAfford={gameState.credits < engineRef.current.getCost('IFV')} 
                     progress={activeQueue.find(q => q.subType === 'IFV')?.progress}
                     count={activeQueue.filter(q => q.subType === 'IFV').length}
                     locked={!engineRef.current.isUnlocked('IFV', localPlayerId)}
@@ -195,7 +196,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Танк Мираж" 
                     icon={<Wind className="w-5 h-5 text-green-600" />} 
-                    cost={engineRef.current.getCost('MIRAGE_TANK')} 
+                    cost={engineRef.current.getCost('MIRAGE_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('MIRAGE_TANK')} 
                     progress={activeQueue.find(q => q.subType === 'MIRAGE_TANK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'MIRAGE_TANK').length}
                     locked={!engineRef.current.isUnlocked('MIRAGE_TANK', localPlayerId)}
@@ -205,7 +206,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Призма-танк" 
                     icon={<Zap className="w-5 h-5 text-blue-300" />} 
-                    cost={engineRef.current.getCost('PRISM_TANK')} 
+                    cost={engineRef.current.getCost('PRISM_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('PRISM_TANK')} 
                     progress={activeQueue.find(q => q.subType === 'PRISM_TANK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'PRISM_TANK').length}
                     locked={!engineRef.current.isUnlocked('PRISM_TANK', localPlayerId)}
@@ -216,7 +217,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Истр. танков" 
                       icon={<ShieldAlert className="w-5 h-5 text-zinc-400" />} 
-                      cost={engineRef.current.getCost('TANK_DESTROYER')} 
+                      cost={engineRef.current.getCost('TANK_DESTROYER')} cannotAfford={gameState.credits < engineRef.current.getCost('TANK_DESTROYER')} 
                       progress={activeQueue.find(q => q.subType === 'TANK_DESTROYER')?.progress}
                       count={activeQueue.filter(q => q.subType === 'TANK_DESTROYER').length}
                       locked={!engineRef.current.isUnlocked('TANK_DESTROYER', localPlayerId)}
@@ -227,7 +228,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Робот-танк" 
                     icon={<Cpu className="w-5 h-5 text-blue-400" />} 
-                    cost={engineRef.current.getCost('ROBOT_TANK')} 
+                    cost={engineRef.current.getCost('ROBOT_TANK')} cannotAfford={gameState.credits < engineRef.current.getCost('ROBOT_TANK')} 
                     progress={activeQueue.find(q => q.subType === 'ROBOT_TANK')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ROBOT_TANK').length}
                     locked={!engineRef.current.isUnlocked('ROBOT_TANK', localPlayerId)}
@@ -237,7 +238,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Крепость" 
                     icon={<Skull className="w-5 h-5 text-zinc-600" />} 
-                    cost={engineRef.current.getCost('BATTLE_FORTRESS')} 
+                    cost={engineRef.current.getCost('BATTLE_FORTRESS')} cannotAfford={gameState.credits < engineRef.current.getCost('BATTLE_FORTRESS')} 
                     progress={activeQueue.find(q => q.subType === 'BATTLE_FORTRESS')?.progress}
                     count={activeQueue.filter(q => q.subType === 'BATTLE_FORTRESS').length}
                     locked={!engineRef.current.isUnlocked('BATTLE_FORTRESS', localPlayerId)}
@@ -247,7 +248,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="МСЦ" 
                     icon={<Truck className="w-5 h-5 text-green-500" />} 
-                    cost={engineRef.current.getCost('ALLIED_MCV')} 
+                    cost={engineRef.current.getCost('ALLIED_MCV')} cannotAfford={gameState.credits < engineRef.current.getCost('ALLIED_MCV')} 
                     progress={activeQueue.find(q => q.subType === 'ALLIED_MCV')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ALLIED_MCV').length}
                     locked={!engineRef.current.isUnlocked('ALLIED_MCV', localPlayerId)}
@@ -257,7 +258,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Эсминец" 
                     icon={<Waves className="w-5 h-5 text-blue-700" />} 
-                    cost={engineRef.current.getCost('DESTROYER')} 
+                    cost={engineRef.current.getCost('DESTROYER')} cannotAfford={gameState.credits < engineRef.current.getCost('DESTROYER')} 
                     progress={activeQueue.find(q => q.subType === 'DESTROYER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'DESTROYER').length}
                     locked={!engineRef.current.isUnlocked('DESTROYER', localPlayerId)}
@@ -267,7 +268,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Авианосец" 
                     icon={<Anchor className="w-5 h-5 text-blue-900" />} 
-                    cost={engineRef.current.getCost('AIRCRAFT_CARRIER')} 
+                    cost={engineRef.current.getCost('AIRCRAFT_CARRIER')} cannotAfford={gameState.credits < engineRef.current.getCost('AIRCRAFT_CARRIER')} 
                     progress={activeQueue.find(q => q.subType === 'AIRCRAFT_CARRIER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'AIRCRAFT_CARRIER').length}
                     locked={!engineRef.current.isUnlocked('AIRCRAFT_CARRIER', localPlayerId)}
@@ -277,7 +278,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Харриер" 
                     icon={<Wind className="w-5 h-5 text-zinc-400" />} 
-                    cost={engineRef.current.getCost('HARRIER')} 
+                    cost={engineRef.current.getCost('HARRIER')} cannotAfford={gameState.credits < engineRef.current.getCost('HARRIER')} 
                     progress={activeQueue.find(q => q.subType === 'HARRIER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'HARRIER').length}
                     locked={!engineRef.current.isUnlocked('HARRIER', localPlayerId)}
@@ -288,7 +289,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Черный орел" 
                       icon={<Wind className="w-5 h-5 text-zinc-800" />} 
-                      cost={engineRef.current.getCost('BLACK_EAGLE')} 
+                      cost={engineRef.current.getCost('BLACK_EAGLE')} cannotAfford={gameState.credits < engineRef.current.getCost('BLACK_EAGLE')} 
                       progress={activeQueue.find(q => q.subType === 'BLACK_EAGLE')?.progress}
                       count={activeQueue.filter(q => q.subType === 'BLACK_EAGLE').length}
                       locked={!engineRef.current.isUnlocked('BLACK_EAGLE', localPlayerId)}
@@ -299,7 +300,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Ночной ястреб" 
                     icon={<Wind className="w-5 h-5 text-zinc-600" />} 
-                    cost={engineRef.current.getCost('NIGHT_HAWK_TRANSPORT')} 
+                    cost={engineRef.current.getCost('NIGHT_HAWK_TRANSPORT')} cannotAfford={gameState.credits < engineRef.current.getCost('NIGHT_HAWK_TRANSPORT')} 
                     progress={activeQueue.find(q => q.subType === 'NIGHT_HAWK_TRANSPORT')?.progress}
                     count={activeQueue.filter(q => q.subType === 'NIGHT_HAWK_TRANSPORT').length}
                     locked={!engineRef.current.isUnlocked('NIGHT_HAWK_TRANSPORT', localPlayerId)}
@@ -309,7 +310,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Транспорт" 
                     icon={<Waves className="w-5 h-5 text-blue-400" />} 
-                    cost={engineRef.current.getCost('AMPHIBIOUS_TRANSPORT')} 
+                    cost={engineRef.current.getCost('AMPHIBIOUS_TRANSPORT')} cannotAfford={gameState.credits < engineRef.current.getCost('AMPHIBIOUS_TRANSPORT')} 
                     progress={activeQueue.find(q => q.subType === 'AMPHIBIOUS_TRANSPORT')?.progress}
                     count={activeQueue.filter(q => q.subType === 'AMPHIBIOUS_TRANSPORT').length}
                     locked={!engineRef.current.isUnlocked('AMPHIBIOUS_TRANSPORT', localPlayerId)}
@@ -319,7 +320,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Дельфин" 
                     icon={<Waves className="w-5 h-5 text-blue-300" />} 
-                    cost={engineRef.current.getCost('DOLPHIN')} 
+                    cost={engineRef.current.getCost('DOLPHIN')} cannotAfford={gameState.credits < engineRef.current.getCost('DOLPHIN')} 
                     progress={activeQueue.find(q => q.subType === 'DOLPHIN')?.progress}
                     count={activeQueue.filter(q => q.subType === 'DOLPHIN').length}
                     locked={!engineRef.current.isUnlocked('DOLPHIN', localPlayerId)}
@@ -329,7 +330,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Крейсер Иджис" 
                     icon={<Shield className="w-5 h-5 text-blue-500" />} 
-                    cost={engineRef.current.getCost('AEGIS_CRUISER')} 
+                    cost={engineRef.current.getCost('AEGIS_CRUISER')} cannotAfford={gameState.credits < engineRef.current.getCost('AEGIS_CRUISER')} 
                     progress={activeQueue.find(q => q.subType === 'AEGIS_CRUISER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'AEGIS_CRUISER').length}
                     locked={!engineRef.current.isUnlocked('AEGIS_CRUISER', localPlayerId)}

@@ -6,50 +6,24 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
   const tileSize = this.state.map.tileSize;
   
   const isPointInEntity = (e: any, p: Vector2) => {
+    const zOffset = this.getZOffset ? this.getZOffset(e.position) : 0;
+    const renderedPos = { x: e.position.x, y: e.position.y + zOffset };
+
     if (e.type === 'BUILDING') {
       const dims = getBuildingDimensions(e.subType as BuildingType);
       const w = dims.w * tileSize;
       const h = dims.h * tileSize;
-      return p.x >= e.position.x - w/2 && p.x <= e.position.x + w/2 &&
-             p.y >= e.position.y - h/2 && p.y <= e.position.y + h/2;
+      return p.x >= renderedPos.x - w/2 && p.x <= renderedPos.x + w/2 &&
+             p.y >= renderedPos.y - h/2 && p.y <= renderedPos.y + h/2;
     }
-    return Math.hypot(e.position.x - p.x, e.position.y - p.y) < e.size / 1.5; // Slightly more generous than radius for units
+    return Math.hypot(renderedPos.x - p.x, renderedPos.y - p.y) < e.size / 1.5; 
   };
 
-  // RMB: Orders in OFFLINE mode or Deselect
+  // RMB: Strictly Deselect/Cancel
   if (isRightClick) {
-    if (this.state.placingBuilding) {
-      this.state.placingBuilding = null;
-    } else if (this.role === 'OFFLINE') {
-      const selectedUnits = this.state.entities.filter((e: any) => e.selected && e.owner === this.localPlayerId && e.type === 'UNIT');
-      if (selectedUnits.length > 0) {
-        // Handle as an order
-        const clickedEntity = this.state.entities.find((e: any) => isPointInEntity(e, pos));
-        const isEnemy = clickedEntity && clickedEntity.owner !== this.localPlayerId;
-        
-        if (clickedEntity && isEnemy) {
-          selectedUnits.forEach((u: any) => {
-            u.targetId = clickedEntity.id;
-            u.explicitAttack = true;
-            u.targetPosition = undefined;
-            u.path = undefined;
-          });
-        } else {
-          this.issueMoveOrder(selectedUnits, pos);
-          selectedUnits.forEach((u: any) => {
-            u.explicitAttack = false;
-            u.targetId = undefined;
-          });
-        }
-        this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
-      } else {
-        this.state.entities.forEach((e: any) => e.selected = false);
-      }
-    } else {
-      // In online mode, right click just deselects or cancels for now
-      this.state.entities.forEach((e: any) => e.selected = false);
-    }
+    this.state.placingBuilding = null;
     this.state.interactionMode = 'DEFAULT';
+    this.state.entities.forEach((e: any) => e.selected = false);
     return;
   }
 
@@ -174,7 +148,11 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
   }
 
   // 3. Selection or Orders
-  const clickedEntity = this.state.entities.find((e: any) => isPointInEntity(e, pos));
+  const clickedEntity = this.state.entities.find((e: any) => 
+    isPointInEntity(e, pos) && 
+    e.subType !== 'TREE' && 
+    e.subType !== 'MOUNTAIN'
+  );
 
   const selectedUnits = this.state.entities.filter((e: any) => e.selected && e.owner === this.localPlayerId && e.type === 'UNIT');
   const selectedBuildings = this.state.entities.filter((e: any) => e.selected && e.owner === this.localPlayerId && e.type === 'BUILDING');
@@ -186,8 +164,39 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     const isEnemy = clickedEntity && clickedEntity.owner !== this.localPlayerId;
     const isForceAttack = isCtrlKey;
     const isEngineerAction = clickedEntity && clickedEntity.type === 'BUILDING' && selectedUnits.some((u: any) => u.subType === 'ENGINEER');
+    const isServiceDepotAction = clickedEntity && clickedEntity.owner === this.localPlayerId && (clickedEntity.subType === 'SERVICE_DEPOT' || clickedEntity.subType === 'ALLIED_NAVAL_YARD' || clickedEntity.subType === 'NAVAL_YARD');
 
-    if (!clickedEntity || isEnemy || isForceAttack || isEngineerAction) {
+    // Check if the target position is walkable terrain
+    const isWalkable = (p: Vector2) => {
+      const tx = Math.floor(p.x / tileSize);
+      const ty = Math.floor(p.y / tileSize);
+      if (ty >= 0 && ty < this.state.map.height && tx >= 0 && tx < this.state.map.width) {
+        const tType = this.state.map.tiles[ty][tx];
+        if (tType === 'WATER' || tType === 'WATER_TO_GRASS' || tType === 'GRASS_TO_WATER' || tType.startsWith('CLIFF')) { // Water and cliffs are generally blocked
+          // Check if on bridge
+          let onBridge = false;
+          let hitsRailing = false;
+          this.state.map.bridges.forEach((b: any) => {
+             const bx = b.x * tileSize;
+             const by = b.y * tileSize;
+             const bw = b.width * tileSize;
+             const bh = b.height * tileSize;
+             if (p.x >= bx && p.x <= bx + bw && p.y >= by && p.y <= by + bh) {
+                onBridge = true;
+                if (bw > bh) {
+                  if (p.y < by + bh / 2 - 20 || p.y > by + bh / 2 + 20) hitsRailing = true;
+                } else {
+                  if (p.x < bx + bw / 2 - 20 || p.x > bx + bw / 2 + 20) hitsRailing = true;
+                }
+             }
+          });
+          return onBridge && !hitsRailing;
+        }
+      }
+      return true;
+    };
+
+    if (!clickedEntity || isEnemy || isForceAttack || isEngineerAction || isServiceDepotAction) {
       if (!clickedEntity) {
         this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
       }
@@ -225,6 +234,12 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
                 u.targetId = clickedEntity.id;
                 u.targetPosition = undefined;
               }
+          });
+      } else if (clickedEntity && isServiceDepotAction) {
+          selectedUnits.forEach((u: any) => {
+              this.issueMoveOrder([u], clickedEntity.position);
+              u.targetId = clickedEntity.id; // set after so it's not cleared
+              u.isRepairing = true; // unit knows it wants to repair
           });
       } else {
           this.issueMoveOrder(selectedUnits, pos);

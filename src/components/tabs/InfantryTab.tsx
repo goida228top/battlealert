@@ -7,9 +7,10 @@ import { Zap, Shield, Factory, Coins, Radar, Wrench, Activity, Layers, Anchor, U
 interface InfantryTabProps {
   gameState: GameState;
   engineRef: React.MutableRefObject<GameEngine>;
+  setGameState: (state: any) => void;
 }
 
-export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }) => {
+export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, setGameState }) => {
   const isAllied = engineRef.current.playerFaction === 'COALITION';
   const localPlayerId = engineRef.current.localPlayerId;
   const activeQueue = localPlayerId === 'PLAYER' ? gameState.productionQueue : 
@@ -34,7 +35,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Призывник" 
                     icon={<User className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('SOLDIER')} 
+                    cost={engineRef.current.getCost('SOLDIER')} cannotAfford={gameState.credits < engineRef.current.getCost('SOLDIER')} 
                     progress={activeQueue.find(q => q.subType === 'SOLDIER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'SOLDIER').length}
                     locked={!engineRef.current.isUnlocked('SOLDIER', localPlayerId)}
@@ -45,7 +46,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Инженер" 
                     icon={<Wrench className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('ENGINEER')} 
+                    cost={engineRef.current.getCost('ENGINEER')} cannotAfford={gameState.credits < engineRef.current.getCost('ENGINEER')} 
                     progress={activeQueue.find(q => q.subType === 'ENGINEER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ENGINEER').length}
                     locked={!engineRef.current.isUnlocked('ENGINEER', localPlayerId)}
@@ -56,7 +57,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Собака" 
                     icon={<Target className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('ATTACK_DOG')} 
+                    cost={engineRef.current.getCost('ATTACK_DOG')} cannotAfford={gameState.credits < engineRef.current.getCost('ATTACK_DOG')} 
                     progress={activeQueue.find(q => q.subType === 'ATTACK_DOG')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ATTACK_DOG').length}
                     locked={!engineRef.current.isUnlocked('ATTACK_DOG', localPlayerId)}
@@ -67,7 +68,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Зенитчик" 
                     icon={<Crosshair className="w-5 h-5 text-zinc-400" />} 
-                    cost={engineRef.current.getCost('FLAK_TROOPER')} 
+                    cost={engineRef.current.getCost('FLAK_TROOPER')} cannotAfford={gameState.credits < engineRef.current.getCost('FLAK_TROOPER')} 
                     progress={activeQueue.find(q => q.subType === 'FLAK_TROOPER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'FLAK_TROOPER').length}
                     locked={!engineRef.current.isUnlocked('FLAK_TROOPER', localPlayerId)}
@@ -78,7 +79,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Тесла-пехотинец" 
                     icon={<Zap className="w-5 h-5 text-blue-400" />} 
-                    cost={engineRef.current.getCost('TESLA_TROOPER')} 
+                    cost={engineRef.current.getCost('TESLA_TROOPER')} cannotAfford={gameState.credits < engineRef.current.getCost('TESLA_TROOPER')} 
                     progress={activeQueue.find(q => q.subType === 'TESLA_TROOPER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'TESLA_TROOPER').length}
                     locked={!engineRef.current.isUnlocked('TESLA_TROOPER', localPlayerId)}
@@ -89,7 +90,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Безумный Иван" 
                     icon={<Bomb className="w-5 h-5 text-red-500" />} 
-                    cost={engineRef.current.getCost('CRAZY_IVAN')} 
+                    cost={engineRef.current.getCost('CRAZY_IVAN')} cannotAfford={gameState.credits < engineRef.current.getCost('CRAZY_IVAN')} 
                     progress={activeQueue.find(q => q.subType === 'CRAZY_IVAN')?.progress}
                     count={activeQueue.filter(q => q.subType === 'CRAZY_IVAN').length}
                     locked={!engineRef.current.isUnlocked('CRAZY_IVAN', localPlayerId)}
@@ -100,7 +101,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Юрий" 
                     icon={<Activity className="w-5 h-5 text-purple-500" />} 
-                    cost={engineRef.current.getCost('YURI')} 
+                    cost={engineRef.current.getCost('YURI')} cannotAfford={gameState.credits < engineRef.current.getCost('YURI')} 
                     progress={activeQueue.find(q => q.subType === 'YURI')?.progress}
                     count={activeQueue.filter(q => q.subType === 'YURI').length}
                     locked={!engineRef.current.isUnlocked('YURI', localPlayerId)}
@@ -111,7 +112,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Борис" 
                     icon={<Crosshair className="w-5 h-5 text-red-600" />} 
-                    cost={engineRef.current.getCost('BORIS')} 
+                    cost={engineRef.current.getCost('BORIS')} cannotAfford={gameState.credits < engineRef.current.getCost('BORIS')} 
                     progress={activeQueue.find(q => q.subType === 'BORIS')?.progress}
                     count={activeQueue.filter(q => q.subType === 'BORIS').length}
                     locked={!engineRef.current.isUnlocked('BORIS', localPlayerId)}
@@ -123,7 +124,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Дезолятор" 
                       icon={<Activity className="w-5 h-5 text-green-600" />} 
-                      cost={engineRef.current.getCost('DESOLATOR')} 
+                      cost={engineRef.current.getCost('DESOLATOR')} cannotAfford={gameState.credits < engineRef.current.getCost('DESOLATOR')} 
                       progress={activeQueue.find(q => q.subType === 'DESOLATOR')?.progress}
                       count={activeQueue.filter(q => q.subType === 'DESOLATOR').length}
                       locked={!engineRef.current.isUnlocked('DESOLATOR', localPlayerId)}
@@ -135,7 +136,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Террорист" 
                       icon={<Bomb className="w-5 h-5 text-red-500" />} 
-                      cost={engineRef.current.getCost('TERRORIST')} 
+                      cost={engineRef.current.getCost('TERRORIST')} cannotAfford={gameState.credits < engineRef.current.getCost('TERRORIST')} 
                       progress={activeQueue.find(q => q.subType === 'TERRORIST')?.progress}
                       count={activeQueue.filter(q => q.subType === 'TERRORIST').length}
                       locked={!engineRef.current.isUnlocked('TERRORIST', localPlayerId)}
@@ -149,7 +150,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Морпех" 
                     icon={<User className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('GI')} 
+                    cost={engineRef.current.getCost('GI')} cannotAfford={gameState.credits < engineRef.current.getCost('GI')} 
                     progress={activeQueue.find(q => q.subType === 'GI')?.progress}
                     count={activeQueue.filter(q => q.subType === 'GI').length}
                     locked={!engineRef.current.isUnlocked('GI', localPlayerId)}
@@ -160,7 +161,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                     <BuildButton 
                       label="Снайпер" 
                       icon={<Target className="w-5 h-5 text-zinc-400" />} 
-                      cost={engineRef.current.getCost('SNIPER')} 
+                      cost={engineRef.current.getCost('SNIPER')} cannotAfford={gameState.credits < engineRef.current.getCost('SNIPER')} 
                       progress={activeQueue.find(q => q.subType === 'SNIPER')?.progress}
                       count={activeQueue.filter(q => q.subType === 'SNIPER').length}
                       locked={!engineRef.current.isUnlocked('SNIPER', localPlayerId)}
@@ -171,7 +172,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Инженер" 
                     icon={<Wrench className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('ENGINEER')} 
+                    cost={engineRef.current.getCost('ENGINEER')} cannotAfford={gameState.credits < engineRef.current.getCost('ENGINEER')} 
                     progress={activeQueue.find(q => q.subType === 'ENGINEER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ENGINEER').length}
                     locked={!engineRef.current.isUnlocked('ENGINEER', localPlayerId)}
@@ -181,7 +182,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Собака" 
                     icon={<Target className="w-5 h-5" />} 
-                    cost={engineRef.current.getCost('ATTACK_DOG')} 
+                    cost={engineRef.current.getCost('ATTACK_DOG')} cannotAfford={gameState.credits < engineRef.current.getCost('ATTACK_DOG')} 
                     progress={activeQueue.find(q => q.subType === 'ATTACK_DOG')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ATTACK_DOG').length}
                     locked={!engineRef.current.isUnlocked('ATTACK_DOG', localPlayerId)}
@@ -191,7 +192,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Ракетчик" 
                     icon={<Wind className="w-5 h-5 text-blue-400" />} 
-                    cost={engineRef.current.getCost('ROCKETEER')} 
+                    cost={engineRef.current.getCost('ROCKETEER')} cannotAfford={gameState.credits < engineRef.current.getCost('ROCKETEER')} 
                     progress={activeQueue.find(q => q.subType === 'ROCKETEER')?.progress}
                     count={activeQueue.filter(q => q.subType === 'ROCKETEER').length}
                     locked={!engineRef.current.isUnlocked('ROCKETEER', localPlayerId)}
@@ -201,7 +202,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Морпех" 
                     icon={<Target className="w-5 h-5 text-zinc-400" />} 
-                    cost={engineRef.current.getCost('NAVY_SEAL')} 
+                    cost={engineRef.current.getCost('NAVY_SEAL')} cannotAfford={gameState.credits < engineRef.current.getCost('NAVY_SEAL')} 
                     progress={activeQueue.find(q => q.subType === 'NAVY_SEAL')?.progress}
                     count={activeQueue.filter(q => q.subType === 'NAVY_SEAL').length}
                     locked={!engineRef.current.isUnlocked('NAVY_SEAL', localPlayerId)}
@@ -211,7 +212,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Таня" 
                     icon={<Crosshair className="w-5 h-5 text-red-600" />} 
-                    cost={engineRef.current.getCost('TANYA')} 
+                    cost={engineRef.current.getCost('TANYA')} cannotAfford={gameState.credits < engineRef.current.getCost('TANYA')} 
                     progress={activeQueue.find(q => q.subType === 'TANYA')?.progress}
                     count={activeQueue.filter(q => q.subType === 'TANYA').length}
                     locked={!engineRef.current.isUnlocked('TANYA', localPlayerId)}
@@ -221,7 +222,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Шпион" 
                     icon={<Users className="w-5 h-5 text-zinc-500" />} 
-                    cost={engineRef.current.getCost('SPY')} 
+                    cost={engineRef.current.getCost('SPY')} cannotAfford={gameState.credits < engineRef.current.getCost('SPY')} 
                     progress={activeQueue.find(q => q.subType === 'SPY')?.progress}
                     count={activeQueue.filter(q => q.subType === 'SPY').length}
                     locked={!engineRef.current.isUnlocked('SPY', localPlayerId)}
@@ -231,7 +232,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef }
                   <BuildButton 
                     label="Хроно-легионер" 
                     icon={<Zap className="w-5 h-5 text-blue-200" />} 
-                    cost={engineRef.current.getCost('CHRONO_LEGIONNAIRE')} 
+                    cost={engineRef.current.getCost('CHRONO_LEGIONNAIRE')} cannotAfford={gameState.credits < engineRef.current.getCost('CHRONO_LEGIONNAIRE')} 
                     progress={activeQueue.find(q => q.subType === 'CHRONO_LEGIONNAIRE')?.progress}
                     count={activeQueue.filter(q => q.subType === 'CHRONO_LEGIONNAIRE').length}
                     locked={!engineRef.current.isUnlocked('CHRONO_LEGIONNAIRE', localPlayerId)}

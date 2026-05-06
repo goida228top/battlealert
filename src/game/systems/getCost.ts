@@ -44,7 +44,7 @@ export function getCost(this: GameEngine, type: string): number {
     case 'V3_LAUNCHER': cost = 800; break;
     case 'TERROR_DRONE': cost = 500; break;
     case 'APOCALYPSE_TANK': cost = 1750; break;
-    case 'HARVESTER': cost = 1400; break;
+    case 'HARVESTER': cost = 1000; break;
     case 'MCV': cost = 3000; break;
     case 'ALLIED_MCV': cost = 3000; break;
     case 'KIROV_AIRSHIP': cost = 2000; break;
@@ -92,7 +92,7 @@ export function getCost(this: GameEngine, type: string): number {
     case 'SPY': cost = 1000; break;
 
     // Allied Vehicles
-    case 'CHRONO_MINER': cost = 1400; break;
+    case 'CHRONO_MINER': cost = 1000; break;
     case 'GRIZZLY_TANK': cost = 700; break;
     case 'IFV': cost = 600; break;
     case 'MIRAGE_TANK': cost = 1000; break;
