@@ -6,11 +6,18 @@ export function updateSeparation(this: GameEngine, entity: Entity, dt: number) {
     let sepY = 0;
     let overlapCount = 0;
     
+    const isEntityMoving = !!entity.targetPosition;
+    
     // Using frameCache populated in update.ts
     const units = (this as any).frameCache.allUnits;
     for (let i = 0; i < units.length; i++) {
         const other = units[i];
         if (other.id !== entity.id && other.health > 0 && !other.isDeployed) {
+            const isOtherMoving = !!other.targetPosition;
+            
+            // If entity is stationary, do not let it be pushed by moving units
+            if (!isEntityMoving && isOtherMoving) continue;
+            
             const odx = entity.position.x - other.position.x;
             if (Math.abs(odx) > 35) continue;
             const ody = entity.position.y - other.position.y;
@@ -19,17 +26,20 @@ export function updateSeparation(this: GameEngine, entity: Entity, dt: number) {
             const odistSq = odx * odx + ody * ody;
             const minSpace = (entity.size + other.size) / 2 * 0.95;
             if (odistSq < minSpace * minSpace && odistSq > 0.01) {
-            const odist = Math.sqrt(odistSq);
-            sepX += (odx / odist) * (minSpace - odist);
-            sepY += (ody / odist) * (minSpace - odist);
-            overlapCount++;
+              const odist = Math.sqrt(odistSq);
+              // Make separation very gentle so they don't act like snowplows
+              const pushForce = (minSpace - odist) * 0.5;
+              sepX += (odx / odist) * pushForce;
+              sepY += (ody / odist) * pushForce;
+              overlapCount++;
             }
         }
     }
     
     if (overlapCount > 0) {
-        let nx = entity.position.x + (sepX / overlapCount) * 0.2 * dt * 2;
-        let ny = entity.position.y + (sepY / overlapCount) * 0.2 * dt * 2;
+        // Limit max separation speed to around half normal movement speed so they act like slow slides rather than explosions
+        let nx = entity.position.x + (sepX / overlapCount) * 0.05 * dt;
+        let ny = entity.position.y + (sepY / overlapCount) * 0.05 * dt;
         
         // Push out from buildings if stuck inside
         const obstacleGrid = this.state.dynamicObstacleGrid;

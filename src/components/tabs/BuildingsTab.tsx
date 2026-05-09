@@ -166,6 +166,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('RADAR');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('RADAR', e)}
                     title="Радар: Включает миникарту и открывает доступ к продвинутым постройкам."
                   />
                   <BuildButton 
@@ -184,6 +186,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('SERVICE_DEPOT');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('SERVICE_DEPOT', e)}
                     title="Ремонтный цех: Ремонтирует поврежденную технику."
                   />
                   <BuildButton 
@@ -202,6 +206,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('BATTLE_LAB');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('BATTLE_LAB', e)}
                     title="Боевая лаборатория: Открывает доступ к элитным юнитам и супероружию."
                   />
                   <BuildButton 
@@ -220,6 +226,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('NUCLEAR_REACTOR');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('NUCLEAR_REACTOR', e)}
                     title="Ядерный реактор: Производит огромное количество энергии."
                   />
                   <BuildButton 
@@ -238,6 +246,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('CLONING_VATS');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('CLONING_VATS', e)}
                     title="Чаны клонирования: Создает бесплатного клона для каждого обученного пехотинца."
                   />
                 </>
@@ -259,6 +269,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_POWER_PLANT');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_POWER_PLANT', e)}
                     title="Электростанция: Обеспечивает энергией другие постройки."
                   />
                   <BuildButton 
@@ -277,6 +289,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_ORE_REFINERY');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_ORE_REFINERY', e)}
                     title="Обогатитель руды: Перерабатывает руду в кредиты. В комплекте идет бесплатный Харвестер."
                   />
                   <BuildButton 
@@ -295,6 +309,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_BARRACKS');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_BARRACKS', e)}
                     title="Казармы: Обучают пехотные подразделения."
                   />
                   <BuildButton 
@@ -313,6 +329,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_WAR_FACTORY');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_WAR_FACTORY', e)}
                     title="Военный завод: Строит технику и танки."
                   />
                   <BuildButton 
@@ -331,6 +349,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('AIR_FORCE_COMMAND');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('AIR_FORCE_COMMAND', e)}
                     title="Штаб ВВС: Открывает доступ к авиации и обеспечивает радар."
                   />
                   <BuildButton 
@@ -349,6 +369,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_BATTLE_LAB');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_BATTLE_LAB', e)}
                     title="Боевая лаборатория: Открывает доступ к элитным юнитам и супероружию."
                   />
                   <BuildButton 
@@ -367,6 +389,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('SERVICE_DEPOT');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('SERVICE_DEPOT', e)}
                     title="Ремонтный цех: Ремонтирует поврежденную технику."
                   />
                   <BuildButton 
@@ -385,6 +409,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_ORE_PURIFIER');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_ORE_PURIFIER', e)}
                     title="Очиститель руды: Повышает ценность собираемой руды на 25%."
                   />
                   <BuildButton 
@@ -403,6 +429,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ROBOT_CONTROL_CENTER');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ROBOT_CONTROL_CENTER', e)}
                     title="Центр управления роботами: Позволяет строить роботов-танков."
                   />
                   <BuildButton 
@@ -421,6 +449,8 @@ export const BuildingsTab: React.FC<BuildingsTabProps> = ({ gameState, engineRef
                         engineRef.current.startProduction('ALLIED_NAVAL_YARD');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_NAVAL_YARD', e)}
                     title="Верфь: Строит корабли. Должна быть размещена на воде."
                   />
                 </>

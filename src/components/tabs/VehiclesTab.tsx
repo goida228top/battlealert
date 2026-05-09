@@ -84,6 +84,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'APOCALYPSE_TANK').length}
                     locked={!engineRef.current.isUnlocked('APOCALYPSE_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('APOCALYPSE_TANK')}
+                    
+                    onContextMenu={(e) => handleCancel('APOCALYPSE_TANK', e)}
                     title="Танк Апокалипсис: Мощнейшая машина наземного штурма."
                   />
                   {engineRef.current.playerCountry === 'RUSSIA' && (
@@ -95,7 +97,9 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'TESLA_TANK').length}
                       locked={!engineRef.current.isUnlocked('TESLA_TANK', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('TESLA_TANK')}
-                      title="Тесла-танк: Уникальный танк России. Стреляет электрическими разрядами."
+                      
+                    onContextMenu={(e) => handleCancel('TESLA_TANK', e)}
+                    title="Тесла-танк: Уникальный танк России. Стреляет электрическими разрядами."
                     />
                   )}
                   {engineRef.current.playerCountry === 'LIBYA' && (
@@ -107,6 +111,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'DEMOLITION_TRUCK').length}
                       locked={!engineRef.current.isUnlocked('DEMOLITION_TRUCK', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('DEMOLITION_TRUCK')}
+                    onContextMenu={(e) => handleCancel('DEMOLITION_TRUCK', e)}
                       title="Грузовик-бомба: Уникальный юнит Ливии. Смертник на колесах."
                     />
                   )}
@@ -118,6 +123,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'HARVESTER').length}
                     locked={!engineRef.current.isUnlocked('HARVESTER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('HARVESTER')}
+                    onContextMenu={(e) => handleCancel('HARVESTER', e)}
                     title="Военный комбайн: Собирает руду. Вооружен пулеметом."
                   />
                   <BuildButton 
@@ -128,6 +134,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'MCV').length}
                     locked={!engineRef.current.isUnlocked('MCV', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('MCV')}
+                    onContextMenu={(e) => handleCancel('MCV', e)}
                     title="Мобильный Сборочный Цех: Развертывается в новый Сборочный Двор."
                   />
                   <BuildButton 
@@ -138,6 +145,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'KIROV_AIRSHIP').length}
                     locked={!engineRef.current.isUnlocked('KIROV_AIRSHIP', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('KIROV_AIRSHIP')}
+                    onContextMenu={(e) => handleCancel('KIROV_AIRSHIP', e)}
                     title="Дирижабль Киров: Тяжелый бомбардировщик. Медленный, но сокрушительный."
                   />
                   <BuildButton 
@@ -148,6 +156,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'TYPHOON_SUB').length}
                     locked={!engineRef.current.isUnlocked('TYPHOON_SUB', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TYPHOON_SUB')}
+                    
+                    onContextMenu={(e) => handleCancel('TYPHOON_SUB', e)}
                     title="Подлодка Тайфун: Скрытный морской юнит."
                   />
                   <BuildButton 
@@ -158,6 +168,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'DREADNOUGHT').length}
                     locked={!engineRef.current.isUnlocked('DREADNOUGHT', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('DREADNOUGHT')}
+                    
+                    onContextMenu={(e) => handleCancel('DREADNOUGHT', e)}
                     title="Дредноут: Дальнобойная морская бомбардировка."
                   />
                 </>
@@ -171,6 +183,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'GRIZZLY_TANK').length}
                     locked={!engineRef.current.isUnlocked('GRIZZLY_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('GRIZZLY_TANK')}
+                    
+                    onContextMenu={(e) => handleCancel('GRIZZLY_TANK', e)}
                     title="Танк Гризли: Стандартный боевой танк Коалиции."
                   />
                   <BuildButton 
@@ -181,6 +195,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'CHRONO_MINER').length}
                     locked={!engineRef.current.isUnlocked('CHRONO_MINER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('CHRONO_MINER')}
+                    onContextMenu={(e) => handleCancel('CHRONO_MINER', e)}
                     title="Хроно-комбайн: Собирает руду и телепортируется обратно на базу."
                   />
                   <BuildButton 
@@ -191,6 +206,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'IFV').length}
                     locked={!engineRef.current.isUnlocked('IFV', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('IFV')}
+                    
+                    onContextMenu={(e) => handleCancel('IFV', e)}
                     title="БМП: Многоцелевая машина. Меняет оружие в зависимости от пехоты внутри."
                   />
                   <BuildButton 
@@ -201,6 +218,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'MIRAGE_TANK').length}
                     locked={!engineRef.current.isUnlocked('MIRAGE_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('MIRAGE_TANK')}
+                    
+                    onContextMenu={(e) => handleCancel('MIRAGE_TANK', e)}
                     title="Танк Мираж: Маскируется под дерево, когда неподвижен."
                   />
                   <BuildButton 
@@ -211,6 +230,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'PRISM_TANK').length}
                     locked={!engineRef.current.isUnlocked('PRISM_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('PRISM_TANK')}
+                    
+                    onContextMenu={(e) => handleCancel('PRISM_TANK', e)}
                     title="Призма-танк: Дальнобойное лучевое оружие, поражающее несколько целей."
                   />
                   {engineRef.current.playerCountry === 'GERMANY' && (
@@ -222,6 +243,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'TANK_DESTROYER').length}
                       locked={!engineRef.current.isUnlocked('TANK_DESTROYER', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('TANK_DESTROYER')}
+                    onContextMenu={(e) => handleCancel('TANK_DESTROYER', e)}
                       title="Истребитель танков: Уникальный юнит Германии. Эффективен против бронетехники."
                     />
                   )}
@@ -233,6 +255,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'ROBOT_TANK').length}
                     locked={!engineRef.current.isUnlocked('ROBOT_TANK', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ROBOT_TANK')}
+                    
+                    onContextMenu={(e) => handleCancel('ROBOT_TANK', e)}
                     title="Робот-танк: Беспилотный танк. Неуязвим для контроля разума."
                   />
                   <BuildButton 
@@ -243,6 +267,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'BATTLE_FORTRESS').length}
                     locked={!engineRef.current.isUnlocked('BATTLE_FORTRESS', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('BATTLE_FORTRESS')}
+                    onContextMenu={(e) => handleCancel('BATTLE_FORTRESS', e)}
                     title="Боевая крепость: Огромный транспорт, способный давить другую технику."
                   />
                   <BuildButton 
@@ -253,6 +278,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'ALLIED_MCV').length}
                     locked={!engineRef.current.isUnlocked('ALLIED_MCV', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ALLIED_MCV')}
+                    onContextMenu={(e) => handleCancel('ALLIED_MCV', e)}
                     title="Мобильный Сборочный Цех: Развертывается в Сборочный Двор Коалиции."
                   />
                   <BuildButton 
@@ -263,6 +289,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'DESTROYER').length}
                     locked={!engineRef.current.isUnlocked('DESTROYER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('DESTROYER')}
+                    
+                    onContextMenu={(e) => handleCancel('DESTROYER', e)}
                     title="Эсминец: Универсальный морской юнит с противолодочным самолетом."
                   />
                   <BuildButton 
@@ -273,6 +301,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'AIRCRAFT_CARRIER').length}
                     locked={!engineRef.current.isUnlocked('AIRCRAFT_CARRIER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('AIRCRAFT_CARRIER')}
+                    
+                    onContextMenu={(e) => handleCancel('AIRCRAFT_CARRIER', e)}
                     title="Авианосец: Запускает самолеты для атаки с большой дистанции."
                   />
                   <BuildButton 
@@ -283,6 +313,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'HARRIER').length}
                     locked={!engineRef.current.isUnlocked('HARRIER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('HARRIER')}
+                    onContextMenu={(e) => handleCancel('HARRIER', e)}
                     title="Харриер: Реактивный истребитель-бомбардировщик."
                   />
                   {engineRef.current.playerCountry === 'KOREA' && (
@@ -294,6 +325,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'BLACK_EAGLE').length}
                       locked={!engineRef.current.isUnlocked('BLACK_EAGLE', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('BLACK_EAGLE')}
+                    onContextMenu={(e) => handleCancel('BLACK_EAGLE', e)}
                       title="Черный орел: Уникальный самолет Кореи. Мощнее и прочнее Харриера."
                     />
                   )}
@@ -305,6 +337,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'NIGHT_HAWK_TRANSPORT').length}
                     locked={!engineRef.current.isUnlocked('NIGHT_HAWK_TRANSPORT', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('NIGHT_HAWK_TRANSPORT')}
+                    onContextMenu={(e) => handleCancel('NIGHT_HAWK_TRANSPORT', e)}
                     title="Ночной ястреб: Транспортный вертолет, невидимый для радаров."
                   />
                   <BuildButton 
@@ -315,6 +348,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'AMPHIBIOUS_TRANSPORT').length}
                     locked={!engineRef.current.isUnlocked('AMPHIBIOUS_TRANSPORT', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('AMPHIBIOUS_TRANSPORT')}
+                    onContextMenu={(e) => handleCancel('AMPHIBIOUS_TRANSPORT', e)}
                     title="Амфибия: Перевозит пехоту и технику по воде и суше."
                   />
                   <BuildButton 
@@ -325,6 +359,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'DOLPHIN').length}
                     locked={!engineRef.current.isUnlocked('DOLPHIN', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('DOLPHIN')}
+                    
+                    onContextMenu={(e) => handleCancel('DOLPHIN', e)}
                     title="Дельфин: Скрытный морской юнит, эффективен против подлодок и гигантских кальмаров."
                   />
                   <BuildButton 
@@ -335,6 +371,8 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'AEGIS_CRUISER').length}
                     locked={!engineRef.current.isUnlocked('AEGIS_CRUISER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('AEGIS_CRUISER')}
+                    
+                    onContextMenu={(e) => handleCancel('AEGIS_CRUISER', e)}
                     title="Крейсер Иджис: Мощная противовоздушная оборона на море."
                   />
                 </>

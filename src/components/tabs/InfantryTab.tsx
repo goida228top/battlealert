@@ -129,6 +129,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'DESOLATOR').length}
                       locked={!engineRef.current.isUnlocked('DESOLATOR', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('DESOLATOR')}
+                    onContextMenu={(e) => handleCancel('DESOLATOR', e)}
                       title="Дезолятор: Уникальный юнит Ирака. Создает зону радиации."
                     />
                   )}
@@ -141,6 +142,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'TERRORIST').length}
                       locked={!engineRef.current.isUnlocked('TERRORIST', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('TERRORIST')}
+                    onContextMenu={(e) => handleCancel('TERRORIST', e)}
                       title="Террорист: Уникальный юнит Кубы. Смертник с взрывчаткой."
                     />
                   )}
@@ -155,6 +157,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'GI').length}
                     locked={!engineRef.current.isUnlocked('GI', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('GI')}
+                    onContextMenu={(e) => handleCancel('GI', e)}
                     title="Морпех (G.I.): Базовая пехота Коалиции. Может окапываться для защиты."
                   />
                   {engineRef.current.playerCountry === 'BRITAIN' && (
@@ -166,6 +169,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                       count={activeQueue.filter(q => q.subType === 'SNIPER').length}
                       locked={!engineRef.current.isUnlocked('SNIPER', localPlayerId)}
                       onClick={() => engineRef.current.startProduction('SNIPER')}
+                    onContextMenu={(e) => handleCancel('SNIPER', e)}
                       title="Снайпер: Уникальный юнит Британии. Уничтожает пехоту с огромной дистанции."
                     />
                   )}
@@ -177,6 +181,8 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'ENGINEER').length}
                     locked={!engineRef.current.isUnlocked('ENGINEER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ENGINEER')}
+                    
+                    onContextMenu={(e) => handleCancel('ENGINEER', e)}
                     title="Инженер: Захватывает вражеские здания или чинит свои."
                   />
                   <BuildButton 
@@ -187,6 +193,8 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'ATTACK_DOG').length}
                     locked={!engineRef.current.isUnlocked('ATTACK_DOG', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ATTACK_DOG')}
+                    
+                    onContextMenu={(e) => handleCancel('ATTACK_DOG', e)}
                     title="Боевой пес: Быстрый разведчик, мгновенно убивает пехоту."
                   />
                   <BuildButton 
@@ -197,6 +205,7 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'ROCKETEER').length}
                     locked={!engineRef.current.isUnlocked('ROCKETEER', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('ROCKETEER')}
+                    onContextMenu={(e) => handleCancel('ROCKETEER', e)}
                     title="Ракетчик: Летающий пехотинец."
                   />
                   <BuildButton 
@@ -207,6 +216,8 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'NAVY_SEAL').length}
                     locked={!engineRef.current.isUnlocked('NAVY_SEAL', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('NAVY_SEAL')}
+                    
+                    onContextMenu={(e) => handleCancel('NAVY_SEAL', e)}
                     title="Морской котик: Элитный спецназ. Силен против пехоты и зданий."
                   />
                   <BuildButton 
@@ -217,6 +228,8 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'TANYA').length}
                     locked={!engineRef.current.isUnlocked('TANYA', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('TANYA')}
+                    
+                    onContextMenu={(e) => handleCancel('TANYA', e)}
                     title="Таня: Элитный спецназ. Мгновенно убивает пехоту и взрывает здания."
                   />
                   <BuildButton 
@@ -227,6 +240,8 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'SPY').length}
                     locked={!engineRef.current.isUnlocked('SPY', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('SPY')}
+                    
+                    onContextMenu={(e) => handleCancel('SPY', e)}
                     title="Шпион: Проникает во вражеские здания для кражи технологий или саботажа."
                   />
                   <BuildButton 
@@ -237,6 +252,8 @@ export const InfantryTab: React.FC<InfantryTabProps> = ({ gameState, engineRef, 
                     count={activeQueue.filter(q => q.subType === 'CHRONO_LEGIONNAIRE').length}
                     locked={!engineRef.current.isUnlocked('CHRONO_LEGIONNAIRE', localPlayerId)}
                     onClick={() => engineRef.current.startProduction('CHRONO_LEGIONNAIRE')}
+                    
+                    onContextMenu={(e) => handleCancel('CHRONO_LEGIONNAIRE', e)}
                     title="Хроно-легионер: Стирает врагов из времени. Телепортируется по карте."
                   />
                 </>

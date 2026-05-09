@@ -126,6 +126,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('PSYCHIC_SENSOR');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('PSYCHIC_SENSOR', e)}
                     title="Психический сенсор: Обнаруживает вражеские приказы в радиусе действия."
                   />
                   <BuildButton 
@@ -144,6 +145,8 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('IRON_CURTAIN');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('IRON_CURTAIN', e)}
                     title="Железный занавес: Делает технику неуязвимой на короткое время."
                   />
                   <BuildButton 
@@ -176,6 +179,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('NUCLEAR_SILO');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('NUCLEAR_SILO', e)}
                     title="Ядерная шахта: Запускает разрушительную ядерную ракету."
                   />
                   {gameState.specialAbilities.IRON_CURTAIN && (
@@ -246,6 +250,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                           engineRef.current.startProduction('GRAND_CANNON');
                         }
                       }}
+                    onContextMenu={(e) => handleCancel('GRAND_CANNON', e)}
                       title="Гранд-Канон: Уникальная пушка Франции. Огромная дальность и мощь."
                     />
                   )}
@@ -265,6 +270,8 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('PILLBOX');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('PILLBOX', e)}
                     title="Дот: Базовая защита против пехоты."
                   />
                   <BuildButton 
@@ -283,6 +290,8 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('PATRIOT_MISSILE');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('PATRIOT_MISSILE', e)}
                     title="Ракета Патриот: Защита от воздушных целей."
                   />
                   <BuildButton 
@@ -301,6 +310,8 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('PRISM_TOWER');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('PRISM_TOWER', e)}
                     title="Призменная башня: Мощная защита, способная соединяться с другими башнями."
                   />
                   <BuildButton 
@@ -319,6 +330,8 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('CHRONOSPHERE');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('CHRONOSPHERE', e)}
                     title="Хроносфера: Телепортирует технику в любую точку карты."
                   />
                   <BuildButton 
@@ -337,6 +350,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('WEATHER_DEVICE');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('WEATHER_DEVICE', e)}
                     title="Устройство управления погодой: Создает разрушительный шторм."
                   />
                   <BuildButton 
@@ -355,6 +369,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('GAP_GENERATOR');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('GAP_GENERATOR', e)}
                     title="Генератор помех: Скрывает базу от вражеских радаров."
                   />
                   <BuildButton 
@@ -373,6 +388,7 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('SPY_SATELLITE');
                       }
                     }}
+                    onContextMenu={(e) => handleCancel('SPY_SATELLITE', e)}
                     title="Спутник-шпион: Открывает всю карту для игрока."
                   />
                   <BuildButton 
@@ -391,6 +407,8 @@ export const DefenseTab: React.FC<DefenseTabProps> = ({ gameState, engineRef, se
                         engineRef.current.startProduction('ALLIED_WALL');
                       }
                     }}
+                    
+                    onContextMenu={(e) => handleCancel('ALLIED_WALL', e)}
                     title="Стена: Базовая защита от пехоты и техники."
                   />
                   {gameState.specialAbilities.CHRONOSPHERE && (

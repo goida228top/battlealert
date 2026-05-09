@@ -1609,7 +1609,10 @@ export default function App() {
   };
 
   return (
-    <div className="flex h-screen bg-black overflow-hidden font-sans text-white select-none">
+    <div 
+      className="flex h-screen bg-black overflow-hidden font-sans text-white select-none"
+      onContextMenu={(e) => e.preventDefault()}
+    >
       {appState === 'MENU' && (
         <MainMenu setAppState={setAppState} playerName={playerName} setPlayerName={setPlayerName} />
       )}

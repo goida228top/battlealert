@@ -56,7 +56,7 @@ export function updateMovement(this: GameEngine, entity: Entity, dt: number) {
              const ody = nextY - other.position.y;
              if (Math.abs(odx) > 30 || Math.abs(ody) > 30) continue;
              
-             const minDist = (entity.size + other.size) / 2 * 0.82;
+             const minDist = (entity.size + other.size) / 2 * 0.95;
              if (odx*odx + ody*ody < minDist*minDist) {
                 const curDx = entity.position.x - other.position.x;
                 const curDy = entity.position.y - other.position.y;
@@ -182,26 +182,49 @@ export function updateMovement(this: GameEngine, entity: Entity, dt: number) {
             }
           }
         } else {
-          // If blocked, try to "jitter" out
+          // If blocked, try to resolve it
           entity.stuckTime = (entity.stuckTime || 0) + 1;
           
-          if (entity.stuckTime > 10) {
-            entity.position.x += (Math.random() - 0.5) * 2;
-            entity.position.y += (Math.random() - 0.5) * 2;
-          }
-
+          let finalDest = entity.targetPosition;
           if (entity.path && entity.path.length > 0) {
-            const now = performance.now();
-            if ((entity.stuckTime > 30) || !entity.lastRepath || now - entity.lastRepath > 2000) {
-              const finalDest = entity.path[entity.path.length - 1];
-              entity.path = this.calculatePath(entity.position, finalDest, entity);
-              entity.targetPosition = entity.path[0];
-              entity.lastRepath = now;
+              finalDest = entity.path[entity.path.length - 1];
+          }
+          
+          let distToFinal = 9999;
+          if (finalDest) {
+             const fdx = finalDest.x - entity.position.x;
+             const fdy = finalDest.y - entity.position.y;
+             distToFinal = Math.sqrt(fdx*fdx + fdy*fdy);
+          }
+          
+          const isHarvester = entity.subType === 'HARVESTER' || entity.subType === 'CHRONO_MINER';
+          
+          // Fast formation stop: if close to destination and blocked by friends, just stop
+          if (collisionBlocked && !isHarvester && entity.stuckTime > 5 && distToFinal < 80) {
+              entity.targetPosition = undefined;
+              entity.path = undefined;
               entity.stuckTime = 0;
-            }
+              entity.isAttackMoving = false;
           } else {
-            entity.targetPosition = undefined;
-            entity.path = undefined;
+             if (entity.path && entity.path.length > 0) {
+               const now = performance.now();
+               // Repath if stuck for too long
+               if ((entity.stuckTime > 30) || !entity.lastRepath || now - entity.lastRepath > 2000) {
+                 const finalPosition = entity.path[entity.path.length - 1];
+                 entity.path = this.calculatePath(entity.position, finalPosition, entity);
+                 if (entity.path && entity.path.length > 0) {
+                     entity.targetPosition = entity.path[0];
+                 }
+                 entity.lastRepath = now;
+                 entity.stuckTime = 0;
+               }
+             } else {
+               if (entity.stuckTime > 30) {
+                   entity.targetPosition = undefined;
+                   entity.path = undefined;
+                   entity.stuckTime = 0;
+               }
+             }
           }
         }
       } else {

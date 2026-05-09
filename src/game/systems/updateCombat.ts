@@ -132,6 +132,7 @@ if (entity.targetId) {
       });
     }
     entity.targetId = undefined;
+    entity.explicitAttack = false;
     return;
   }
   
@@ -209,6 +210,13 @@ if (entity.targetId) {
 
   if (dist > range) {
     if (entity.type === 'UNIT') {
+      const canChase = entity.isAttackMoving || entity.explicitAttack;
+      
+      if (!canChase) {
+         entity.targetId = undefined;
+         return; // Target is out of range and we are not allowed to chase, so drop target and wait
+      }
+
       // Re-evaluate target periodically if out of range to avoid chasing endlessly 
       // when there's a closer threat or obstacle right in front of us
       if (timestamp - (entity.lastTargetSearch || 0) > 1500) {

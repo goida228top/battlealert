@@ -208,39 +208,33 @@ export function calculatePath(this: any, start: Vector2, endRaw: Vector2, entity
     return !!(baseGrid[ty] && baseGrid[ty][tx]);
   };
 
-  // If end tile is blocked, find nearest walkable neighbor
-  if (!isWalkableBase(endTile.x, endTile.y)) {
-    const neighborsArr = [
-      { x: 0, y: 1 }, { x: 0, y: -1 }, { x: 1, y: 0 }, { x: -1, y: 0 },
-      { x: 1, y: 1 }, { x: 1, y: -1 }, { x: -1, y: 1 }, { x: -1, y: -1 }
-    ];
-    let found = false;
-    for (let r = 1; r < 20; r++) { 
-      for (let i = 0; i < neighborsArr.length; i++) {
-         const d = neighborsArr[i];
-         for (let step = 1; step <= r; step++) {
-             const nx = endTile.x + d.x * step;
-             const ny = endTile.y + d.y * step;
-             if (isWalkableBase(nx, ny)) {
-               endTile.x = nx;
-               endTile.y = ny;
-               end.x = nx * tileSize + tileSize / 2;
-               end.y = ny * tileSize + tileSize / 2;
-               found = true;
-               break;
-             }
-         }
-         if (found) break;
-      }
-      if (found) break;
-    }
-  }
-
   const isWalkableForSearch = (tx: number, ty: number) => {
     // If unit is currently stuck in an obstacle, treat its current tile as walkable
     if (tx === startTile.x && ty === startTile.y) return true;
     return isWalkableBase(tx, ty);
   };
+
+  // If end tile is blocked, find nearest walkable neighbor
+  if (!isWalkableForSearch(endTile.x, endTile.y)) {
+    let found = false;
+    for (let r = 1; r < 20 && !found; r++) { 
+      // Spiral/perimeter search
+      for (let dy = -r; dy <= r && !found; dy++) {
+         for (let dx = -r; dx <= r && !found; dx++) {
+            if (Math.abs(dx) !== r && Math.abs(dy) !== r) continue;
+            const nx = endTile.x + dx;
+            const ny = endTile.y + dy;
+            if (isWalkableForSearch(nx, ny)) {
+               endTile.x = nx;
+               endTile.y = ny;
+               end.x = nx * tileSize + tileSize / 2;
+               end.y = ny * tileSize + tileSize / 2;
+               found = true;
+            }
+         }
+      }
+    }
+  }
 
   if (!isWalkableForSearch(endTile.x, endTile.y)) return [];
   if (startTile.x === endTile.x && startTile.y === endTile.y) return [{ ...end }];

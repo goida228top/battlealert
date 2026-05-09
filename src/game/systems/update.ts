@@ -375,6 +375,21 @@ export function update(this: any, timestamp: number) {
             }
           }
         }
+      } else if (e.type === 'UNIT' && !e.targetPosition && !e.isDeployed) {
+        // Add stationary units to obstacle grid so pathfinder can route around them
+        const rad = 25 * 0.4; // 10 pixels radius roughly for blocking
+        const minX = Math.floor((e.position.x - rad) / pfTileSize);
+        const maxX = Math.floor((e.position.x + rad) / pfTileSize);
+        const minY = Math.floor((e.position.y - rad) / pfTileSize);
+        const maxY = Math.floor((e.position.y + rad) / pfTileSize);
+        
+        for (let gy = minY; gy <= maxY; gy++) {
+          for (let gx = minX; gx <= maxX; gx++) {
+            if (gx >= 0 && gx < pfWidth && gy >= 0 && gy < pfHeight) {
+              obstacleGrid[gy * pfWidth + gx] = 1;
+            }
+          }
+        }
       }
     });
   }

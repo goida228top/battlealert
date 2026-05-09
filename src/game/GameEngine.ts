@@ -406,21 +406,56 @@ export class GameEngine {
     }
 
     const cols = Math.ceil(Math.sqrt(numUnits));
-    const spacing = 40; 
+    const spacing = 100; // 40 * 2.5
     
-    selectedUnits.forEach((u, idx) => {
+    // Generate all target positions
+    const targetPositions: Vector2[] = [];
+    for (let idx = 0; idx < numUnits; idx++) {
       const row = Math.floor(idx / cols);
       const col = idx % cols;
-      
       const offsetX = (col - (cols - 1) / 2) * spacing;
       const offsetY = (row - (cols - 1) / 2) * spacing;
-      
-      const individualTargetPos = {
+      targetPositions.push({
         x: worldPos.x + offsetX,
         y: worldPos.y + offsetY
-      };
+      });
+    }
+    
+    // Calculate start center
+    let startCenterX = 0;
+    let startCenterY = 0;
+    for (const u of selectedUnits) {
+      startCenterX += u.position.x;
+      startCenterY += u.position.y;
+    }
+    startCenterX /= numUnits;
+    startCenterY /= numUnits;
+
+    // Sort target positions by distance from start center DESCENDING (furthest first = vanguard of formation)
+    targetPositions.sort((a, b) => {
+      const distA = Math.hypot(a.x - startCenterX, a.y - startCenterY);
+      const distB = Math.hypot(b.x - startCenterX, b.y - startCenterY);
+      return distB - distA;
+    });
+
+    const unassignedUnits = [...selectedUnits];
+
+    targetPositions.forEach((targetPos) => {
+      // Find the closest unassigned unit to this target position
+      let closestIdx = 0;
+      let closestDist = Infinity;
+      for (let i = 0; i < unassignedUnits.length; i++) {
+        const u = unassignedUnits[i];
+        const dist = Math.hypot(u.position.x - targetPos.x, u.position.y - targetPos.y);
+        if (dist < closestDist) {
+          closestDist = dist;
+          closestIdx = i;
+        }
+      }
       
-      u.path = this.calculatePath(u.position, individualTargetPos, u);
+      const u = unassignedUnits.splice(closestIdx, 1)[0];
+      
+      u.path = this.calculatePath(u.position, targetPos, u);
       u.targetPosition = u.path[0];
       u.targetId = undefined;
       if (u.subType === 'HARVESTER' || u.subType === 'CHRONO_MINER') {
