@@ -81,6 +81,8 @@ export interface ProductionItem {
   time: number; // total time in ms
   startTime: number;
   owner?: string;
+  paused?: boolean;
+  creditsSpent?: number;
 }
 
 export interface CombatEffect {

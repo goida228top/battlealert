@@ -97,6 +97,13 @@ if (!entity.targetId) {
       const dx = entity.position.x - e.position.x;
       const dy = entity.position.y - e.position.y;
       const distSq = dx * dx + dy * dy;
+
+      if (e.type === 'BUILDING' && !entity.explicitAttack) {
+         if (e.targetId !== entity.id) {
+            continue; // Only auto-target buildings that are shooting at this specific unit
+         }
+      }
+
       if (distSq < minDistSq) {
         // Prioritize units over buildings slightly
         const priorityBonusSq = e.type === 'UNIT' ? 2500 : 0; // sqrt(2500) = 50

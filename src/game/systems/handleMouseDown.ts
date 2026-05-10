@@ -197,57 +197,18 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     };
 
     if (!clickedEntity || isEnemy || isForceAttack || isEngineerAction || isServiceDepotAction) {
-      if (!clickedEntity) {
-        this.state.moveMarkers.push({ position: { ...pos }, startTime: performance.now() });
-      }
-
-      selectedUnits.forEach((entity: any) => {
-        const responses = clickedEntity && isEnemy ? ['Target acquired', 'Attacking', 'Destroy!'] : ['Moving', 'Affirmative', 'Yes, sir!'];
-        entity.selectionResponse = responses[Math.floor(Math.random() * responses.length)];
-        entity.selectionResponseTime = performance.now();
-      });
-
-      if (this.role === 'CLIENT' || this.role === 'HOST') {
-          this.socket.emit('client_command', {
-              roomId: this.roomId,
-              command: {
-                  type: 'MOVE_OR_ATTACK',
-                  unitIds: selectedUnits.map((u:any) => u.id),
-                  targetPos: !clickedEntity ? pos : undefined,
-                  targetId: clickedEntity ? clickedEntity.id : undefined
-              }
-          });
-          return;
-      }
-
-      // OFFLINE mode execution (or SERVER)
-      if (clickedEntity && isEnemy) {
-          selectedUnits.forEach((u: any) => {
-              u.targetId = clickedEntity.id;
-              u.explicitAttack = true;
-              u.targetPosition = undefined;
-              u.path = undefined;
-          });
-      } else if (clickedEntity && isEngineerAction) {
-          selectedUnits.forEach((u: any) => {
-              if (u.subType === 'ENGINEER') {
-                u.targetId = clickedEntity.id;
-                u.targetPosition = undefined;
-              }
-          });
-      } else if (clickedEntity && isServiceDepotAction) {
-          selectedUnits.forEach((u: any) => {
-              this.issueMoveOrder([u], clickedEntity.position);
-              u.targetId = clickedEntity.id; // set after so it's not cleared
-              u.isRepairing = true; // unit knows it wants to repair
-          });
-      } else {
-          this.issueMoveOrder(selectedUnits, pos);
-          selectedUnits.forEach((u: any) => {
-              u.explicitAttack = false;
-              u.targetId = undefined;
-          });
-      }
+      this.pendingOrder = {
+        pos: { ...pos },
+        clickedEntity,
+        isEnemy,
+        isForceAttack,
+        isEngineerAction,
+        isServiceDepotAction,
+        selectedUnits,
+      };
+      
+      // Always start a selection box so we can drag additive selections. We will execute the move order ONLY if it's a click.
+      this.state.selectionBox = { start: { ...pos }, end: { ...pos } };
       return;
     }
   }
@@ -292,9 +253,6 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     }
 
     if (clickedEntity.type === 'UNIT') {
-      if (!isCtrlKey) {
-        this.state.entities.forEach((e: any) => e.selected = false);
-      }
       clickedEntity.selected = true;
     }
     return;

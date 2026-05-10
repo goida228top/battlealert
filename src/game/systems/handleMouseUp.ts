@@ -1,7 +1,7 @@
 
 import { getBuildingDimensions } from './getBuildingDimensions';
 
-export function handleMouseUp(this: any) {
+export function handleMouseUp(this: any, isAdditive: boolean = false) {
   if (this.state.selectionBox) {
     const { start, end } = this.state.selectionBox;
     const xMin = Math.min(start.x, end.x);
@@ -11,6 +11,67 @@ export function handleMouseUp(this: any) {
 
     const isSingleClick = Math.abs(start.x - end.x) < 5 && Math.abs(start.y - end.y) < 5;
     const timestamp = performance.now();
+
+    if (isSingleClick && this.pendingOrder) {
+      const { pos, clickedEntity, isEnemy, isForceAttack, isEngineerAction, isServiceDepotAction, selectedUnits } = this.pendingOrder;
+
+      if (!clickedEntity) {
+        this.state.moveMarkers.push({ position: { ...pos }, startTime: timestamp });
+      }
+
+      selectedUnits.forEach((entity: any) => {
+        const responses = clickedEntity && isEnemy ? ['Target acquired', 'Attacking', 'Destroy!'] : ['Moving', 'Affirmative', 'Yes, sir!'];
+        entity.selectionResponse = responses[Math.floor(Math.random() * responses.length)];
+        entity.selectionResponseTime = timestamp;
+      });
+
+      if (this.role === 'CLIENT' || this.role === 'HOST') {
+          this.socket.emit('client_command', {
+              roomId: this.roomId,
+              command: {
+                  type: 'MOVE_OR_ATTACK',
+                  unitIds: selectedUnits.map((u:any) => u.id),
+                  targetPos: !clickedEntity ? pos : undefined,
+                  targetId: clickedEntity ? clickedEntity.id : undefined
+              }
+          });
+      } else {
+          // OFFLINE mode execution
+          if (clickedEntity && isEnemy) {
+              selectedUnits.forEach((u: any) => {
+                  u.targetId = clickedEntity.id;
+                  u.explicitAttack = true;
+                  u.targetPosition = undefined;
+                  u.path = undefined;
+              });
+          } else if (clickedEntity && isEngineerAction) {
+              selectedUnits.forEach((u: any) => {
+                  if (u.subType === 'ENGINEER') {
+                    u.targetId = clickedEntity.id;
+                    u.targetPosition = undefined;
+                  }
+              });
+          } else if (clickedEntity && isServiceDepotAction) {
+              selectedUnits.forEach((u: any) => {
+                  this.issueMoveOrder([u], clickedEntity.position);
+                  u.targetId = clickedEntity.id; 
+                  u.isRepairing = true; 
+              });
+          } else {
+              this.issueMoveOrder(selectedUnits, pos);
+              selectedUnits.forEach((u: any) => {
+                  u.explicitAttack = false;
+                  u.targetId = undefined;
+              });
+          }
+      }
+      
+      this.pendingOrder = null;
+      this.state.selectionBox = null;
+      return;
+    }
+
+    this.pendingOrder = null;
 
     this.state.entities.forEach((entity: any) => {
       if (entity.owner === this.localPlayerId) {
@@ -36,10 +97,11 @@ export function handleMouseUp(this: any) {
             entity.position.y <= yMax;
         }
 
-        if (newlySelected && !entity.selected && entity.type === 'UNIT') {
-          // No response text
+        if (isAdditive) {
+           if (newlySelected) entity.selected = true;
+        } else {
+           entity.selected = newlySelected;
         }
-        entity.selected = newlySelected;
       }
     });
 

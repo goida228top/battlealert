@@ -15,10 +15,11 @@ interface BuildButtonProps {
   stuck?: boolean;
   count?: number;
   cannotAfford?: boolean;
+  paused?: boolean;
 }
 
 export const BuildButton: React.FC<BuildButtonProps> = ({ 
-  label, icon, cost, onClick, onContextMenu, active, disabled, locked, title, progress, stuck, count, cannotAfford
+  label, icon, cost, onClick, onContextMenu, active, disabled, locked, title, progress, stuck, count, cannotAfford, paused
 }) => {
   return (
     <button 
@@ -84,10 +85,16 @@ export const BuildButton: React.FC<BuildButtonProps> = ({
       
       {/* Progress Percentage (Center) */}
       {progress !== undefined && progress < 100 && (
-        <div className="absolute inset-0 flex items-center justify-center z-40 pointer-events-none">
-          <span className="text-[10px] font-mono font-black text-zinc-400">
-            {Math.floor(progress)}%
-          </span>
+        <div className="absolute inset-0 flex flex-col items-center justify-center z-40 pointer-events-none">
+          {paused ? (
+            <span className="text-[10px] font-black text-yellow-500 uppercase">
+              ПАУЗА
+            </span>
+          ) : (
+            <span className="text-[10px] font-mono font-black text-zinc-400">
+              {Math.floor(progress)}%
+            </span>
+          )}
         </div>
       )}
 

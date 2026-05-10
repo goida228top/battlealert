@@ -15,6 +15,7 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
     categories.forEach(category => {
       const item = queue.find(q => this.getCategory(q.subType) === category);
       if (!item) return;
+      if (item.paused) return;
 
       if (item.progress >= 100) {
         if (category === 'BUILDINGS' || category === 'DEFENSE') {
@@ -141,7 +142,53 @@ export function updateProduction(this: GameEngine, timestamp: number, dt: number
       const speedMultiplier = Math.max(1, factoryCount) * powerMultiplier;
       const timeDelta = dt * 16.67 * speedMultiplier;
       
-      item.progress = Math.min(100, item.progress + (timeDelta / item.time) * 100);
+      let progressDelta = (timeDelta / item.time) * 100;
+      let newProgress = Math.min(100, item.progress + progressDelta);
+      let targetCreditsSpent = Math.floor((newProgress / 100) * item.cost);
+      let costDelta = targetCreditsSpent - (item.creditsSpent || 0);
+
+      let affordable = true;
+      if (owner === 'PLAYER') {
+        if (this.state.credits < costDelta && costDelta > 0) {
+            costDelta = Math.floor(this.state.credits);
+            targetCreditsSpent = (item.creditsSpent || 0) + costDelta;
+            newProgress = (targetCreditsSpent / item.cost) * 100;
+            if (this.state.credits <= 0) affordable = false;
+        }
+        this.state.credits -= costDelta;
+      } else if (owner === 'PLAYER_2') {
+        const creds = this.state.p2Credits || 0;
+        if (creds < costDelta && costDelta > 0) {
+            costDelta = Math.floor(creds);
+            targetCreditsSpent = (item.creditsSpent || 0) + costDelta;
+            newProgress = (targetCreditsSpent / item.cost) * 100;
+            if (creds <= 0) affordable = false;
+        }
+        this.state.p2Credits = creds - costDelta;
+      } else if (owner === 'PLAYER_3') {
+        const creds = this.state.p3Credits || 0;
+        if (creds < costDelta && costDelta > 0) {
+            costDelta = Math.floor(creds);
+            targetCreditsSpent = (item.creditsSpent || 0) + costDelta;
+            newProgress = (targetCreditsSpent / item.cost) * 100;
+            if (creds <= 0) affordable = false;
+        }
+        this.state.p3Credits = creds - costDelta;
+      } else if (owner === 'PLAYER_4') {
+        const creds = this.state.p4Credits || 0;
+        if (creds < costDelta && costDelta > 0) {
+            costDelta = Math.floor(creds);
+            targetCreditsSpent = (item.creditsSpent || 0) + costDelta;
+            newProgress = (targetCreditsSpent / item.cost) * 100;
+            if (creds <= 0) affordable = false;
+        }
+        this.state.p4Credits = creds - costDelta;
+      }
+
+      if (affordable || costDelta > 0 || (item.creditsSpent || 0) >= item.cost) {
+          item.progress = newProgress;
+          item.creditsSpent = targetCreditsSpent;
+      }
     });
   });
 }

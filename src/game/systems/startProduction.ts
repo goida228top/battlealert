@@ -43,17 +43,7 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
     time *= 0.75;
   }
 
-  if (credits >= cost && this.isUnlocked(subType, actualOwner)) {
-    if (actualOwner === 'PLAYER') {
-      this.state.credits -= cost;
-    } else if (actualOwner === 'PLAYER_2') {
-      this.state.p2Credits = (this.state.p2Credits || 0) - cost;
-    } else if (actualOwner === 'PLAYER_3') {
-      this.state.p3Credits = (this.state.p3Credits || 0) - cost;
-    } else if (actualOwner === 'PLAYER_4') {
-      this.state.p4Credits = (this.state.p4Credits || 0) - cost;
-    }
-    
+  if (this.isUnlocked(subType, actualOwner)) {
     queue.push({
       id: idValue,
       subType,
@@ -62,6 +52,7 @@ export function startProduction(this: any, subType: UnitType | BuildingType, own
       time,
       startTime: 0, // Server syncs this properly if processing
       owner: actualOwner,
+      creditsSpent: 0,
     });
   }
 }

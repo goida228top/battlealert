@@ -86,6 +86,7 @@ export class GameEngine {
 
   public lastClickTime: number = 0;
   public lastClickedEntityId: string | null = null;
+  public pendingOrder: any = null;
 
   public playerFaction: Faction = 'FEDERATION';
   public playerCountry: Country = 'RUSSIA';
@@ -406,7 +407,7 @@ export class GameEngine {
     }
 
     const cols = Math.ceil(Math.sqrt(numUnits));
-    const spacing = 100; // 40 * 2.5
+    const spacing = 55; 
     
     // Generate all target positions
     const targetPositions: Vector2[] = [];
@@ -607,8 +608,8 @@ export class GameEngine {
     return handleMouseMove.call(this, pos);
   }
 
-  public handleMouseUp() {
-    return handleMouseUp.call(this);
+  public handleMouseUp(isAdditive: boolean = false) {
+    return handleMouseUp.call(this, isAdditive);
   }
 
   public startPlacing(type: BuildingType) {
@@ -644,24 +645,24 @@ export class GameEngine {
 
     if (actualOwner === 'PLAYER') {
         const item = this.state.productionQueue.find(q => q.id === itemId);
-        if (item) this.state.credits += item.cost; // Refund
+        if (item) this.state.credits += (item.creditsSpent || 0); // Refund
         this.state.productionQueue = this.state.productionQueue.filter(q => q.id !== itemId);
     } else if (actualOwner === 'PLAYER_2') {
         if (this.state.p2ProductionQueue) {
             const item = this.state.p2ProductionQueue.find(q => q.id === itemId);
-            if (item) this.state.p2Credits = (this.state.p2Credits || 0) + item.cost;
+            if (item) this.state.p2Credits = (this.state.p2Credits || 0) + (item.creditsSpent || 0);
             this.state.p2ProductionQueue = this.state.p2ProductionQueue.filter(q => q.id !== itemId);
         }
     } else if (actualOwner === 'PLAYER_3') {
         if (this.state.p3ProductionQueue) {
             const item = this.state.p3ProductionQueue.find(q => q.id === itemId);
-            if (item) this.state.p3Credits = (this.state.p3Credits || 0) + item.cost;
+            if (item) this.state.p3Credits = (this.state.p3Credits || 0) + (item.creditsSpent || 0);
             this.state.p3ProductionQueue = this.state.p3ProductionQueue.filter(q => q.id !== itemId);
         }
     } else if (actualOwner === 'PLAYER_4') {
         if (this.state.p4ProductionQueue) {
             const item = this.state.p4ProductionQueue.find(q => q.id === itemId);
-            if (item) this.state.p4Credits = (this.state.p4Credits || 0) + item.cost;
+            if (item) this.state.p4Credits = (this.state.p4Credits || 0) + (item.creditsSpent || 0);
             this.state.p4ProductionQueue = this.state.p4ProductionQueue.filter(q => q.id !== itemId);
         }
     }

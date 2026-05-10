@@ -24,7 +24,7 @@ export function updateSeparation(this: GameEngine, entity: Entity, dt: number) {
             if (Math.abs(ody) > 35) continue;
 
             const odistSq = odx * odx + ody * ody;
-            const minSpace = (entity.size + other.size) / 2 * 0.95;
+            const minSpace = (entity.size + other.size) / 2 * 0.85;
             if (odistSq < minSpace * minSpace && odistSq > 0.01) {
               const odist = Math.sqrt(odistSq);
               // Make separation very gentle so they don't act like snowplows

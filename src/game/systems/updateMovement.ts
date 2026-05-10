@@ -56,7 +56,7 @@ export function updateMovement(this: GameEngine, entity: Entity, dt: number) {
              const ody = nextY - other.position.y;
              if (Math.abs(odx) > 30 || Math.abs(ody) > 30) continue;
              
-             const minDist = (entity.size + other.size) / 2 * 0.95;
+             const minDist = (entity.size + other.size) / 2 * 0.85;
              if (odx*odx + ody*ody < minDist*minDist) {
                 const curDx = entity.position.x - other.position.x;
                 const curDy = entity.position.y - other.position.y;

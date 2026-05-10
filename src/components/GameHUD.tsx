@@ -126,7 +126,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
       <div className="px-4 py-2 bg-black border-b border-zinc-800 flex justify-center">
         <div className="flex items-center gap-2 px-4 py-1 bg-zinc-900/50 rounded-sm border border-zinc-700 shadow-inner w-full justify-center">
           <span className="font-mono text-2xl font-black tracking-tighter text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]">
-            ${displayedCredits.toLocaleString()}
+            ${Math.floor(displayedCredits).toLocaleString('en-US')}
           </span>
         </div>
       </div>

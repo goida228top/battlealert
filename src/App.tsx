@@ -104,22 +104,39 @@ export default function App() {
     loadTexture('OIL_DERRICK', '/assets/oil_derrick.png');
   }, []);
 
-  // Add ref to track last UI update
+  // Add ref to track last logic update
+  const lastLogicTimeRef = useRef<number>(performance.now());
   const lastUiUpdateRef = useRef<number>(0);
-  const lastFrameTimeRef = useRef<number>(0);
 
-  const updateRef = useRef<(time: number) => void>(() => {});
+  const logicUpdate = () => {
+    const now = performance.now();
+    let dt = now - lastLogicTimeRef.current;
+    
+    // Cap dt to prevent massive jump if the tab was suspended for a long time
+    // but allow enough to catch up background throttling.
+    if (dt > 1000) dt = 16; 
+    lastLogicTimeRef.current = now;
 
-  const update = (time: number) => {
-    let dt = time - (lastFrameTimeRef.current || time);
-    if (dt > 100) dt = 16;
-    lastFrameTimeRef.current = time;
+    try {
+      engineRef.current.update(now);
+      
+      // Update React state occasionally for UI (credits, counts, etc)
+      if (now - lastUiUpdateRef.current > 150) {
+        setGameState({ ...engineRef.current.state });
+        lastUiUpdateRef.current = now;
+      }
+    } catch (err) {
+      console.error("Logic loop error:", err);
+    }
+  };
 
-    // Edge panning
+  const drawLoop = (time: number) => {
+    // Edge panning (Drawing loop handles input/panning for smoothness)
     if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current) {
+      const dt = 16; // Standard frame target
       const maxScrollSpeed = 1.0 * dt;
       const edgeThreshold = 60;
-      const { camera, map } = engineRef.current.state; 
+      const { camera } = engineRef.current.state; 
       const x = globalMousePosRef.current.x;
       const y = globalMousePosRef.current.y;
 
@@ -142,30 +159,21 @@ export default function App() {
       camera.y += dy;
     }
 
-    try {
-      engineRef.current.update(time);
-      
-      if (time - lastUiUpdateRef.current > 100) {
-        setGameState({ ...engineRef.current.state });
-        lastUiUpdateRef.current = time;
-      }
-      
-      draw();
-    } catch (err) {
-      console.error("Game loop error:", err);
-    }
-    
-    requestRef.current = requestAnimationFrame(updateRef.current);
+    draw();
+    requestRef.current = requestAnimationFrame(drawLoop);
   };
 
   useEffect(() => {
-    updateRef.current = update;
-  });
-
-  useEffect(() => {
     if (appState === 'PLAYING') {
-      requestRef.current = requestAnimationFrame(updateRef.current);
-      return () => cancelAnimationFrame(requestRef.current);
+      // Logic loop runs in setInterval to stay alive in background
+      const logicInterval = setInterval(logicUpdate, 1000 / 60);
+      // Draw loop runs in requestAnimationFrame for smooth visuals
+      requestRef.current = requestAnimationFrame(drawLoop);
+      
+      return () => {
+        clearInterval(logicInterval);
+        cancelAnimationFrame(requestRef.current);
+      };
     }
   }, [appState]);
   const draw = () => {
@@ -1547,7 +1555,7 @@ export default function App() {
     }
 
     const worldPos = engineRef.current.screenToWorld(screenPos);
-    engineRef.current.handleMouseDown(worldPos, e.button === 2, e.ctrlKey);
+    engineRef.current.handleMouseDown(worldPos, e.button === 2, e.ctrlKey || e.shiftKey);
   };
 
   const handleMouseMove = (e: React.MouseEvent) => {
@@ -1567,14 +1575,14 @@ export default function App() {
     engineRef.current.handleMouseMove(worldPos);
   };
 
-  const handleMouseUp = () => {
-    engineRef.current.handleMouseUp();
+  const handleMouseUp = (e: React.MouseEvent) => {
+    engineRef.current.handleMouseUp(true);
   };
 
   const handleMouseLeave = () => {
     // Keep mousePosRef so selection drag works even if slightly out of div bounds, but 
     // handleMouseUp will cancel the selection box.
-    engineRef.current.handleMouseUp(); // Stop dragging selection
+    engineRef.current.handleMouseUp(false); // Stop dragging selection
   };
 
   const handleWheel = (e: React.WheelEvent) => {

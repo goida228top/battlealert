@@ -258,10 +258,13 @@ export function calculatePath(this: any, start: Vector2, endRaw: Vector2, entity
     x: startTile.x,
     y: startTile.y,
     g: 0,
-    h: Math.abs(startTile.x - endTile.x) + Math.abs(startTile.y - endTile.y),
+    h: 0, // calculated below
     f: 0,
     parent: null
   };
+  const sdx = Math.abs(startTile.x - endTile.x);
+  const sdy = Math.abs(startTile.y - endTile.y);
+  startNode.h = sdx + sdy + (1.414 - 2) * Math.min(sdx, sdy);
   startNode.f = startNode.g + startNode.h;
   openList.push(startNode);
   nodeStates[startTile.y * mapWidth + startTile.x] = 1;
@@ -308,7 +311,9 @@ export function calculatePath(this: any, start: Vector2, endRaw: Vector2, entity
       const gScore = currentNode.g + (Math.abs(dirs[i].x) === 1 && Math.abs(dirs[i].y) === 1 ? 1.4 : 1);
       
       if (nodeStates[nIdx] === 0 || gScore < bestG[nIdx]) {
-        const h = Math.abs(nx - endTile.x) + Math.abs(ny - endTile.y);
+        const dx = Math.abs(nx - endTile.x);
+        const dy = Math.abs(ny - endTile.y);
+        const h = dx + dy + (1.414 - 2) * Math.min(dx, dy);
         openList.push({
           x: nx,
           y: ny,
