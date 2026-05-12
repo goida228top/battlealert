@@ -257,8 +257,8 @@ export function initGame(this: any, mapId: string = 'RIVER_DIVIDE') {
       const tx = Math.floor(x / pScale);
       const ty = Math.floor(y / pScale);
       const tileType = tiles[ty][tx];
-      // Walkable: Grass, Elevated Grass, Mountain Grass, Ore, Ramps, and certain decorations
-      const isGroundWalkable = tileType === 'GRASS' || tileType === 'ELEVATED_GRASS' || tileType === 'MOUNTAIN_GRASS' || tileType === 'ORE' || tileType === 'MOUNTAIN_DECOR' || tileType.startsWith('RAMP_');
+      // Walkable: Grass, Elevated Grass, Ore, Ramps, and certain decorations (NOT mountains/cliffs)
+      const isGroundWalkable = tileType === 'GRASS' || tileType === 'ELEVATED_GRASS' || tileType === 'MOUNTAIN_GRASS' || tileType === 'MOUNTAIN_DECOR' || tileType === 'ORE' || tileType.startsWith('RAMP_');
       const isWater = tileType === 'WATER';
       const isWaterTransition = tileType === 'WATER_TO_GRASS' || tileType === 'GRASS_TO_WATER';
 

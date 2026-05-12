@@ -271,7 +271,7 @@ export function calculatePath(this: any, start: Vector2, endRaw: Vector2, entity
   bestG[startTile.y * mapWidth + startTile.x] = 0;
 
   let iterations = 0;
-  const maxIterations = 15000; // Balanced
+  const maxIterations = 80000; // Increased to allow full map exploration
   let bestNode: Node = startNode;
 
   while (openList.length > 0 && iterations < maxIterations) {

@@ -86,7 +86,10 @@ export function updateMovement(this: GameEngine, entity: Entity, dt: number) {
              // can drive on grass, water
           } else {
              // Block water and cliffs. ORE is walkable for units.
-             if (tType === 'WATER' || tType === 'WATER_TO_GRASS' || tType === 'GRASS_TO_WATER') {
+             const isWaterTile = tType === 'WATER' || tType === 'WATER_TO_GRASS' || tType === 'GRASS_TO_WATER';
+             const isCliffTile = tType.startsWith('CLIFF_');
+             
+             if (isWaterTile || isCliffTile) {
                 terrainBlocked = true;
              }
           }
@@ -140,7 +143,10 @@ export function updateMovement(this: GameEngine, entity: Entity, dt: number) {
                 if (isNaval) {
                    if (curTType !== 'WATER') currentlyBlocked = true;
                 } else if (!isAmphibious) {
-                   if (curTType === 'WATER' || curTType === 'WATER_TO_GRASS' || curTType === 'GRASS_TO_WATER') {
+                   const isWaterTile = curTType === 'WATER' || curTType === 'WATER_TO_GRASS' || curTType === 'GRASS_TO_WATER';
+                   const isCliffTile = curTType.startsWith('CLIFF_');
+                   
+                   if (isWaterTile || isCliffTile) {
                       let curOnBridge = false;
                       const mapTileSize = this.state.map.tileSize;
                       this.state.map.bridges.forEach((b: any) => {
