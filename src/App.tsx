@@ -635,6 +635,60 @@ export default function App() {
     // Sorting for rendering
     const getZOffset = (pos: {x: number, y: number}) => engineRef.current?.getZOffset(pos) || 0;
     
+    // Draw paths for selected entities before they get culled
+    gameState.entities.forEach(entity => {
+      if (entity.selected && entity.type === 'UNIT') {
+        const zOffset = (entity as any).zOffset ?? getZOffset(entity.position);
+        
+        ctx.save();
+        // Move to entity position (apply zOffset if any)
+        ctx.translate(entity.position.x, entity.position.y - zOffset);
+        
+        // Draw Rally Point Line
+        if (entity.rallyPoint) {
+          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
+          ctx.lineWidth = 1 / camera.zoom;
+          ctx.setLineDash([4 / camera.zoom, 4 / camera.zoom]);
+          ctx.beginPath();
+          ctx.moveTo(0, 0);
+          ctx.lineTo(entity.rallyPoint.x - entity.position.x, entity.rallyPoint.y - entity.position.y);
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Draw Rally Point Marker
+          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
+          ctx.beginPath();
+          ctx.arc(entity.rallyPoint.x - entity.position.x, entity.rallyPoint.y - entity.position.y, 3 / camera.zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+
+        // Draw Path Line
+        if (entity.path && entity.path.length > 0) {
+          ctx.strokeStyle = 'rgba(34, 197, 94, 0.6)'; // Greenish line
+          ctx.lineWidth = 2 / camera.zoom;
+          ctx.setLineDash([4 / camera.zoom, 4 / camera.zoom]);
+          ctx.beginPath();
+          ctx.moveTo(0, 0); // Start at entity position
+          for (const node of entity.path) {
+            const nodeZ = getZOffset({x: node.x, y: node.y});
+            ctx.lineTo(node.x - entity.position.x, node.y - entity.position.y + nodeZ - zOffset);
+          }
+          ctx.stroke();
+          ctx.setLineDash([]);
+          
+          // Draw Destination Marker
+          const dest = entity.path[entity.path.length - 1];
+          const destZ = getZOffset({x: dest.x, y: dest.y});
+          ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
+          ctx.beginPath();
+          ctx.arc(dest.x - entity.position.x, dest.y - entity.position.y + destZ - zOffset, 3 / camera.zoom, 0, Math.PI * 2);
+          ctx.fill();
+        }
+        
+        ctx.restore();
+      }
+    });
+
     // Use pre-sorted list from engine if available (calculated every 10 frames)
     const sortedEntities = (gameState as any).sortedVisEntities || gameState.entities;
 
@@ -988,47 +1042,6 @@ export default function App() {
         ctx.stroke();
         ctx.setLineDash([]);
         ctx.restore();
-
-        // Draw Rally Point Line
-        if (entity.rallyPoint) {
-          ctx.strokeStyle = 'rgba(255, 255, 255, 0.4)';
-          ctx.lineWidth = 1 / camera.zoom;
-          ctx.setLineDash([4 / camera.zoom, 4 / camera.zoom]);
-          ctx.beginPath();
-          ctx.moveTo(0, 0);
-          ctx.lineTo(entity.rallyPoint.x - entity.position.x, entity.rallyPoint.y - entity.position.y);
-          ctx.stroke();
-          ctx.setLineDash([]);
-          
-          // Draw Rally Point Marker
-          ctx.fillStyle = 'rgba(255, 255, 255, 0.6)';
-          ctx.beginPath();
-          ctx.arc(entity.rallyPoint.x - entity.position.x, entity.rallyPoint.y - entity.position.y, 3 / camera.zoom, 0, Math.PI * 2);
-          ctx.fill();
-        }
-
-        // Draw Path Line
-        if (entity.path && entity.path.length > 0) {
-          ctx.strokeStyle = 'rgba(34, 197, 94, 0.6)'; // Greenish line
-          ctx.lineWidth = 2 / camera.zoom;
-          ctx.setLineDash([4 / camera.zoom, 4 / camera.zoom]);
-          ctx.beginPath();
-          ctx.moveTo(0, 0); // Start at entity position
-          for (const node of entity.path) {
-            const nodeZ = getZOffset({x: node.x, y: node.y});
-            ctx.lineTo(node.x - entity.position.x, node.y - entity.position.y + nodeZ - zOffset);
-          }
-          ctx.stroke();
-          ctx.setLineDash([]);
-          
-          // Draw Destination Marker
-          const dest = entity.path[entity.path.length - 1];
-          const destZ = getZOffset({x: dest.x, y: dest.y});
-          ctx.fillStyle = 'rgba(34, 197, 94, 0.8)';
-          ctx.beginPath();
-          ctx.arc(dest.x - entity.position.x, dest.y - entity.position.y + destZ - zOffset, 3 / camera.zoom, 0, Math.PI * 2);
-          ctx.fill();
-        }
       }
 
       // Iron Curtain visual
@@ -1444,7 +1457,8 @@ export default function App() {
       const worldY = (mousePosRef.current.y - camera.y) / camera.zoom;
       
       const hovered = gameState.entities.find(e => 
-        Math.hypot(e.position.x - worldX, e.position.y - worldY) < e.size
+        Math.hypot(e.position.x - worldX, e.position.y - worldY) < e.size &&
+        e.subType !== 'TREE' && e.subType !== 'MOUNTAIN'
       );
 
       if (hovered) {

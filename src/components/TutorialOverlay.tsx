@@ -19,7 +19,7 @@ export const TutorialOverlay: React.FC<TutorialOverlayProps> = ({ gameState }) =
   let color = "text-blue-400";
 
   if (!hasYard) {
-    objective = "Разверните базу: Выделите MCV (грузовик) и нажмите 'Deploy Base' справа.";
+    objective = "Разверните базу: Выделите MCV и дважды кликните по нему (или нажмите D).";
     icon = <Truck className="w-6 h-6 text-yellow-400 animate-pulse" />;
     color = "text-yellow-400";
   } else if (!hasPower) {

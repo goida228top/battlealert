@@ -226,7 +226,7 @@ if (entity.targetId) {
 
       // Re-evaluate target periodically if out of range to avoid chasing endlessly 
       // when there's a closer threat or obstacle right in front of us
-      if (timestamp - (entity.lastTargetSearch || 0) > 1500) {
+      if (!entity.explicitAttack && timestamp - (entity.lastTargetSearch || 0) > 1500) {
           entity.targetId = undefined;
           return; // Let next frame find a new closest target
       }

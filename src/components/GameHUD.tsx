@@ -183,25 +183,6 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
         </button>
       </div>
 
-      {/* Selected MCV Action Button */}
-      {gameState.entities.some(e => e.selected && e.owner === engineRef.current.localPlayerId && (e.subType === 'MCV' || e.subType === 'ALLIED_MCV')) && (
-        <div className="p-2 bg-zinc-900 border-b border-zinc-800">
-          <button 
-            onClick={() => {
-              const selectedMCV = gameState.entities.find(e => e.selected && e.owner === engineRef.current.localPlayerId && (e.subType === 'MCV' || e.subType === 'ALLIED_MCV'));
-              if (selectedMCV) {
-                engineRef.current.deployMCV(selectedMCV.id);
-                setGameState({ ...engineRef.current.state });
-              }
-            }}
-            className="w-full py-3 bg-red-600 hover:bg-red-500 text-white font-black rounded border-2 border-white/20 shadow-[0_0_15px_rgba(220,38,38,0.4)] flex items-center justify-center gap-2 animate-pulse"
-          >
-            <Factory className="w-5 h-5" />
-            РАЗВЕРНУТЬ БАЗУ (D)
-          </button>
-        </div>
-      )}
-
       {/* Build Area with Power Bar */}
       <div className="flex-1 flex overflow-hidden bg-black">
         {/* Power Bar (Vertical) */}

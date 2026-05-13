@@ -53,7 +53,7 @@ async function startServer() {
                     harvestState: e.harvestState, harvestAmount: e.harvestAmount,
                     occupiedBy: e.occupiedBy, constructionStartTime: e.constructionStartTime,
                     mindControlledBy: e.mindControlledBy, rallyPoint: e.rallyPoint,
-                    isDisguised: e.isDisguised, kills: e.kills
+                    isDisguised: e.isDisguised, kills: e.kills, path: e.path
                 })),
                 credits: room.engine.state.credits,
                 p2Credits: room.engine.state.p2Credits,

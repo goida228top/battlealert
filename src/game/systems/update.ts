@@ -352,7 +352,17 @@ export function update(this: any, timestamp: number) {
 
     this.state.entities.forEach((e: Entity) => {
       if (e.health <= 0) return;
-      if (e.type === 'BUILDING' && e.subType !== 'TREE') {
+      if (e.type === 'BUILDING') {
+        if (e.subType === 'TREE') {
+           // Trees only block a small point at their base (trunk)
+           const gx = Math.floor(e.position.x / pfTileSize);
+           const gy = Math.floor(e.position.y / pfTileSize);
+           if (gx >= 0 && gx < pfWidth && gy >= 0 && gy < pfHeight) {
+              obstacleGrid[gy * pfWidth + gx] = 1;
+           }
+           return;
+        }
+        
         const dims = getBuildingDimensions(e.subType as any);
         const cx = Math.floor(e.position.x / mapTileSize);
         const cy = Math.floor(e.position.y / mapTileSize);
@@ -377,7 +387,7 @@ export function update(this: any, timestamp: number) {
         }
       } else if (e.type === 'UNIT' && !e.targetPosition && !e.isDeployed) {
         // Add stationary units to obstacle grid so pathfinder can route around them
-        const rad = 25 * 0.4; // 10 pixels radius roughly for blocking
+        const rad = (e.size || 25) * 0.7 * 0.5; // Adjusted to match movement collision radius
         const minX = Math.floor((e.position.x - rad) / pfTileSize);
         const maxX = Math.floor((e.position.x + rad) / pfTileSize);
         const minY = Math.floor((e.position.y - rad) / pfTileSize);

@@ -227,7 +227,7 @@ export function initGame(this: any, mapId: string = 'RIVER_DIVIDE') {
                     health: 999999,
                     maxHealth: 999999,
                     owner: 'NEUTRAL',
-                    size: 20
+                    size: 10
                   });
                 }
               }

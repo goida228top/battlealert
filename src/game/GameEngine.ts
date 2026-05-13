@@ -240,6 +240,7 @@ export class GameEngine {
                     le.isDeployed = se.isDeployed;
                     le.targetPosition = se.targetPosition;
                     le.targetId = se.targetId;
+                    le.path = se.path;
                     le.rank = se.rank;
                     le.isRepairing = se.isRepairing;
                     le.rotation = se.rotation;
