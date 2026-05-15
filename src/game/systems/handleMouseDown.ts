@@ -242,11 +242,19 @@ export function handleMouseDown(this: any, pos: Vector2, isRightClick: boolean, 
     this.lastClickedEntityId = clickedEntity.id;
 
     if (isDoubleClick) {
-      if (clickedEntity.subType === 'MCV' || clickedEntity.subType === 'ALLIED_MCV') {
+      if (['MCV', 'ALLIED_MCV'].includes(clickedEntity.subType)) {
         this.deployMCV(clickedEntity.id);
         return;
       }
-      if (clickedEntity.subType === 'CONSTRUCTION_YARD' || clickedEntity.subType === 'ALLIED_CONSTRUCTION_YARD') {
+      if (['GI', 'SIEGE_CHOPPER', 'DESOLATOR'].includes(clickedEntity.subType)) {
+        this.socket.emit('client_command', {
+           roomId: this.roomId,
+           command: { type: 'TOGGLE_DEPLOY', unitId: clickedEntity.id, owner: this.localPlayerId }
+        });
+        clickedEntity.isDeployed = !clickedEntity.isDeployed;
+        return;
+      }
+      if (['CONSTRUCTION_YARD', 'ALLIED_CONSTRUCTION_YARD'].includes(clickedEntity.subType)) {
         this.undeployConstructionYard(clickedEntity.id);
         return;
       }

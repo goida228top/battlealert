@@ -133,16 +133,16 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   const me = players.find(p => p.id === socket.id);
 
   return (
-    <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white">
+    <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white overflow-y-auto">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
-      <div className="relative z-10 flex flex-col h-full p-8 max-w-6xl mx-auto w-full">
-        <h1 className="text-4xl font-black text-red-600 mb-2 uppercase tracking-tighter font-display">
+      <div className="relative z-10 flex flex-col h-full p-4 md:p-8 max-w-6xl mx-auto w-full min-h-max">
+        <h1 className="text-3xl md:text-4xl font-black text-red-600 mb-2 uppercase tracking-tighter font-display text-center md:text-left">
           Игровая Комната {roomInfo ? `- ${roomInfo.name}` : ''}
         </h1>
-        <p className="text-zinc-400 mb-8 font-bold">Карта: {roomInfo ? roomInfo.map : selectedMap}</p>
+        <p className="text-zinc-400 mb-4 md:mb-8 font-bold text-center md:text-left">Карта: {roomInfo ? roomInfo.map : selectedMap}</p>
 
-        <div className="flex-1 flex gap-8">
+        <div className="flex-1 flex flex-col md:flex-row gap-4 md:gap-8">
           {/* Players List */}
           <div className="flex-1 bg-zinc-900/80 border border-zinc-700 p-6 flex flex-col">
             <h2 className="text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-2 mb-4 flex justify-between items-center">
@@ -235,7 +235,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
           </div>
 
           {/* Chat */}
-          <div className="w-[400px] bg-zinc-900/80 border border-zinc-700 p-6 flex flex-col">
+          <div className="w-full md:w-[400px] h-[300px] md:h-auto bg-zinc-900/80 border border-zinc-700 p-4 md:p-6 flex flex-col">
             <h2 className="text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-2 mb-4">Чат</h2>
             
             <div className="flex-1 bg-black/50 border border-zinc-800 p-4 rounded overflow-auto flex flex-col justify-end space-y-2">
@@ -265,21 +265,21 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-8 flex justify-between items-center w-full">
+        <div className="mt-8 flex flex-col-reverse md:flex-row justify-between items-center w-full gap-4 pb-4">
           <button 
             onClick={() => {
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}
-            className="flex items-center gap-2 py-4 px-12 font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all"
+            className="flex w-full md:w-auto justify-center items-center gap-2 py-4 px-12 font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all"
           >
-            <ArrowLeft size={24} /> Покинуть комнату
+            <ArrowLeft size={24} /> Покинуть
           </button>
           
           <button 
             onClick={handleStart}
             disabled={players.length < 2 || !isHost}
-            className={`py-4 px-16 font-black uppercase tracking-widest border-2 transition-all ${
+            className={`w-full md:w-auto py-4 px-16 font-black uppercase tracking-widest border-2 transition-all ${
               players.length < 2 || !isHost
                 ? 'bg-zinc-800 text-zinc-500 border-zinc-700 cursor-not-allowed' 
                 : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'

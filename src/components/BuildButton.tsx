@@ -53,25 +53,25 @@ export const BuildButton: React.FC<BuildButtonProps> = ({
       {/* Locked Overlay */}
       {locked && !progress && (
         <div className="absolute inset-0 bg-black/60 flex items-center justify-center z-30">
-          <Lock className="w-6 h-6 text-zinc-600" />
+          <Lock className="w-4 h-4 text-zinc-600" />
         </div>
       )}
 
       {/* Icon/Image Area */}
-      <div className={`text-zinc-500 group-hover:text-zinc-300 transition-colors relative z-10 scale-125 mb-1 ${locked ? 'grayscale' : ''}`}>
-        {icon || <Factory className="w-6 h-6" />}
+      <div className={`text-zinc-500 group-hover:text-zinc-300 transition-colors relative z-10 scale-75 mb-2 ${locked ? 'grayscale' : ''}`}>
+        {icon || <Factory className="w-5 h-5" />}
       </div>
 
       {/* Label Bar (Bottom) */}
       <div className="absolute bottom-0 left-0 w-full bg-black/95 py-0.5 border-t border-zinc-800 z-30">
-        <span className="text-[8px] font-black uppercase tracking-tighter text-zinc-400 block text-center truncate px-1">
+        <span className="text-[7px] font-black uppercase tracking-tighter text-zinc-400 block text-center truncate px-[2px]">
           {label}
         </span>
       </div>
 
       {/* Cost (Top Right) */}
-      <div className="absolute top-0.5 right-1 z-30">
-        <span className={`text-[7px] font-mono font-bold tracking-tighter ${cannotAfford ? 'text-yellow-500 font-extrabold' : 'text-zinc-400'}`}>
+      <div className="absolute top-[1px] right-[2px] z-30">
+        <span className={`text-[6px] font-mono font-bold tracking-tighter ${cannotAfford ? 'text-yellow-500 font-extrabold' : 'text-zinc-400'}`}>
           ${cost}
         </span>
       </div>

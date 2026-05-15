@@ -46,7 +46,7 @@ export const VehiclesTab: React.FC<VehiclesTabProps> = ({ gameState, engineRef, 
 
   return (
     <>
-            <div className="grid grid-cols-2 gap-2">
+            <div className="grid grid-cols-2 gap-1.5">
               {!isAllied ? (
                 <>
                   <BuildButton 

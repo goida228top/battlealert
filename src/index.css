@@ -11,6 +11,32 @@
   body {
     @apply bg-black text-white antialiased;
   }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: #09090b; /* zinc-950 */
+    border-left: 1px solid #18181b; /* zinc-900 */
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: #3f3f46; /* zinc-700 */
+    border-radius: 4px;
+    border: 1px solid #52525b; /* zinc-600 */
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: #71717a; /* zinc-500 */
+  }
+
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: #3f3f46 #09090b; /* thumb track */
+  }
 }
 
 @layer utilities {

@@ -61,7 +61,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
   };
 
   return (
-    <div className="w-[280px] bg-zinc-950 border-l-2 border-zinc-800 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)] relative z-20 overflow-hidden">
+    <div className="w-[140px] md:w-[240px] h-full shrink-0 bg-zinc-950 border-l-2 border-zinc-800 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)] relative z-20 overflow-hidden">
       {/* Scanline Effect */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
       
@@ -74,7 +74,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
       </div>
 
       {/* Minimap Section (Top) */}
-      <div className="p-2 bg-zinc-900/50 border-b border-zinc-800 aspect-square flex items-center justify-center relative overflow-hidden">
+      <div className="p-1 bg-zinc-900/50 border-b border-zinc-800 aspect-[4/3] flex items-center justify-center relative overflow-hidden">
         {localGameState.entities.some(e => e.type === 'BUILDING' && e.owner === engineRef.current.localPlayerId && (e.subType === 'RADAR' || e.subType === 'AIR_FORCE_COMMAND')) && localGameState.power >= localGameState.powerConsumption ? (
           <Minimap 
             gameState={localGameState} 
@@ -93,100 +93,96 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
             
             {engineRef.current.playerFaction === 'FEDERATION' ? (
               <div className="flex flex-col items-center opacity-40 group-hover:opacity-60 transition-opacity">
-                <div className="w-20 h-20 bg-red-900/10 rounded-full flex items-center justify-center border-2 border-red-600/20">
-                  <ShieldAlert className="w-12 h-12 text-red-700" />
+                <div className="w-12 h-12 bg-red-900/10 rounded-full flex items-center justify-center border-2 border-red-600/20">
+                  <ShieldAlert className="w-6 h-6 text-red-700" />
                 </div>
-                <div className="mt-3 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-red-600 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-red-900 uppercase tracking-[0.3em]">Federation</span>
-                  <div className="w-1 h-1 bg-red-600 rounded-full animate-pulse" />
+                <div className="mt-2 flex items-center gap-1">
+                  <span className="text-[8px] font-black text-red-900 uppercase tracking-[0.2em]">Federation</span>
                 </div>
               </div>
             ) : (
               <div className="flex flex-col items-center opacity-40 group-hover:opacity-60 transition-opacity">
-                <div className="w-20 h-20 bg-blue-900/10 rounded-full flex items-center justify-center border-2 border-blue-600/20">
-                  <Shield className="w-12 h-12 text-blue-700" />
+                <div className="w-12 h-12 bg-blue-900/10 rounded-full flex items-center justify-center border-2 border-blue-600/20">
+                  <Shield className="w-6 h-6 text-blue-700" />
                 </div>
-                <div className="mt-3 flex items-center gap-1">
-                  <div className="w-1 h-1 bg-blue-600 rounded-full animate-pulse" />
-                  <span className="text-[10px] font-black text-blue-900 uppercase tracking-[0.3em]">Coalition</span>
-                  <div className="w-1 h-1 bg-blue-600 rounded-full animate-pulse" />
+                <div className="mt-2 flex items-center gap-1">
+                  <span className="text-[8px] font-black text-blue-900 uppercase tracking-[0.2em]">Coalition</span>
                 </div>
               </div>
             )}
             
-            <div className="absolute bottom-3 text-[9px] font-bold text-zinc-800 uppercase tracking-widest">
-              Ожидание данных радара
+            <div className="absolute bottom-1 text-[7px] font-bold text-zinc-800 uppercase tracking-widest leading-tight text-center">
+              Ожидание<br/>радара
             </div>
           </div>
         )}
       </div>
 
       {/* Credits Section */}
-      <div className="px-4 py-2 bg-black border-b border-zinc-800 flex justify-center">
-        <div className="flex items-center gap-2 px-4 py-1 bg-zinc-900/50 rounded-sm border border-zinc-700 shadow-inner w-full justify-center">
-          <span className="font-mono text-2xl font-black tracking-tighter text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]">
+      <div className="px-1 py-1 bg-black border-b border-zinc-800 flex justify-center">
+        <div className="flex items-center gap-1.5 px-1 py-0.5 bg-zinc-900/50 rounded-sm border border-zinc-700 shadow-inner w-full justify-center">
+          <span className="font-mono text-xs font-black tracking-tighter text-green-500 drop-shadow-[0_0_5px_rgba(34,197,94,0.5)]">
             ${Math.floor(displayedCredits).toLocaleString('en-US')}
           </span>
         </div>
       </div>
 
       {/* Utility & Special Abilities Row */}
-      <div className="p-2 bg-zinc-900/30 border-b border-zinc-800">
+      <div className="p-1 bg-zinc-900/30 border-b border-zinc-800">
         <div className="grid grid-cols-2 gap-1 mb-1">
           <button 
             onClick={() => { engineRef.current.state.interactionMode = 'REPAIR'; setGameState({ ...engineRef.current.state }); }}
-            className={`py-1.5 flex flex-col items-center justify-center rounded-sm border transition-all ${gameState.interactionMode === 'REPAIR' ? 'bg-zinc-700 border-zinc-400 text-white shadow-[0_0_10px_rgba(255,255,255,0.2)]' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'}`}
+            className={`py-1 flex flex-col items-center justify-center rounded-sm border transition-all ${gameState.interactionMode === 'REPAIR' ? 'bg-zinc-700 border-zinc-400 text-white shadow-[0_0_10px_rgba(255,255,255,0.2)]' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'}`}
             title="Ремонт (W)"
           >
-            <Wrench className="w-4 h-4" />
+            <Wrench className="w-3.5 h-3.5" />
           </button>
           <button 
             onClick={() => { engineRef.current.state.interactionMode = 'SELL'; setGameState({ ...engineRef.current.state }); }}
-            className={`py-1.5 flex flex-col items-center justify-center rounded-sm border transition-all ${gameState.interactionMode === 'SELL' ? 'bg-zinc-700 border-zinc-400 text-white shadow-[0_0_10px_rgba(255,255,255,0.2)]' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'}`}
+            className={`py-1 flex flex-col items-center justify-center rounded-sm border transition-all ${gameState.interactionMode === 'SELL' ? 'bg-zinc-700 border-zinc-400 text-white shadow-[0_0_10px_rgba(255,255,255,0.2)]' : 'bg-zinc-800 border-zinc-700 text-zinc-400 hover:text-zinc-200 hover:bg-zinc-700'}`}
             title="Продажа ($)"
           >
-            <DollarSign className="w-4 h-4" />
+            <DollarSign className="w-3.5 h-3.5" />
           </button>
         </div>
       </div>
       
       {/* Tab Row */}
-      <div className="flex gap-0.5 p-1 bg-black border-b border-zinc-800">
+      <div className="flex gap-0.5 p-0.5 bg-black border-b border-zinc-800">
         <button 
           onClick={() => { engineRef.current.state.sidebarTab = 'BUILDINGS'; setGameState({ ...engineRef.current.state }); }}
-          className={`flex-1 py-3 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'BUILDINGS' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
+          className={`flex-1 py-1.5 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'BUILDINGS' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
           title="Здания"
         >
-          <Factory className="w-5 h-5" />
+          <Factory className="w-4 h-4" />
         </button>
         <button 
           onClick={() => { engineRef.current.state.sidebarTab = 'DEFENSE'; setGameState({ ...engineRef.current.state }); }}
-          className={`flex-1 py-3 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'DEFENSE' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
+          className={`flex-1 py-1.5 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'DEFENSE' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
           title="Оборона"
         >
-          <Shield className="w-5 h-5" />
+          <Shield className="w-4 h-4" />
         </button>
         <button 
           onClick={() => { engineRef.current.state.sidebarTab = 'INFANTRY'; setGameState({ ...engineRef.current.state }); }}
-          className={`flex-1 py-3 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'INFANTRY' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
+          className={`flex-1 py-1.5 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'INFANTRY' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
           title="Пехота"
         >
-          <Users className="w-5 h-5" />
+          <Users className="w-4 h-4" />
         </button>
         <button 
           onClick={() => { engineRef.current.state.sidebarTab = 'VEHICLES'; setGameState({ ...engineRef.current.state }); }}
-          className={`flex-1 py-3 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'VEHICLES' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
+          className={`flex-1 py-1.5 flex items-center justify-center rounded-sm transition-all border ${gameState.sidebarTab === 'VEHICLES' ? 'bg-zinc-800 border-zinc-600 text-white shadow-[0_0_10px_rgba(255,255,255,0.1)]' : 'bg-zinc-900 border-transparent text-zinc-600 hover:text-zinc-400'}`}
           title="Техника"
         >
-          <Truck className="w-5 h-5" />
+          <Truck className="w-4 h-4" />
         </button>
       </div>
 
       {/* Build Area with Power Bar */}
       <div className="flex-1 flex overflow-hidden bg-black">
         {/* Power Bar (Vertical) */}
-        <div className="w-10 bg-zinc-950 border-r border-zinc-800 flex flex-col-reverse p-1.5 relative group" title={`Энергия: ${localGameState.power} / Потребление: ${localGameState.powerConsumption}`}>
+        <div className="w-6 bg-zinc-950 border-r border-zinc-800 flex flex-col-reverse p-1.5 relative group" title={`Энергия: ${localGameState.power} / Потребление: ${localGameState.powerConsumption}`}>
           <div className="absolute inset-0 bg-black/40 pointer-events-none" />
           <div className="flex-1 w-full bg-black rounded-sm overflow-hidden relative border border-zinc-800">
             {/* Power Level Indicator */}
@@ -201,7 +197,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
             />
           </div>
           <div className="text-center mt-2">
-            <Zap className={`w-4 h-4 mx-auto ${localGameState.power >= localGameState.powerConsumption ? 'text-green-500' : 'text-red-500 animate-pulse'}`} />
+            <Zap className={`w-3 h-3 mx-auto ${localGameState.power >= localGameState.powerConsumption ? 'text-green-500' : 'text-red-500 animate-pulse'}`} />
           </div>
           
           {/* Power Tooltip */}
@@ -213,7 +209,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
         </div>
 
         {/* Build Grid */}
-        <div className="flex-1 p-2 overflow-y-auto custom-scrollbar">
+        <div className="flex-1 p-1 overflow-y-auto custom-scrollbar">
           {localGameState.sidebarTab === 'BUILDINGS' && <BuildingsTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}
           {localGameState.sidebarTab === 'INFANTRY' && <InfantryTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}
           {localGameState.sidebarTab === 'VEHICLES' && <VehiclesTab gameState={localGameState} engineRef={engineRef} setGameState={setGameState} />}

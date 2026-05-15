@@ -81,30 +81,30 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
   };
 
   return (
-    <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white">
+    <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white overflow-hidden">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
-      <div className="relative z-10 flex flex-col h-full p-8 max-w-6xl mx-auto w-full">
-        <div className="flex items-center justify-between mb-8 pb-4 border-b border-zinc-800">
+      <div className="relative z-10 flex flex-col h-full p-2 md:p-4 max-w-6xl mx-auto w-full min-h-0">
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between mb-2 md:mb-4 pb-2 border-b border-zinc-800 gap-2 md:gap-4">
           <div>
-            <h1 className="text-4xl font-black uppercase text-red-500 flex items-center gap-4">
-              <Server size={36} /> Мультиплеер: Лобби
+            <h1 className="text-xl md:text-2xl font-black uppercase text-red-500 flex items-center gap-2">
+              <Server size={24} className="w-5 h-5 md:w-6 md:h-6" /> Мультиплеер: Лобби
             </h1>
-            <p className={status.includes('разорвано') ? "text-red-400 mt-2" : "text-green-400 mt-2 font-mono"}>
+            <p className={status.includes('разорвано') ? "text-red-400 mt-1 text-xs md:text-sm" : "text-green-400 mt-1 font-mono text-xs md:text-sm"}>
                {status} 
                {stats && ` | ОНЛАЙН: ${stats.online} | КОМНАТ: ${stats.rooms}`}
             </p>
           </div>
           
-          <div className="flex gap-4">
+          <div className="flex flex-col sm:flex-row gap-2 md:gap-4 w-full md:w-auto">
             <button
               onClick={() => setAppState('MULTIPLAYER_CREATE')}
-              className="flex items-center gap-2 bg-red-700 hover:bg-red-600 px-6 py-3 rounded text-xl font-bold uppercase transition-colors shadow-lg"
+              className="flex justify-center items-center gap-2 bg-red-700 hover:bg-red-600 px-3 md:px-4 py-2 rounded text-xs md:text-sm font-bold uppercase transition-colors shadow-lg w-full md:w-auto"
             >
-              <PlusSquare size={24} /> Создать игру
+              <PlusSquare size={16} className="w-4 h-4 md:w-5 md:h-5" /> Создать игру
             </button>
             <button
-              className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded text-xl font-bold uppercase transition-colors"
+              className="flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-4 py-2 rounded text-xs md:text-sm font-bold uppercase transition-colors w-full md:w-auto"
               onClick={() => socket.emit('get_rooms')}
             >
               Обновить
@@ -112,43 +112,43 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           </div>
         </div>
 
-        <div className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded flex flex-col">
-          <div className="grid grid-cols-5 gap-4 p-4 border-b border-zinc-800 bg-zinc-900/80 font-bold uppercase text-zinc-400">
-            <div className="col-span-2">Название комнаты</div>
-            <div>Карта</div>
-            <div>Игроки</div>
-            <div>Пинг</div>
+        <div className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded flex flex-col min-h-0">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 p-2 border-b border-zinc-800 bg-zinc-900/80 font-bold uppercase text-zinc-400 text-[10px] md:text-xs">
+            <div className="md:col-span-2">Название комнаты</div>
+            <div className="hidden md:block">Карта</div>
+            <div>Статус</div>
+            <div className="hidden md:block">Пинг</div>
           </div>
           
-          <div className="flex-1 overflow-auto p-2">
+          <div className="flex-1 overflow-auto p-1 md:p-2">
             {rooms.length === 0 && (
-              <div className="p-8 text-center text-zinc-500 font-bold uppercase">
+              <div className="p-4 md:p-8 text-center text-zinc-500 font-bold uppercase text-xs md:text-sm">
                 Нет доступных комнат. Создайте новую игру!
               </div>
             )}
             {rooms.map((room) => (
               <div 
                 key={room.id}
-                className={`grid grid-cols-5 gap-4 p-4 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 rounded transition-colors items-center group ${room.players >= room.maxPlayers ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 p-2 md:p-3 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 rounded transition-colors items-center group ${room.players >= room.maxPlayers ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 onClick={() => room.players < room.maxPlayers && handleJoin(room.id)}
               >
-                <div className="col-span-2 font-bold text-lg group-hover:text-red-400">{room.name}</div>
-                <div className="text-zinc-300">{room.map}</div>
-                <div className="flex items-center gap-2 text-zinc-300">
-                  <Users size={16} className={room.players >= room.maxPlayers ? "text-red-500" : "text-green-500"} /> {room.players}/{room.maxPlayers}
+                <div className="md:col-span-2 font-bold text-xs md:text-sm group-hover:text-red-400 truncate">{room.name}</div>
+                <div className="hidden md:block text-zinc-300 text-[10px] md:text-xs truncate">{room.map}</div>
+                <div className="flex items-center gap-1 md:gap-2 text-zinc-300 text-[10px] md:text-xs">
+                  <Users size={14} className={room.players >= room.maxPlayers ? "text-red-500" : "text-green-500"} /> {room.players}/{room.maxPlayers}
                 </div>
-                <div className="text-green-500">{"< 50ms (Relay)"}</div>
+                <div className="hidden md:block text-green-500 text-[10px] md:text-xs">{"< 50ms (Relay)"}</div>
               </div>
             ))}
           </div>
         </div>
 
-        <div className="mt-8 flex justify-between">
+        <div className="mt-2 md:mt-4 flex justify-between pb-1 md:pb-2 shrink-0">
           <button
             onClick={() => setAppState('MENU')}
-            className="flex items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-6 py-3 rounded text-xl font-bold uppercase transition-colors"
+            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 md:px-6 py-2 rounded text-sm md:text-base font-bold uppercase transition-colors"
           >
-            <ArrowLeft size={24} /> Назад
+            <ArrowLeft size={16} /> Назад
           </button>
         </div>
       </div>

@@ -14,12 +14,16 @@ import { BuildButton } from './components/BuildButton';
 import { GameHUD } from './components/GameHUD';
 import { DebugMenu } from './components/DebugMenu';
 import { FPSCounter } from './components/FPSCounter';
+import { useTouchControls } from './components/mobile/useTouchControls';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine>(new GameEngine());
   const [gameState, setGameState] = useState<GameState>(engineRef.current.state);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+
+  const [isCommandMode, setIsCommandMode] = useState(false);
+  useTouchControls(canvasRef, engineRef, isCommandMode);
 
   useEffect(() => {
     const handleResize = () => {
@@ -132,7 +136,7 @@ export default function App() {
 
   const drawLoop = (time: number) => {
     // Edge panning (Drawing loop handles input/panning for smoothness)
-    if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current) {
+    if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current && window.innerWidth > 768) {
       const dt = 16; // Standard frame target
       const maxScrollSpeed = 1.0 * dt;
       const edgeThreshold = 60;
@@ -1632,7 +1636,7 @@ export default function App() {
 
   return (
     <div 
-      className="flex h-screen bg-black overflow-hidden font-sans text-white select-none"
+      className="fixed inset-0 flex flex-row bg-black overflow-hidden font-sans text-white select-none"
       onContextMenu={(e) => e.preventDefault()}
     >
       {appState === 'MENU' && (
@@ -1693,7 +1697,7 @@ export default function App() {
           <div className="relative flex-1 bg-zinc-900 cursor-crosshair overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={Math.max(100, windowSize.width - 280)}
+          width={Math.max(100, windowSize.width - (windowSize.width >= 768 ? 240 : 140))}
           height={windowSize.height}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -1705,7 +1709,9 @@ export default function App() {
         />
       </div>
 
-      <GameHUD gameState={gameState} engineRef={engineRef} setGameState={setGameState} />
+      <div className="z-20">
+         <GameHUD gameState={gameState} engineRef={engineRef} setGameState={setGameState} />
+      </div>
 
       {/* Emergency Credits */}
       {gameState.credits < 500 && !gameState.entities.some(e => e.owner === engineRef.current.localPlayerId && e.subType === 'HARVESTER') && (
@@ -1721,6 +1727,21 @@ export default function App() {
           </button>
         </div>
       )}
+      {/* Mobile Command Toggle */}
+      <div className="md:hidden absolute bottom-4 left-4 z-50">
+        <button
+          className={`px-3 py-2 text-sm font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 ${
+            isCommandMode 
+              ? 'bg-red-600 hover:bg-red-500 text-white border-2 border-red-400' 
+              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-2 border-zinc-600'
+          }`}
+          onClick={() => setIsCommandMode(!isCommandMode)}
+          onPointerDown={(e) => e.stopPropagation()} // Prevent touches on button from panning
+        >
+          {isCommandMode ? 'ОТМЕНА' : 'КОМАНДОВАТЬ'}
+        </button>
+      </div>
+
       <GameOverScreen gameState={gameState} />
         </>
       )}
