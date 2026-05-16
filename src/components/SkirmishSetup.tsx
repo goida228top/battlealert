@@ -138,10 +138,10 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-2 md:pb-4 pt-0.5 lg:pt-4">
+        <div className="flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-1 md:pb-4 pt-0 md:pt-4">
           <button 
             onClick={() => setAppState('MENU')}
-            className="flex-1 md:flex-none py-1 md:py-4 px-2 md:px-12 text-[9px] md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all cursor-pointer rounded-none"
+            className="flex-1 md:flex-none py-0.5 md:py-4 px-1 md:px-12 text-[8px] md:text-base font-black uppercase tracking-widest border md:border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all cursor-pointer rounded-none"
           >
             Назад
           </button>
@@ -163,7 +163,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
               setGameState(engineRef.current.state);
               setAppState('PLAYING');
             }}
-            className={`flex-1 md:flex-none py-1 md:py-4 px-2 md:px-16 text-[9px] md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none cursor-pointer ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
+            className={`flex-1 md:flex-none py-0.5 md:py-4 px-1 md:px-16 text-[8px] md:text-base font-black uppercase tracking-widest border md:border-2 transition-all rounded-none cursor-pointer ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
           >
             В БОЙ
           </button>
