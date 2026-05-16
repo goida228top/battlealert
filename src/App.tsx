@@ -17,12 +17,16 @@ import { DebugMenu } from './components/DebugMenu';
 import { FPSCounter } from './components/FPSCounter';
 import { useTouchControls } from './components/mobile/useTouchControls';
 
+import { OrientationWarning } from './components/OrientationWarning';
+
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine>(new GameEngine());
   const [gameState, setGameState] = useState<GameState>(engineRef.current.state);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [isFullscreen, setIsFullscreen] = useState(false);
+  const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+  const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
 
   const [isCommandMode, setIsCommandMode] = useState(false);
 
@@ -52,10 +56,25 @@ export default function App() {
   useEffect(() => {
     const handleResize = () => {
       setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+      const portrait = window.innerHeight > window.innerWidth;
+      setIsPortrait(portrait);
+
+      // If we just flipped to landscape on mobile, try to go fullscreen automatically
+      if (!portrait && isTouchDevice && !document.fullscreenElement) {
+        const docElm = document.documentElement as any;
+        const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+        if (requestMethod) {
+          requestMethod.call(docElm).catch(() => {});
+        }
+      }
     };
     window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
+    window.addEventListener('orientationchange', handleResize);
+    return () => {
+      window.removeEventListener('resize', handleResize);
+      window.removeEventListener('orientationchange', handleResize);
+    };
+  }, [isTouchDevice]);
 
   const texturesRef = useRef<Record<string, HTMLImageElement | HTMLCanvasElement>>({});
   const texturesLoadedCountRef = useRef<number>(0);
@@ -1826,6 +1845,8 @@ export default function App() {
       )}
 
       <GameOverScreen gameState={gameState} />
+      
+      {isTouchDevice && isPortrait && <OrientationWarning />}
         </>
       )}
     </div>
