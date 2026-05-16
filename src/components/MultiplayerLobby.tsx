@@ -84,7 +84,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white overflow-hidden">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
 
-      <div className="relative z-10 flex flex-col h-full p-2 md:p-4 w-full overflow-hidden">
+      <div className="relative z-10 flex flex-col h-full p-2 md:p-4 max-w-6xl mx-auto w-full overflow-hidden">
         <div className="shrink-0 flex flex-col md:flex-row items-start md:items-center justify-between mb-2 md:mb-4 pb-2 border-b border-zinc-800 gap-2 md:gap-4">
           <div>
             <h1 className="text-xl md:text-2xl font-black uppercase text-red-500 flex items-center gap-2">
@@ -143,10 +143,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           </div>
         </div>
 
-        <div className="shrink-0 flex justify-between pb-6 lg:pb-4 pt-2">
+        <div className="shrink-0 flex justify-between pb-1.5 md:pb-4 pt-1">
           <button
             onClick={() => setAppState('MENU')}
-            className="flex w-full lg:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 lg:px-6 py-1 lg:py-2 rounded-none text-xs lg:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700"
+            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-6 py-1.5 rounded-none text-[10px] md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700 cursor-pointer"
           >
             <ArrowLeft size={16} /> Назад
           </button>
