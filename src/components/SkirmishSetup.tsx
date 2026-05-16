@@ -29,14 +29,14 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-y-auto">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
-      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-8 min-h-0">
-        <h1 className="text-xl md:text-4xl font-black text-red-600 mb-2 md:mb-8 uppercase tracking-tighter font-display text-center md:text-left">
+      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-4 lg:p-8 min-h-min">
+        <h1 className="text-xl md:text-3xl lg:text-4xl font-black text-red-600 mb-2 md:mb-4 uppercase tracking-tighter font-display text-center md:text-left">
           Настройка Сражения
         </h1>
         
-        <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-8 min-h-0 overflow-y-auto md:overflow-visible">
+        <div className="flex-1 flex flex-col md:flex-row gap-2 md:gap-4 lg:gap-8 min-h-min">
           {/* Left Panel: Player Settings */}
-          <div className="flex-1 bg-zinc-900/80 border border-zinc-700 p-3 md:p-6 flex flex-col gap-2 md:gap-6">
+          <div className="flex-1 bg-zinc-900/80 border border-zinc-700 p-3 md:p-4 flex flex-col gap-2 md:gap-4">
             <h2 className="text-base md:text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-1 md:pb-2">Настройка игрока</h2>
             
             <div className="flex flex-col gap-2 md:gap-4">
