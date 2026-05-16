@@ -143,7 +143,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white overflow-hidden">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
-      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-8 max-w-6xl mx-auto w-full min-h-0">
+      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-8 w-full min-h-0">
         <div className="flex-1 overflow-y-auto pr-1">
           <h1 className="text-xl md:text-4xl font-black text-red-600 mb-1 md:mb-2 uppercase tracking-tighter font-display text-center md:text-left">
             Игровая Комната {roomInfo ? `- ${roomInfo.name}` : ''}
@@ -191,7 +191,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                          <User size={18} className={`${TEXT_COLOR_MAP[player.color] || 'text-zinc-400'} md:w-6 md:h-6`} />
                       )}
                       <span className="font-bold text-xs md:text-lg truncate max-w-[80px] md:max-w-none">{player.name} {player.id === socket.id ? '(Вы)' : ''}</span>
-                      {player.isHost && <span className="text-[8px] md:text-xs bg-red-600 px-1 md:px-2 py-0.5 md:py-1 text-white font-bold ml-1">ХОСТ</span>}
+                      {player.isHost && <span className="text-[8px] md:text-xs bg-red-600 px-1 md:px-2 py-0.5 md:py-1 text-white font-bold ml-1 rounded-none">ХОСТ</span>}
                     </div>
                     <div className="flex items-center gap-2 md:gap-4">
                       {player.id === socket.id ? (
@@ -217,7 +217,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                         </span>
                       )}
 
-                      <span className={`px-1 md:px-3 py-0.5 md:py-1 font-bold text-[8px] md:text-xs uppercase ${player.ready ? 'bg-green-600/20 text-green-500' : 'bg-yellow-600/20 text-yellow-500'}`}>
+                      <span className={`px-1 md:px-3 py-0.5 md:py-1 font-bold text-[8px] md:text-xs uppercase rounded-none ${player.ready ? 'bg-green-600/20 text-green-500' : 'bg-yellow-600/20 text-yellow-500'}`}>
                         {player.ready ? 'Готов' : 'Ждет'}
                       </span>
                       
@@ -279,7 +279,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}
-            className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
+            className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none"
           >
             <ArrowLeft size={18} className="md:w-6 md:h-6" /> Покинуть
           </button>
@@ -287,7 +287,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
           <button 
             onClick={handleStart}
             disabled={players.length < 2 || !isHost}
-            className={`flex-1 md:flex-none py-2 md:py-4 px-4 md:px-16 text-xs md:text-base font-black uppercase tracking-widest border-2 transition-all ${
+            className={`flex-1 md:flex-none py-2 md:py-4 px-4 md:px-16 text-xs md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none ${
               players.length < 2 || !isHost
                 ? 'bg-zinc-800 text-zinc-600 border-zinc-700 cursor-not-allowed' 
                 : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)] cursor-pointer'

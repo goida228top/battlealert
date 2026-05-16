@@ -29,7 +29,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-hidden">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
-      <div className={`relative z-10 flex-1 flex flex-col p-2 md:p-4 lg:p-8 min-h-0 ${typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0) ? 'scale-[0.8] origin-top' : ''}`}>
+      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-4 lg:p-8 min-h-0 w-full">
         <div className="flex-1 overflow-y-auto pr-1">
           <h1 className="text-xl md:text-3xl lg:text-4xl font-black text-red-600 mb-2 md:mb-4 uppercase tracking-tighter font-display text-center md:text-left">
             Настройка Сражения
@@ -138,7 +138,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-2 md:pb-4 border-zinc-800 pt-2 lg:pt-4">
+        <div className="flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-6 md:pb-4 pt-2 lg:pt-4">
           <button 
             onClick={() => setAppState('MENU')}
             className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all"

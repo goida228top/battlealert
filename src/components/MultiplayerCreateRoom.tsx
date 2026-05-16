@@ -53,7 +53,7 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-hidden">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
-      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-4 max-w-6xl mx-auto w-full min-h-0">
+      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-4 w-full min-h-0">
         <div className="flex-1 overflow-y-auto pr-1">
           <h1 className="text-xl md:text-3xl font-black text-red-600 mb-2 md:mb-4 uppercase tracking-tighter font-display text-center md:text-left">
             Создание Комнаты
@@ -149,7 +149,7 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-2 md:mt-4 flex flex-col md:flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-1 md:pb-2 border-t border-zinc-800 pt-2 lg:pt-4">
+        <div className="mt-2 md:mt-4 flex flex-col md:flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-6 md:pb-2 pt-2 lg:pt-4">
           <button 
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
             className="flex-1 md:flex-none w-full md:w-auto py-2 px-6 md:px-12 text-sm md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all rounded-none"
