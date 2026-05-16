@@ -1725,7 +1725,7 @@ export default function App() {
           <div className="relative flex-1 bg-zinc-900 cursor-crosshair overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={Math.max(100, windowSize.width - (windowSize.width >= 1024 ? 220 : 240))}
+          width={Math.max(100, windowSize.width - (windowSize.width >= 1024 ? 220 : 185))}
           height={windowSize.height}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
