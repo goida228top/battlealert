@@ -53,35 +53,37 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  const handleResize = () => {
-    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-    const portrait = window.innerHeight > window.innerWidth;
-    setIsPortrait(portrait);
-
-    // If we just flipped to landscape on mobile, try to go fullscreen automatically
-    if (!portrait && isTouchDevice && !document.fullscreenElement) {
+  const applyFullscreen = (forcedPortrait?: boolean) => {
+    const portrait = forcedPortrait !== undefined ? forcedPortrait : (window.innerHeight > window.innerWidth);
+    if (isTouchDevice && !portrait && !document.fullscreenElement) {
       const docElm = document.documentElement as any;
       const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
-      if (requestMethod) {
-        requestMethod.call(docElm).catch(() => {});
+      if (typeof requestMethod === 'function') {
+        requestMethod.call(docElm).catch(() => {
+          // Failure is expected if not triggered by user gesture
+        });
       }
     }
   };
 
+  const handleResize = () => {
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    const portrait = window.innerHeight > window.innerWidth;
+    setIsPortrait(portrait);
+    
+    // Try immediate fullscreen on orientation change/resize
+    if (!portrait) {
+      applyFullscreen(false);
+    }
+  };
+
   useEffect(() => {
-    // Attempt fullscreen on first interaction if in landscape
-    const autoFullscreen = () => {
-      if (!isPortrait && isTouchDevice && !document.fullscreenElement) {
-        const docElm = document.documentElement as any;
-        const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
-        if (requestMethod) {
-          requestMethod.call(docElm).catch(() => {});
-        }
-      }
+    const interactionHandler = () => {
+      applyFullscreen();
     };
 
-    window.addEventListener('touchstart', autoFullscreen, { once: false });
-    window.addEventListener('click', autoFullscreen, { once: false });
+    window.addEventListener('touchstart', interactionHandler);
+    window.addEventListener('click', interactionHandler);
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
 
@@ -89,8 +91,8 @@ export default function App() {
     handleResize();
 
     return () => {
-      window.removeEventListener('touchstart', autoFullscreen);
-      window.removeEventListener('click', autoFullscreen);
+      window.removeEventListener('touchstart', interactionHandler);
+      window.removeEventListener('click', interactionHandler);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
