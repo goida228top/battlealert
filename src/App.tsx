@@ -27,13 +27,16 @@ export default function App() {
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
-      document.documentElement.requestFullscreen().catch((err) => {
-        console.error(`Error attempting to enable fullscreen: ${err.message}`);
-      });
-    } else {
-      if (document.exitFullscreen) {
-        document.exitFullscreen();
+      const docElm = document.documentElement as any;
+      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+      
+      if (requestMethod) {
+        requestMethod.call(docElm).catch((err: any) => {
+          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+        });
       }
+    } else if (document.exitFullscreen) {
+        document.exitFullscreen();
     }
   };
 

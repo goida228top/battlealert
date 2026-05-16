@@ -151,8 +151,13 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
               engineRef.current.resetGame(selectedFaction, selectedCountry, selectedMap, botDiff);
               
               const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
-              if (isTouchDevice && !document.fullscreenElement) {
-                document.documentElement.requestFullscreen().catch(() => {});
+              const docElm = document.documentElement as any;
+              const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+              
+              if (isTouchDevice && !document.fullscreenElement && requestMethod) {
+                try {
+                  requestMethod.call(docElm).catch(() => {});
+                } catch (e) {}
               }
               
               setGameState(engineRef.current.state);

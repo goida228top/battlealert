@@ -114,6 +114,16 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
 
   const handleStart = () => {
     if (roomInfo && players.length >= 2) {
+      const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+      const docElm = document.documentElement as any;
+      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+      
+      if (isTouchDevice && !document.fullscreenElement && requestMethod) {
+        try {
+          requestMethod.call(docElm).catch(() => {});
+        } catch (e) {}
+      }
+      
       socket.emit('start_game', roomInfo.id);
     }
   };
