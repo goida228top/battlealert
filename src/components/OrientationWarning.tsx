@@ -11,7 +11,7 @@ export const OrientationWarning: React.FC = () => {
       
       <div className="relative z-10 flex flex-col items-center max-w-sm">
         <motion.div
-          animate={{ rotate: [0, 90, 90, 0] }}
+          animate={{ rotate: [0, -90, -90, 0] }}
           transition={{ duration: 2, repeat: Infinity, ease: "easeInOut", times: [0, 0.4, 0.6, 1] }}
           className="mb-8"
         >

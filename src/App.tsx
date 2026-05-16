@@ -68,6 +68,16 @@ export default function App() {
         }
       }
     };
+
+    // Initial check for fullscreen if started in landscape
+    if (!isPortrait && isTouchDevice && !document.fullscreenElement) {
+      const docElm = document.documentElement as any;
+      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+      if (requestMethod) {
+        requestMethod.call(docElm).catch(() => {});
+      }
+    }
+
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
     return () => {
