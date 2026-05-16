@@ -1548,7 +1548,7 @@ export default function App() {
     }
 
     // Hover Tooltip
-    if (mousePosRef.current) {
+    if (mousePosRef.current && !isTouchDevice) {
       const worldX = (mousePosRef.current.x - camera.x) / camera.zoom;
       const worldY = (mousePosRef.current.y - camera.y) / camera.zoom;
       
