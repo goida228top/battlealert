@@ -64,14 +64,8 @@ export class FogOfWar {
             data[idx + 1] = 0;
             data[idx + 2] = 0;
             data[idx + 3] = 255; 
-          } else if (vis === 1) {
-            // Explored (Fog of War): Dark semi-transparent black
-            data[idx] = 0;
-            data[idx + 1] = 0;
-            data[idx + 2] = 0;
-            data[idx + 3] = 180; // Dark fog
           } else {
-            // Visible: Fully transparent
+            // Explored or Visible: Fully transparent
             data[idx] = 0;
             data[idx + 1] = 0;
             data[idx + 2] = 0;
