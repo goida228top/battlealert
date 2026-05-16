@@ -24,7 +24,6 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [isCommandMode, setIsCommandMode] = useState(false);
-  useTouchControls(canvasRef, engineRef, isCommandMode, appState);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -66,6 +65,8 @@ export default function App() {
   const [activeRoomId, setActiveRoomId] = useState<string | undefined>(undefined);
   const [playerName, setPlayerName] = useState<string>('Командир_' + Math.floor(Math.random() * 100));
   const mousePosRef = useRef<Vector2 | null>(null);
+
+  useTouchControls(canvasRef, engineRef, isCommandMode, appState);
 
   const globalMousePosRef = useRef<Vector2 | null>(null);
 
@@ -1724,7 +1725,7 @@ export default function App() {
           <div className="relative flex-1 bg-zinc-900 cursor-crosshair overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={Math.max(100, windowSize.width - (windowSize.width >= 1024 ? 280 : 220))}
+          width={Math.max(100, windowSize.width - (windowSize.width >= 1024 ? 220 : 240))}
           height={windowSize.height}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -1732,7 +1733,7 @@ export default function App() {
           onMouseLeave={handleMouseLeave}
           onWheel={handleWheel}
           onContextMenu={onContextMenu}
-          className="block w-full h-full"
+          className="block w-full h-full touch-none"
         />
       </div>
 
