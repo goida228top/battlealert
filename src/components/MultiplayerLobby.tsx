@@ -17,6 +17,7 @@ interface MultiplayerLobbyProps {
 }
 
 export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState, setRoomId, playerName }) => {
+  const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
   const [rooms, setRooms] = useState<Room[]>([]);
   const [status, setStatus] = useState<string>('Подключение...');
   const [stats, setStats] = useState<{ online: number; rooms: number } | null>(null);
@@ -109,12 +110,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           <div className="flex flex-row gap-2 w-full md:w-auto">
             <button
               onClick={() => setAppState('MULTIPLAYER_CREATE')}
-              className="flex-1 md:flex-none flex justify-center items-center gap-2 bg-red-700 hover:bg-red-600 px-3 md:px-4 py-2 rounded-none text-[10px] md:text-sm font-bold uppercase transition-colors shadow-lg"
+              className={`flex-1 md:flex-none flex justify-center items-center gap-2 bg-red-700 hover:bg-red-600 px-3 md:px-4 rounded-none font-bold uppercase transition-colors shadow-lg ${isTouchDevice ? 'py-1.5 text-[10px]' : 'py-2 text-sm'}`}
             >
               <PlusSquare size={16} className="w-4 h-4 md:w-5 md:h-5" /> Создать
             </button>
             <button
-              className="flex-1 md:flex-none flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-4 py-2 rounded-none text-[10px] md:text-sm font-bold uppercase transition-colors"
+              className={`flex-1 md:flex-none flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-4 rounded-none font-bold uppercase transition-colors ${isTouchDevice ? 'py-1.5 text-[10px]' : 'py-2 text-sm'}`}
               onClick={() => socket.emit('get_rooms')}
             >
               Обновить
@@ -156,7 +157,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
         <div className="shrink-0 flex justify-between pb-1.5 md:pb-4 pt-1">
           <button
             onClick={() => setAppState('MENU')}
-            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-6 py-1.5 md:py-4 rounded-none text-[10px] md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700 cursor-pointer"
+            className={`flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 font-bold uppercase tracking-widest transition-colors border border-zinc-700 cursor-pointer ${isTouchDevice ? 'py-1.5 px-3 text-[10px]' : 'py-4 px-6 text-base'}`}
           >
             <ArrowLeft size={16} /> Назад
           </button>

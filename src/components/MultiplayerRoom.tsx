@@ -60,6 +60,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   roomId,
   playerName
 }) => {
+  const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
   const [players, setPlayers] = useState<any[]>([]);
   const [roomInfo, setRoomInfo] = useState<any>(null);
   const [chatMessages, setChatMessages] = useState<{sender: string, text: string}[]>([]);
@@ -181,7 +182,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                       onClick={() => {
                         socket.emit('add_bot', { roomId: roomInfo?.id, difficulty: botDifficulty });
                       }}
-                      className="bg-zinc-800 hover:bg-zinc-700 text-[10px] md:text-sm px-2 md:px-3 py-1 border border-zinc-600 flex items-center gap-2 transition-colors rounded-none cursor-pointer"
+                      className={`bg-zinc-800 hover:bg-zinc-700 px-2 md:px-3 py-1 border border-zinc-600 flex items-center gap-2 transition-colors rounded-none cursor-pointer ${isTouchDevice ? 'text-[10px]' : 'text-sm'}`}
                     >
                       <Bot size={14} className="md:w-4 md:h-4" /> +Бот
                     </button>
@@ -274,7 +275,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                   placeholder="Текст..." 
                   className="flex-1 bg-zinc-800/50 border border-zinc-700 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-sm text-white outline-none focus:border-red-500 transition-colors"
                 />
-                <button onClick={sendChatMessage} className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-3 md:px-4 font-bold uppercase transition-colors text-xs md:text-base cursor-pointer">
+                <button onClick={sendChatMessage} className={`bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-3 md:px-4 font-bold uppercase transition-colors cursor-pointer ${isTouchDevice ? 'text-xs' : 'text-base'}`}>
                   &gt;
                 </button>
               </div>
@@ -289,7 +290,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}
-            className="flex-1 md:flex-none py-1.5 md:py-4 px-3 md:px-12 text-[10px] md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none"
+            className={`flex-1 md:flex-none px-3 font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none ${isTouchDevice ? 'py-1.5 text-[10px]' : 'py-4 md:px-12 text-base'}`}
           >
             <ArrowLeft size={18} className="md:w-6 md:h-6" /> Покинуть
           </button>
@@ -297,11 +298,11 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
           <button 
             onClick={handleStart}
             disabled={players.length < 2 || !isHost}
-            className={`flex-1 md:flex-none py-1.5 md:py-4 px-3 md:px-16 text-[10px] md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none ${
+            className={`flex-1 md:flex-none px-3 font-black uppercase tracking-widest border-2 transition-all rounded-none ${
               players.length < 2 || !isHost
                 ? 'bg-zinc-800 text-zinc-600 border-zinc-700 cursor-not-allowed' 
                 : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)] cursor-pointer'
-            }`}
+            } ${isTouchDevice ? 'py-1.5 text-[10px]' : 'py-4 md:px-16 text-base'}`}
           >
             {isHost ? 'В БОЙ' : 'ЖДЕМ ХОСТА'}
           </button>
