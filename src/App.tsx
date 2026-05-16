@@ -18,6 +18,7 @@ import { FPSCounter } from './components/FPSCounter';
 import { useTouchControls } from './components/mobile/useTouchControls';
 
 import { OrientationWarning } from './components/OrientationWarning';
+import { FullscreenPrompt } from './components/FullscreenPrompt';
 
 export default function App() {
   const canvasRef = useRef<HTMLCanvasElement>(null);
@@ -26,6 +27,7 @@ export default function App() {
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [isPortrait, setIsPortrait] = useState(window.innerHeight > window.innerWidth);
+  const [showFullscreenPrompt, setShowFullscreenPrompt] = useState(false);
   const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
 
   const [isCommandMode, setIsCommandMode] = useState(false);
@@ -37,7 +39,8 @@ export default function App() {
       
       if (typeof requestMethod === 'function') {
         requestMethod.call(docElm).catch(() => {
-          // Silent catch for iOS or browsers requiring user gesture
+          // Failure is expected if not triggered by user gesture
+          setShowFullscreenPrompt(true);
         });
       }
     } else if (typeof document.exitFullscreen === 'function') {
@@ -48,6 +51,9 @@ export default function App() {
   useEffect(() => {
     const handleFullscreenChange = () => {
       setIsFullscreen(!!document.fullscreenElement);
+      if (!!document.fullscreenElement) {
+        setShowFullscreenPrompt(false);
+      }
     };
     document.addEventListener('fullscreenchange', handleFullscreenChange);
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
@@ -61,6 +67,7 @@ export default function App() {
       if (typeof requestMethod === 'function') {
         requestMethod.call(docElm).catch(() => {
           // Failure is expected if not triggered by user gesture
+          setShowFullscreenPrompt(true);
         });
       }
     }
@@ -74,6 +81,8 @@ export default function App() {
     // Try immediate fullscreen on orientation change/resize
     if (!portrait) {
       applyFullscreen(false);
+    } else {
+      setShowFullscreenPrompt(false);
     }
   };
 
@@ -97,6 +106,12 @@ export default function App() {
       window.removeEventListener('orientationchange', handleResize);
     };
   }, [isTouchDevice, isPortrait]);
+
+  useEffect(() => {
+    if (!isFullscreen && !isPortrait && isTouchDevice) {
+      setShowFullscreenPrompt(true);
+    }
+  }, [isFullscreen, isPortrait, isTouchDevice]);
 
   const texturesRef = useRef<Record<string, HTMLImageElement | HTMLCanvasElement>>({});
   const texturesLoadedCountRef = useRef<number>(0);
@@ -1868,6 +1883,16 @@ export default function App() {
 
       <GameOverScreen gameState={gameState} />
         </>
+      )}
+      
+      {showFullscreenPrompt && (
+        <FullscreenPrompt 
+          onAccept={() => {
+            toggleFullScreen();
+            setShowFullscreenPrompt(false);
+          }}
+          onDecline={() => setShowFullscreenPrompt(false)}
+        />
       )}
 
       {isTouchDevice && isPortrait && <OrientationWarning />}
