@@ -1845,10 +1845,10 @@ export default function App() {
       )}
 
       <GameOverScreen gameState={gameState} />
-      
-      {isTouchDevice && isPortrait && <OrientationWarning />}
         </>
       )}
+
+      {isTouchDevice && isPortrait && <OrientationWarning />}
     </div>
   );
 }

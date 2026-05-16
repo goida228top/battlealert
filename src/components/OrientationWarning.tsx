@@ -19,18 +19,18 @@ export const OrientationWarning: React.FC = () => {
         </motion.div>
 
         <h1 className="text-2xl font-black text-white uppercase tracking-tighter mb-4 font-display italic">
-          Командир, смените позицию!
+          Переверните экран
         </h1>
         
         <div className="w-16 h-1 bg-red-600 mb-6 shadow-[0_0_10px_rgba(220,38,38,0.8)]" />
         
         <p className="text-zinc-400 font-bold uppercase tracking-widest text-xs leading-relaxed mb-8">
-          Для тактического превосходства и управления базой переверните устройство в <span className="text-red-500">альбомный режим</span>
+          Для игры переверните устройство в <span className="text-red-500">горизонтальный режим</span>
         </p>
 
         <div className="flex items-center gap-3 text-zinc-600 text-[10px] font-black uppercase tracking-widest border border-zinc-800 px-4 py-2 rounded-full bg-black/40">
           <RotateCw size={14} className="animate-spin-slow" />
-          <span>Ожидание маневра...</span>
+          <span>Ожидание...</span>
         </div>
       </div>
 
