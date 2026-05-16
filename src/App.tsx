@@ -53,38 +53,48 @@ export default function App() {
     return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
   }, []);
 
-  useEffect(() => {
-    const handleResize = () => {
-      setWindowSize({ width: window.innerWidth, height: window.innerHeight });
-      const portrait = window.innerHeight > window.innerWidth;
-      setIsPortrait(portrait);
+  const handleResize = () => {
+    setWindowSize({ width: window.innerWidth, height: window.innerHeight });
+    const portrait = window.innerHeight > window.innerWidth;
+    setIsPortrait(portrait);
 
-      // If we just flipped to landscape on mobile, try to go fullscreen automatically
-      if (!portrait && isTouchDevice && !document.fullscreenElement) {
+    // If we just flipped to landscape on mobile, try to go fullscreen automatically
+    if (!portrait && isTouchDevice && !document.fullscreenElement) {
+      const docElm = document.documentElement as any;
+      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+      if (requestMethod) {
+        requestMethod.call(docElm).catch(() => {});
+      }
+    }
+  };
+
+  useEffect(() => {
+    // Attempt fullscreen on first interaction if in landscape
+    const autoFullscreen = () => {
+      if (!isPortrait && isTouchDevice && !document.fullscreenElement) {
         const docElm = document.documentElement as any;
         const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
-        if (typeof requestMethod === 'function') {
+        if (requestMethod) {
           requestMethod.call(docElm).catch(() => {});
         }
       }
     };
 
-    // Initial check for fullscreen if started in landscape
-    if (!isPortrait && isTouchDevice && !document.fullscreenElement) {
-      const docElm = document.documentElement as any;
-      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
-      if (typeof requestMethod === 'function') {
-        requestMethod.call(docElm).catch(() => {});
-      }
-    }
-
+    window.addEventListener('touchstart', autoFullscreen, { once: false });
+    window.addEventListener('click', autoFullscreen, { once: false });
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
+
+    // Initial check
+    handleResize();
+
     return () => {
+      window.removeEventListener('touchstart', autoFullscreen);
+      window.removeEventListener('click', autoFullscreen);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [isTouchDevice]);
+  }, [isTouchDevice, isPortrait]);
 
   const texturesRef = useRef<Record<string, HTMLImageElement | HTMLCanvasElement>>({});
   const texturesLoadedCountRef = useRef<number>(0);
