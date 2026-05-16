@@ -21,9 +21,30 @@ export default function App() {
   const engineRef = useRef<GameEngine>(new GameEngine());
   const [gameState, setGameState] = useState<GameState>(engineRef.current.state);
   const [windowSize, setWindowSize] = useState({ width: window.innerWidth, height: window.innerHeight });
+  const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [isCommandMode, setIsCommandMode] = useState(false);
   useTouchControls(canvasRef, engineRef, isCommandMode);
+
+  const toggleFullScreen = () => {
+    if (!document.fullscreenElement) {
+      document.documentElement.requestFullscreen().catch((err) => {
+        console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      });
+    } else {
+      if (document.exitFullscreen) {
+        document.exitFullscreen();
+      }
+    }
+  };
+
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      setIsFullscreen(!!document.fullscreenElement);
+    };
+    document.addEventListener('fullscreenchange', handleFullscreenChange);
+    return () => document.removeEventListener('fullscreenchange', handleFullscreenChange);
+  }, []);
 
   useEffect(() => {
     const handleResize = () => {
@@ -136,7 +157,8 @@ export default function App() {
 
   const drawLoop = (time: number) => {
     // Edge panning (Drawing loop handles input/panning for smoothness)
-    if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current && window.innerWidth > 768) {
+    const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current && window.innerWidth > 768 && !isTouchDevice) {
       const dt = 16; // Standard frame target
       const maxScrollSpeed = 1.0 * dt;
       const edgeThreshold = 60;
@@ -1727,8 +1749,15 @@ export default function App() {
           </button>
         </div>
       )}
-      {/* Mobile Command Toggle */}
+      {/* Mobile Controls */}
       <div className="lg:hidden absolute bottom-4 left-4 z-50 flex flex-col gap-2">
+        <button
+          className="px-2.5 py-1.5 text-xs font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-2 border-zinc-600"
+          onClick={toggleFullScreen}
+          onPointerDown={(e) => e.stopPropagation()}
+        >
+          {isFullscreen ? 'ВЫЙТИ ИЗ ПОЛНОГО' : 'ПОЛНЫЙ ЭКРАН'}
+        </button>
         <button
           className={`px-2.5 py-1.5 text-xs font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 ${
             isCommandMode 
