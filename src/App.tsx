@@ -3,7 +3,7 @@ import { GameEngine } from './game/GameEngine';
 import { BuildingType, GameState, Vector2 } from './game/types';
 import { getBuildingDimensions } from './game/systems/getBuildingDimensions';
 import { FogOfWar } from './game/systems/FogOfWar';
-import { Zap, Shield, Factory, Coins, MousePointer2, Users, Truck, Wrench, DollarSign, XCircle, Lock, Radar, Activity, Crosshair, Skull, Target, Wind, Layers, ShieldAlert, Bomb, Cpu, Anchor, Waves, Square, User, Car } from 'lucide-react';
+import { Zap, Shield, Factory, Coins, MousePointer2, Users, Truck, Wrench, DollarSign, XCircle, Lock, Radar, Activity, Crosshair, Skull, Target, Wind, Layers, ShieldAlert, Bomb, Cpu, Anchor, Waves, Square, User, Car, Check, Trash2 } from 'lucide-react';
 import { MainMenu } from './components/MainMenu';
 import { SkirmishSetup } from './components/SkirmishSetup';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
@@ -66,7 +66,7 @@ export default function App() {
   const [playerName, setPlayerName] = useState<string>('Командир_' + Math.floor(Math.random() * 100));
   const mousePosRef = useRef<Vector2 | null>(null);
 
-  useTouchControls(canvasRef, engineRef, isCommandMode, appState);
+  useTouchControls(canvasRef, engineRef, isCommandMode, appState, mousePosRef);
 
   const globalMousePosRef = useRef<Vector2 | null>(null);
 
@@ -1735,6 +1735,34 @@ export default function App() {
           onContextMenu={onContextMenu}
           className="block w-full h-full touch-none"
         />
+
+        {/* Mobile Placement Confirm/Cancel */}
+        {gameState.placingBuilding && (
+          <div className="lg:hidden absolute bottom-4 right-4 z-50 flex gap-2">
+            <button
+              className="bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.5)] border-2 border-zinc-500"
+              onClick={() => {
+                 engineRef.current.state.placingBuilding = null;
+                 setGameState({ ...engineRef.current.state });
+              }}
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+            <button
+              className="bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.5)] border-2 border-zinc-500"
+              onClick={() => {
+                if (mousePosRef.current) {
+                  const placePos = engineRef.current.screenToWorld(mousePosRef.current);
+                  engineRef.current.handleMouseDown(placePos, false, false);
+                  engineRef.current.handleMouseUp(false);
+                  setGameState({ ...engineRef.current.state });
+                }
+              }}
+            >
+              <Check className="w-4 h-4" />
+            </button>
+          </div>
+        )}
       </div>
 
       <div className="z-20">

@@ -5,7 +5,8 @@ export function useTouchControls(
   canvasRef: React.RefObject<HTMLCanvasElement>,
   engineRef: React.MutableRefObject<GameEngine | null>,
   isCommandMode: boolean = false,
-  appState: string = 'MAIN_MENU'
+  appState: string = 'MAIN_MENU',
+  mousePosRef?: React.MutableRefObject<any>
 ) {
   const touchState = useRef({
     initialPinchDistance: 0,
@@ -162,10 +163,14 @@ export function useTouchControls(
              const screenPos = { x: touchState.current.startX - rect.left, y: touchState.current.startY - rect.top };
              const worldPos = engine.screenToWorld(screenPos);
              
-             // Check for double click logic handled automatically by GameEngine 
-             // but we must send Mousedown then Mouseup quickly
-             engine.handleMouseDown(worldPos, false, false);
-             engine.handleMouseUp(false); // isAdditive = false
+             if (engine.state.placingBuilding && mousePosRef) {
+                 mousePosRef.current = screenPos;
+             } else {
+                 // Check for double click logic handled automatically by GameEngine 
+                 // but we must send Mousedown then Mouseup quickly
+                 engine.handleMouseDown(worldPos, false, false);
+                 engine.handleMouseUp(false); // isAdditive = false
+             }
              
           } else if (touchState.current.isLeftDragStarted) {
              // Finish Left Drag

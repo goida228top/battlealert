@@ -8,25 +8,25 @@ interface MainMenuProps {
 
 export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, setPlayerName }) => {
   return (
-    <div className="absolute inset-0 z-[200] flex flex-col lg:flex-row bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-y-auto overflow-x-hidden">
+    <div className="absolute inset-0 z-[200] flex flex-row bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-hidden">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm pointer-events-none" />
       
       {/* Left side - Logo & Nickname */}
-      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-4 min-h-min py-8">
-        <h1 className="text-6xl lg:text-[9rem] leading-none font-black text-red-600 mb-4 lg:mb-6 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] font-display text-center">
+      <div className="relative z-10 flex-1 flex flex-col items-center justify-center p-2 lg:p-4 min-h-0">
+        <h1 className="text-4xl sm:text-6xl lg:text-[9rem] leading-none font-black text-red-600 mb-2 lg:mb-6 uppercase tracking-tighter drop-shadow-[0_0_15px_rgba(220,38,38,0.8)] font-display text-center">
           Battle<br />Alert
         </h1>
         
         {/* Nickname Input */}
-        <div className="mt-2 lg:mt-4 flex flex-col items-center bg-black/60 p-4 border border-zinc-800 rounded">
-          <label className="text-zinc-400 font-bold uppercase tracking-widest text-xs lg:text-sm mb-2">
+        <div className="mt-2 lg:mt-4 flex flex-col items-center bg-black/60 p-2 sm:p-4 border border-zinc-800 rounded">
+          <label className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] lg:text-sm mb-1 lg:mb-2">
             Ваш Позывной
           </label>
           <input 
             type="text" 
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="w-48 lg:w-64 bg-zinc-900 border-2 border-zinc-700 focus:border-red-500 text-white text-center font-bold text-base lg:text-xl py-2 px-4 rounded outline-none transition-colors"
+            className="w-32 sm:w-48 lg:w-64 bg-zinc-900 border-2 border-zinc-700 focus:border-red-500 text-white text-center font-bold text-sm lg:text-xl py-1 lg:py-2 px-2 lg:px-4 rounded outline-none transition-colors"
             placeholder="Командир"
             maxLength={15}
           />
@@ -34,22 +34,22 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, set
       </div>
 
       {/* Right side - Menu Buttons */}
-      <div className="relative z-10 w-full lg:w-96 bg-zinc-950/80 border-t-2 lg:border-t-0 lg:border-l-2 border-red-900/50 p-6 flex flex-col justify-center min-h-min">
-        <div className="flex flex-col gap-4 w-full">
+      <div className="relative z-10 w-40 sm:w-64 lg:w-96 bg-zinc-950/80 border-l-2 border-red-900/50 p-4 lg:p-6 flex flex-col justify-center min-h-0">
+        <div className="flex flex-col gap-2 lg:gap-4 w-full">
           <button 
             onClick={() => setAppState('SKIRMISH_SETUP')}
-            className="w-full py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-b-4 lg:border-b-0 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
+            className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-l-2 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
           >
-            Сражение (С Ботами)
+            Сражение (Боты)
           </button>
           <button 
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
-            className="w-full py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-b-4 lg:border-b-0 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
+            className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-l-2 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
           >
             Мультиплеер
           </button>
           <button 
-            className="w-full py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-sm lg:text-xl text-zinc-600 cursor-not-allowed border-b-4 lg:border-b-0 lg:border-l-4 border-transparent"
+            className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-700 cursor-not-allowed border-l-2 lg:border-l-4 border-transparent"
           >
             Настройки
           </button>
