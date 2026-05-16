@@ -39,6 +39,16 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
   }, [setAppState, setRoomId]);
 
   const handleCreate = () => {
+    const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+    const docElm = document.documentElement as any;
+    const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+    
+    if (isTouchDevice && !document.fullscreenElement && typeof requestMethod === 'function') {
+      try {
+        requestMethod.call(docElm).catch(() => {});
+      } catch (e) {}
+    }
+
     socket.emit('create_room', {
       name: roomName,
       map: selectedMap,
@@ -152,13 +162,13 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
         <div className="mt-2 md:mt-4 flex flex-col md:flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-1.5 md:pb-2 border-t border-zinc-800 pt-1 lg:pt-4">
           <button 
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
-            className="flex-1 md:flex-none w-full md:w-auto py-1.5 px-3 md:px-12 text-[10px] md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all rounded-none cursor-pointer"
+            className="flex-1 md:flex-none w-full md:w-auto py-1.5 md:py-4 px-3 md:px-12 text-[10px] md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all rounded-none cursor-pointer"
           >
             Отмена
           </button>
           <button 
             onClick={handleCreate}
-            className={`flex-1 md:flex-none w-full md:w-auto py-1.5 px-3 md:px-16 text-[10px] md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none cursor-pointer ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
+            className={`flex-1 md:flex-none w-full md:w-auto py-1.5 md:py-4 px-3 md:px-16 text-[10px] md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none cursor-pointer ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
           >
             Создать
           </button>

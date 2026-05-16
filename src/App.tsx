@@ -227,7 +227,7 @@ export default function App() {
 
   const drawLoop = (time: number) => {
     // Edge panning (Drawing loop handles input/panning for smoothness)
-    const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+    const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
     if (appState === 'PLAYING' && globalMousePosRef.current && canvasRef.current && window.innerWidth > 768 && !isTouchDevice) {
       const dt = 16; // Standard frame target
       const maxScrollSpeed = 1.0 * dt;

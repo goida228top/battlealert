@@ -11,6 +11,7 @@ interface SettingsMenuProps {
 
 export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setAppState, settings, setSettings }) => {
   const [localSettings, setLocalSettings] = useState({ ...settings });
+  const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
 
   const handleSave = () => {
     setSettings(localSettings);
@@ -29,7 +30,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setAppState, setting
 
       <div className="flex-1 overflow-y-auto p-4 md:p-8 w-full">
         <div className="space-y-8">
-          {typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0) && (
+          {isTouchDevice && (
             <section id="settings-mobile-section">
               <div className="flex items-center gap-2 mb-4">
                 <Smartphone className="text-red-500" size={20} />
@@ -55,7 +56,7 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setAppState, setting
             </section>
           )}
 
-          {!((typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0))) && (
+          {!isTouchDevice && (
             <div className="text-zinc-500 italic text-center py-10 opacity-50">
               Настройки для ПК будут добавлены в будущих обновлениях.
             </div>

@@ -84,6 +84,16 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       const hostFaction = hostP?.faction || selectedFaction;
       const hostCountry = hostP?.country || selectedCountry;
       
+      const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+      const docElm = document.documentElement as any;
+      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+      
+      if (isTouchDevice && !document.fullscreenElement && typeof requestMethod === 'function') {
+        try {
+          requestMethod.call(docElm).catch(() => {});
+        } catch (e) {}
+      }
+      
       engineRef.current.resetGame(hostFaction, hostCountry, roomInfo?.map || selectedMap);
       engineRef.current.initMultiplayer(role, roomInfo?.id, socket, roomInfo);
       
@@ -112,7 +122,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
 
   const handleStart = () => {
     if (roomInfo && players.length >= 2) {
-      const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+      const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
       const docElm = document.documentElement as any;
       const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
       

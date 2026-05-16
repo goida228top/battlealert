@@ -74,6 +74,16 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
   }, [setAppState, setRoomId]);
 
   const handleJoin = (id: string) => {
+      const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
+      const docElm = document.documentElement as any;
+      const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
+      
+      if (isTouchDevice && !document.fullscreenElement && typeof requestMethod === 'function') {
+        try {
+          requestMethod.call(docElm).catch(() => {});
+        } catch (e) {}
+      }
+
       socket.emit('join_room', { 
          roomId: id,
          player: { name: playerName, faction: 'COALITION', country: 'AMERICA' } 
@@ -146,7 +156,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
         <div className="shrink-0 flex justify-between pb-1.5 md:pb-4 pt-1">
           <button
             onClick={() => setAppState('MENU')}
-            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-6 py-1.5 rounded-none text-[10px] md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700 cursor-pointer"
+            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-6 py-1.5 md:py-4 rounded-none text-[10px] md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700 cursor-pointer"
           >
             <ArrowLeft size={16} /> Назад
           </button>

@@ -150,7 +150,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
               const botDiff = (document.getElementById('skirmish-bot-difficulty') as HTMLSelectElement)?.value || 'NORMAL';
               engineRef.current.resetGame(selectedFaction, selectedCountry, selectedMap, botDiff);
               
-              const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+              const isTouchDevice = typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0);
               const docElm = document.documentElement as any;
               const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
               
