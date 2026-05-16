@@ -87,12 +87,6 @@ export default function App() {
   };
 
   useEffect(() => {
-    const interactionHandler = () => {
-      applyFullscreen();
-    };
-
-    window.addEventListener('touchstart', interactionHandler);
-    window.addEventListener('click', interactionHandler);
     window.addEventListener('resize', handleResize);
     window.addEventListener('orientationchange', handleResize);
 
@@ -100,12 +94,10 @@ export default function App() {
     handleResize();
 
     return () => {
-      window.removeEventListener('touchstart', interactionHandler);
-      window.removeEventListener('click', interactionHandler);
       window.removeEventListener('resize', handleResize);
       window.removeEventListener('orientationchange', handleResize);
     };
-  }, [isTouchDevice, isPortrait]);
+  }, [isTouchDevice]);
 
   useEffect(() => {
     if (!isFullscreen && !isPortrait && isTouchDevice) {
