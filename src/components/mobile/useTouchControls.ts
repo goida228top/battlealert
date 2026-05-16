@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react';
 import { GameEngine } from '../../game/GameEngine';
 
 export function useTouchControls(

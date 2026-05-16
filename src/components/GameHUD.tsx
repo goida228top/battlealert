@@ -61,7 +61,7 @@ export const GameHUD: React.FC<GameHUDProps> = ({ gameState, engineRef, setGameS
   };
 
   return (
-    <div className="w-[140px] md:w-[240px] h-full shrink-0 bg-zinc-950 border-l-2 border-zinc-800 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)] relative z-20 overflow-hidden">
+    <div className="w-[110px] md:w-[160px] h-full shrink-0 bg-zinc-950 border-l-2 border-zinc-800 flex flex-col shadow-[-10px_0_40px_rgba(0,0,0,0.8)] relative z-20 overflow-hidden">
       {/* Scanline Effect */}
       <div className="absolute inset-0 pointer-events-none opacity-[0.03] z-50 bg-[linear-gradient(rgba(18,16,16,0)_50%,rgba(0,0,0,0.25)_50%),linear-gradient(90deg,rgba(255,0,0,0.06),rgba(0,255,0,0.02),rgba(0,0,255,0.06))] bg-[length:100%_2px,3px_100%]" />
       

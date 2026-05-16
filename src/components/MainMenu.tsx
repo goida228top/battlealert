@@ -8,7 +8,7 @@ interface MainMenuProps {
 
 export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, setPlayerName }) => {
   return (
-    <div className="absolute inset-0 z-[200] flex flex-row bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-hidden">
+    <div className="absolute inset-0 z-[200] flex flex-col md:flex-row bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-auto md:overflow-hidden">
       <div className="absolute inset-0 bg-black/50 backdrop-blur-sm" />
       
       {/* Left side - Logo & Nickname */}
@@ -34,7 +34,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, set
       </div>
 
       {/* Right side - Menu Buttons */}
-      <div className="relative z-10 w-64 md:w-96 bg-zinc-950/80 border-l-2 border-red-900/50 p-6 md:p-8 flex flex-col justify-end">
+      <div className="relative z-10 w-full md:w-96 bg-zinc-950/80 border-t-2 md:border-t-0 md:border-l-2 border-red-900/50 p-6 md:p-8 flex flex-col justify-end">
         <div className="flex flex-col gap-4 md:mb-12">
           <button 
             onClick={() => setAppState('SKIRMISH_SETUP')}
