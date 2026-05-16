@@ -64,21 +64,21 @@ export const BuildButton: React.FC<BuildButtonProps> = ({
 
       {/* Label Bar (Bottom) */}
       <div className="absolute bottom-0 left-0 w-full bg-black/95 py-0.5 border-t border-zinc-800 z-30">
-        <span className="text-[10px] lg:text-xs font-black uppercase tracking-tighter text-zinc-400 block text-center truncate px-1">
+        <span className="text-[7px] lg:text-[8px] font-black uppercase tracking-tighter text-zinc-400 block text-center truncate px-1">
           {label}
         </span>
       </div>
 
       {/* Cost (Top Right) */}
       <div className="absolute top-[2px] right-[4px] z-30">
-        <span className={`text-[10px] font-mono font-bold tracking-tighter ${cannotAfford ? 'text-yellow-500 font-extrabold' : 'text-zinc-400'}`}>
+        <span className={`text-[7px] lg:text-[7px] font-mono font-bold tracking-tighter ${cannotAfford ? 'text-yellow-500 font-extrabold' : 'text-zinc-400'}`}>
           ${cost}
         </span>
       </div>
 
       {/* Queue Count Badge */}
       {count !== undefined && count > 1 && (
-        <div className="absolute top-0 left-0 bg-blue-600 text-white text-[8px] font-bold px-1.5 py-0.5 rounded-br z-40">
+        <div className="absolute top-0 left-0 bg-blue-600 text-white text-[6px] lg:text-[6px] font-bold px-1.5 py-0.5 rounded-br z-40">
           {count}
         </div>
       )}
@@ -87,11 +87,11 @@ export const BuildButton: React.FC<BuildButtonProps> = ({
       {progress !== undefined && progress < 100 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-40 pointer-events-none">
           {paused ? (
-            <span className="text-xs font-black text-yellow-500 uppercase">
+            <span className="text-[8px] lg:text-[8px] font-black text-yellow-500 uppercase">
               ПАУЗА
             </span>
           ) : (
-            <span className="text-xs font-mono font-black text-zinc-400">
+            <span className="text-[8px] lg:text-[8px] font-mono font-black text-zinc-400">
               {Math.floor(progress)}%
             </span>
           )}
@@ -101,21 +101,21 @@ export const BuildButton: React.FC<BuildButtonProps> = ({
       {/* Ready Text (Center) */}
       {progress !== undefined && progress >= 100 && (
         <div className="absolute inset-0 flex flex-col items-center justify-center z-40 pointer-events-none animate-pulse">
-          <span className="text-xs font-black text-zinc-100 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
+          <span className="text-[8px] lg:text-[8px] font-black text-zinc-100 uppercase tracking-widest drop-shadow-[0_0_5px_rgba(255,255,255,0.5)]">
             ГОТОВО
           </span>
           {onClick && active === undefined && !stuck && (
-            <span className="text-[8px] font-bold text-zinc-400 uppercase mt-0.5">
+            <span className="text-[6px] lg:text-[6px] font-bold text-zinc-400 uppercase mt-0.5">
               ВЫХОД...
             </span>
           )}
           {stuck && (
-            <span className="text-[8px] font-bold text-red-500 uppercase mt-0.5 animate-pulse">
+            <span className="text-[6px] lg:text-[6px] font-bold text-red-500 uppercase mt-0.5 animate-pulse">
               НУЖНО ЗДАНИЕ
             </span>
           )}
           {onClick && active !== undefined && (
-            <span className="text-[8px] font-bold text-red-500 uppercase mt-0.5 animate-bounce">
+            <span className="text-[6px] lg:text-[6px] font-bold text-red-500 uppercase mt-0.5 animate-bounce">
               РАЗМЕСТИТЬ
             </span>
           )}
