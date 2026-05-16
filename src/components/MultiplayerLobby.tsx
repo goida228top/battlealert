@@ -154,12 +154,13 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           </div>
         </div>
 
-        <div className="shrink-0 flex justify-between pb-1.5 md:pb-4 pt-1">
+        {/* Bottom Bar */}
+        <div className={`flex gap-4 shrink-0 ${isTouchDevice ? 'border-t border-zinc-800 bg-zinc-950 mt-auto p-2' : 'p-4 md:p-8'}`}>
           <button
             onClick={() => setAppState('MENU')}
-            className={`flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 font-bold uppercase tracking-widest transition-colors border border-zinc-700 cursor-pointer ${isTouchDevice ? 'py-1.5 px-3 text-[10px]' : 'py-4 px-6 text-base'}`}
+            className={`flex-1 px-3 font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all cursor-pointer rounded-none ${isTouchDevice ? 'py-1.5 text-[10px]' : 'py-4 md:px-12 text-base'}`}
           >
-            <ArrowLeft size={16} /> Назад
+            <ArrowLeft size={16} className="inline mr-2" /> Назад
           </button>
         </div>
       </div>
