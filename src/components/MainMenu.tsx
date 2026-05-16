@@ -1,7 +1,7 @@
 import React from 'react';
 
 interface MainMenuProps {
-  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY') => void;
+  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'SETTINGS') => void;
   playerName: string;
   setPlayerName: (name: string) => void;
 }
@@ -23,6 +23,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, set
             Ваш Позывной
           </label>
           <input 
+            id="nickname-input"
             type="text" 
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
@@ -37,19 +38,23 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, set
       <div className="relative z-10 w-40 sm:w-64 lg:w-96 bg-zinc-950/80 border-l-2 border-red-900/50 p-4 lg:p-6 flex flex-col justify-center min-h-0">
         <div className="flex flex-col gap-2 lg:gap-4 w-full">
           <button 
+            id="btn-skirmish"
             onClick={() => setAppState('SKIRMISH_SETUP')}
             className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-l-2 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
           >
             Сражение (Боты)
           </button>
           <button 
+            id="btn-multiplayer"
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
             className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-l-2 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
           >
             Мультиплеер
           </button>
           <button 
-            className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-700 cursor-not-allowed border-l-2 lg:border-l-4 border-transparent"
+            id="btn-settings"
+            onClick={() => setAppState('SETTINGS')}
+            className="w-full py-3 lg:py-4 text-center lg:text-left lg:px-6 font-black uppercase tracking-widest text-[10px] sm:text-sm lg:text-xl text-zinc-300 hover:text-white hover:bg-red-900/40 border-l-2 lg:border-l-4 border-transparent hover:border-red-500 transition-all"
           >
             Настройки
           </button>

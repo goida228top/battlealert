@@ -9,7 +9,7 @@ interface SkirmishSetupProps {
   setSelectedCountry: (country: Country) => void;
   selectedMap: string;
   setSelectedMap: (map: string) => void;
-  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING') => void;
+  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'SETTINGS') => void;
   engineRef: React.MutableRefObject<GameEngine>;
   setGameState: (state: any) => void;
 }

@@ -8,7 +8,7 @@ interface MultiplayerRoomProps {
   selectedFaction: Faction;
   selectedCountry: Country;
   selectedMap: string;
-  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM') => void;
+  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM' | 'SETTINGS') => void;
   engineRef: React.MutableRefObject<GameEngine>;
   setGameState: (state: any) => void;
   roomId?: string; // We expect roomId to be passed or derived

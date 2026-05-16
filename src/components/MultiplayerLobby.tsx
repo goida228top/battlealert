@@ -11,7 +11,7 @@ interface Room {
 }
 
 interface MultiplayerLobbyProps {
-  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM') => void;
+  setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM' | 'SETTINGS') => void;
   setRoomId: (id: string) => void;
   playerName: string;
 }

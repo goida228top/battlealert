@@ -9,6 +9,7 @@ import { SkirmishSetup } from './components/SkirmishSetup';
 import { MultiplayerLobby } from './components/MultiplayerLobby';
 import { MultiplayerCreateRoom } from './components/MultiplayerCreateRoom';
 import { MultiplayerRoom } from './components/MultiplayerRoom';
+import { SettingsMenu } from './components/SettingsMenu';
 import { GameOverScreen } from './components/GameOverScreen';
 import { BuildButton } from './components/BuildButton';
 import { GameHUD } from './components/GameHUD';
@@ -61,7 +62,19 @@ export default function App() {
   const cachedMapCanvasRef = useRef<HTMLCanvasElement | null>(null);
   const fogOfWarRef = useRef<FogOfWar>(new FogOfWar());
   const requestRef = useRef<number>(0);
-  const [appState, setAppState] = useState<'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM'>('MENU');
+  const [appState, setAppState] = useState<'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM' | 'SETTINGS'>('MENU');
+  const [settings, setSettings] = useState(() => {
+    const saved = localStorage.getItem('battle_alert_settings');
+    try {
+      return saved ? JSON.parse(saved) : { showMobileControls: false };
+    } catch {
+      return { showMobileControls: false };
+    }
+  });
+
+  useEffect(() => {
+    localStorage.setItem('battle_alert_settings', JSON.stringify(settings));
+  }, [settings]);
   const [selectedFaction, setSelectedFaction] = useState<'FEDERATION' | 'COALITION'>('FEDERATION');
   const [selectedCountry, setSelectedCountry] = useState<'RUSSIA' | 'CUBA' | 'LIBYA' | 'IRAQ' | 'AMERICA' | 'BRITAIN' | 'FRANCE' | 'GERMANY' | 'KOREA'>('RUSSIA');
   const [selectedMap, setSelectedMap] = useState<string>('RIVER_DIVIDE');
@@ -1678,6 +1691,14 @@ export default function App() {
         <MultiplayerLobby setAppState={setAppState} setRoomId={setActiveRoomId} playerName={playerName} />
       )}
 
+      {appState === 'SETTINGS' && (
+        <SettingsMenu
+          setAppState={setAppState}
+          settings={settings}
+          setSettings={setSettings}
+        />
+      )}
+
       {appState === 'MULTIPLAYER_CREATE' && (
         <MultiplayerCreateRoom 
           selectedFaction={selectedFaction}
@@ -1740,7 +1761,7 @@ export default function App() {
         />
 
         {/* Mobile Placement Confirm/Cancel */}
-        {gameState.placingBuilding && (
+        {gameState.placingBuilding && settings.showMobileControls && (
           <div className="lg:hidden absolute bottom-4 right-4 z-50 flex gap-2">
             <button
               className="bg-zinc-700 hover:bg-zinc-600 text-white p-2 rounded-md shadow-[0_0_10px_rgba(0,0,0,0.5)] border-2 border-zinc-500"
@@ -1787,19 +1808,22 @@ export default function App() {
         </div>
       )}
       {/* Mobile Controls */}
-      <div className="lg:hidden absolute bottom-4 left-4 z-50 flex flex-col gap-2">
-        <button
-          className={`px-3 py-2 text-sm font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 ${
-            isCommandMode 
-              ? 'bg-red-600 hover:bg-red-500 text-white border-2 border-red-400' 
-              : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-2 border-zinc-600'
-          }`}
-          onClick={() => setIsCommandMode(!isCommandMode)}
-          onPointerDown={(e) => e.stopPropagation()} // Prevent touches on button from panning
-        >
-          {isCommandMode ? 'ОТМЕНА' : 'КОМАНДОВАТЬ'}
-        </button>
-      </div>
+      {settings.showMobileControls && (
+        <div className="lg:hidden absolute bottom-4 left-4 z-50 flex flex-col gap-2">
+          <button
+            id="mobile-command-btn"
+            className={`px-3 py-2 text-sm font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 ${
+              isCommandMode 
+                ? 'bg-red-600 hover:bg-red-500 text-white border-2 border-red-400' 
+                : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-2 border-zinc-600'
+            }`}
+            onClick={() => setIsCommandMode(!isCommandMode)}
+            onPointerDown={(e) => e.stopPropagation()} // Prevent touches on button from panning
+          >
+            {isCommandMode ? 'ОТМЕНА' : 'КОМАНДОВАТЬ'}
+          </button>
+        </div>
+      )}
 
       <GameOverScreen gameState={gameState} />
         </>
