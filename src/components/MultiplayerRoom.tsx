@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Faction, Country } from '../game/types';
 import { GameEngine } from '../game/GameEngine';
-import { User, Anchor, AlertCircle, ArrowLeft, Bot, Trash2 } from 'lucide-react';
+import { User, ArrowLeft, Bot, Trash2 } from 'lucide-react';
 import { socket } from '../game/network';
 
 interface MultiplayerRoomProps {
@@ -11,7 +11,7 @@ interface MultiplayerRoomProps {
   setAppState: (state: 'MENU' | 'SKIRMISH_SETUP' | 'PLAYING' | 'MULTIPLAYER_LOBBY' | 'MULTIPLAYER_CREATE' | 'MULTIPLAYER_ROOM' | 'SETTINGS') => void;
   engineRef: React.MutableRefObject<GameEngine>;
   setGameState: (state: any) => void;
-  roomId?: string; // We expect roomId to be passed or derived
+  roomId?: string;
   playerName: string;
 }
 
@@ -77,16 +77,14 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     });
 
     socket.on('game_started', () => {
-      const isHost = players.find(p => p.id === socket.id)?.isHost;
-      const role = isHost ? 'HOST' : 'CLIENT';
+      const isHostLocal = players.find(p => p.id === socket.id)?.isHost;
+      const role = isHostLocal ? 'HOST' : 'CLIENT';
       
       const hostP = players.find(p => p.isHost);
       const hostFaction = hostP?.faction || selectedFaction;
       const hostCountry = hostP?.country || selectedCountry;
       
-      // We pass the full room info to the game engine now so it knows about all 4 players
       engineRef.current.resetGame(hostFaction, hostCountry, roomInfo?.map || selectedMap);
-      
       engineRef.current.initMultiplayer(role, roomInfo?.id, socket, roomInfo);
       
       const me = players.find(p => p.id === socket.id);
@@ -118,7 +116,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
       const docElm = document.documentElement as any;
       const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
       
-      if (isTouchDevice && !document.fullscreenElement && requestMethod) {
+      if (isTouchDevice && !document.fullscreenElement && typeof requestMethod === 'function') {
         try {
           requestMethod.call(docElm).catch(() => {});
         } catch (e) {}
@@ -140,7 +138,6 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
   };
 
   const isHost = players.find(p => p.id === socket.id)?.isHost;
-  const me = players.find(p => p.id === socket.id);
 
   return (
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center text-white overflow-hidden">
@@ -162,7 +159,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                   <div className="flex gap-2">
                     <select 
                       id="bot-difficulty-select"
-                      className="bg-black border border-zinc-600 text-xs md:text-sm p-1 rounded text-white"
+                      className="bg-black border border-zinc-600 text-xs md:text-sm p-1 rounded-none text-white outline-none"
                       value={botDifficulty}
                       onChange={(e) => setBotDifficulty(e.target.value)}
                     >
@@ -174,7 +171,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                       onClick={() => {
                         socket.emit('add_bot', { roomId: roomInfo?.id, difficulty: botDifficulty });
                       }}
-                      className="bg-zinc-800 hover:bg-zinc-700 text-[10px] md:text-sm px-2 md:px-3 py-1 rounded border border-zinc-600 flex items-center gap-2 transition-colors"
+                      className="bg-zinc-800 hover:bg-zinc-700 text-[10px] md:text-sm px-2 md:px-3 py-1 border border-zinc-600 flex items-center gap-2 transition-colors rounded-none cursor-pointer"
                     >
                       <Bot size={14} className="md:w-4 md:h-4" /> +Бот
                     </button>
@@ -184,7 +181,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
               
               <div className="flex flex-col gap-2">
                 {players.map(player => (
-                  <div key={player.id} className="flex justify-between items-center bg-zinc-800 p-2 md:p-4 border border-zinc-700 rounded relative overflow-hidden">
+                  <div key={player.id} className="flex justify-between items-center bg-zinc-800 p-2 md:p-4 border border-zinc-700 rounded-none relative overflow-hidden">
                     <div className={`absolute left-0 top-0 bottom-0 w-1 md:w-2 ${COLOR_MAP[player.color]}`} />
                     
                     <div className="ml-1 md:ml-2 flex items-center gap-2 md:gap-4">
@@ -194,21 +191,20 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                          <User size={18} className={`${TEXT_COLOR_MAP[player.color] || 'text-zinc-400'} md:w-6 md:h-6`} />
                       )}
                       <span className="font-bold text-xs md:text-lg truncate max-w-[80px] md:max-w-none">{player.name} {player.id === socket.id ? '(Вы)' : ''}</span>
-                      {player.isHost && <span className="text-[8px] md:text-xs bg-red-600 px-1 md:px-2 py-0.5 md:py-1 rounded text-white font-bold ml-1">ХОСТ</span>}
+                      {player.isHost && <span className="text-[8px] md:text-xs bg-red-600 px-1 md:px-2 py-0.5 md:py-1 text-white font-bold ml-1">ХОСТ</span>}
                     </div>
                     <div className="flex items-center gap-2 md:gap-4">
-                      {/* Settings Dropdowns for Me */}
                       {player.id === socket.id ? (
                         <div className="flex gap-1 md:gap-2">
                           <select 
-                            className="bg-black border border-zinc-700 text-[10px] p-1 rounded"
+                            className="bg-black border border-zinc-700 text-[10px] p-1 rounded-none outline-none"
                             value={player.faction}
                             onChange={(e) => updateMySettings(e.target.value, COUNTRIES[e.target.value as Faction][0].id)}
                           >
                             {FACTIONS.map(f => <option key={f.id} value={f.id}>{f.id}</option>)}
                           </select>
                           <select 
-                            className="bg-black border border-zinc-700 text-[10px] p-1 rounded"
+                            className="bg-black border border-zinc-700 text-[10px] p-1 rounded-none outline-none"
                             value={player.country}
                             onChange={(e) => updateMySettings(player.faction, e.target.value)}
                           >
@@ -221,14 +217,14 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                         </span>
                       )}
 
-                      <span className={`px-1 md:px-3 py-0.5 md:py-1 font-bold text-[8px] md:text-xs uppercase rounded ${player.ready ? 'bg-green-600/20 text-green-500' : 'bg-yellow-600/20 text-yellow-500'}`}>
+                      <span className={`px-1 md:px-3 py-0.5 md:py-1 font-bold text-[8px] md:text-xs uppercase ${player.ready ? 'bg-green-600/20 text-green-500' : 'bg-yellow-600/20 text-yellow-500'}`}>
                         {player.ready ? 'Готов' : 'Ждет'}
                       </span>
                       
                       {isHost && player.isBot && (
                         <button 
                           onClick={() => socket.emit('remove_bot', { roomId: roomInfo?.id, botId: player.id })}
-                          className="text-red-500 hover:text-red-400 ml-1 md:ml-2"
+                          className="text-red-500 hover:text-red-400 ml-1 md:ml-2 cursor-pointer"
                         >
                           <Trash2 size={16} className="md:w-[18px] md:h-[18px]" />
                         </button>
@@ -238,7 +234,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                 ))}
                 
                 {players.length < 4 && (
-                  <div className="flex justify-center items-center bg-zinc-800/50 p-2 md:p-4 border border-dashed border-zinc-700 rounded text-zinc-500 text-[10px] md:text-sm">
+                  <div className="flex justify-center items-center bg-zinc-800/50 p-2 md:p-4 border border-dashed border-zinc-700 text-zinc-500 text-[10px] md:text-sm">
                     <span className="opacity-50 tracking-widest uppercase">Свободный слот</span>
                   </div>
                 )}
@@ -249,7 +245,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
             <div className="w-full md:w-[400px] h-[200px] md:h-auto bg-zinc-900/80 border border-zinc-700 p-3 md:p-6 flex flex-col min-h-0">
               <h2 className="text-base md:text-xl font-bold text-zinc-300 uppercase tracking-widest border-b border-zinc-700 pb-2 mb-4">Чат</h2>
               
-              <div className="flex-1 bg-black/50 border border-zinc-800 p-2 md:p-4 rounded overflow-y-auto flex flex-col space-y-1">
+              <div className="flex-1 bg-black/50 border border-zinc-800 p-2 md:p-4 overflow-y-auto flex flex-col space-y-1">
                 <div className="text-zinc-500 text-[10px] md:text-sm mb-1 opacity-50">Бортовой журнал:</div>
                 <div className="text-green-500 text-[10px] md:text-sm font-bold">Система: Вы в комнате.</div>
                 {chatMessages.map((msg, i) => (
@@ -266,9 +262,9 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
                   onChange={(e) => setMessageInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === 'Enter') sendChatMessage() }}
                   placeholder="Текст..." 
-                  className="flex-1 bg-zinc-800/50 border border-zinc-700 rounded px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-sm text-white outline-none focus:border-red-500 transition-colors"
+                  className="flex-1 bg-zinc-800/50 border border-zinc-700 px-2 md:px-3 py-1 md:py-2 text-[10px] md:text-sm text-white outline-none focus:border-red-500 transition-colors"
                 />
-                <button onClick={sendChatMessage} className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-3 md:px-4 font-bold rounded uppercase transition-colors text-xs md:text-base">
+                <button onClick={sendChatMessage} className="bg-zinc-800 hover:bg-zinc-700 border border-zinc-600 px-3 md:px-4 font-bold uppercase transition-colors text-xs md:text-base cursor-pointer">
                   &gt;
                 </button>
               </div>
@@ -283,7 +279,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}
-            className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2"
+            className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer"
           >
             <ArrowLeft size={18} className="md:w-6 md:h-6" /> Покинуть
           </button>
@@ -294,7 +290,7 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
             className={`flex-1 md:flex-none py-2 md:py-4 px-4 md:px-16 text-xs md:text-base font-black uppercase tracking-widest border-2 transition-all ${
               players.length < 2 || !isHost
                 ? 'bg-zinc-800 text-zinc-600 border-zinc-700 cursor-not-allowed' 
-                : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]'
+                : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)] cursor-pointer'
             }`}
           >
             {isHost ? 'В БОЙ' : 'ЖДЕМ ХОСТА'}
@@ -304,4 +300,3 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
     </div>
   );
 };
-

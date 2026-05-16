@@ -99,12 +99,12 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           <div className="flex flex-row gap-2 w-full md:w-auto">
             <button
               onClick={() => setAppState('MULTIPLAYER_CREATE')}
-              className="flex-1 md:flex-none flex justify-center items-center gap-2 bg-red-700 hover:bg-red-600 px-3 md:px-4 py-2 rounded text-[10px] md:text-sm font-bold uppercase transition-colors shadow-lg"
+              className="flex-1 md:flex-none flex justify-center items-center gap-2 bg-red-700 hover:bg-red-600 px-3 md:px-4 py-2 rounded-none text-[10px] md:text-sm font-bold uppercase transition-colors shadow-lg"
             >
               <PlusSquare size={16} className="w-4 h-4 md:w-5 md:h-5" /> Создать
             </button>
             <button
-              className="flex-1 md:flex-none flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-4 py-2 rounded text-[10px] md:text-sm font-bold uppercase transition-colors"
+              className="flex-1 md:flex-none flex justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 md:px-4 py-2 rounded-none text-[10px] md:text-sm font-bold uppercase transition-colors"
               onClick={() => socket.emit('get_rooms')}
             >
               Обновить
@@ -112,7 +112,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           </div>
         </div>
 
-        <div className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded flex flex-col min-h-0 overflow-hidden mb-2 md:mb-4">
+        <div className="flex-1 bg-zinc-900/50 border border-zinc-800 rounded-none flex flex-col min-h-0 overflow-hidden mb-2 md:mb-4">
           <div className="shrink-0 grid grid-cols-2 md:grid-cols-5 gap-2 md:grid-4 p-2 border-b border-zinc-800 bg-zinc-900/80 font-bold uppercase text-zinc-400 text-[10px] md:text-xs">
             <div className="md:col-span-2">Название</div>
             <div className="hidden md:block">Карта</div>
@@ -129,7 +129,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
             {rooms.map((room) => (
               <div 
                 key={room.id}
-                className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 p-2 md:p-3 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 rounded transition-colors items-center group ${room.players >= room.maxPlayers ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
+                className={`grid grid-cols-2 md:grid-cols-5 gap-2 md:gap-4 p-2 md:p-3 hover:bg-zinc-800 border border-transparent hover:border-zinc-700 rounded-none transition-colors items-center group ${room.players >= room.maxPlayers ? 'opacity-50 cursor-not-allowed' : 'cursor-pointer'}`}
                 onClick={() => room.players < room.maxPlayers && handleJoin(room.id)}
               >
                 <div className="md:col-span-2 font-bold text-xs md:text-sm group-hover:text-red-400 truncate">{room.name || 'Без названия'}</div>
@@ -146,7 +146,7 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
         <div className="shrink-0 flex justify-between pb-2 md:pb-4 border-t border-zinc-800 pt-2">
           <button
             onClick={() => setAppState('MENU')}
-            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 md:px-6 py-2 rounded text-sm md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700"
+            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 md:px-6 py-2 rounded-none text-sm md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700"
           >
             <ArrowLeft size={16} /> Назад
           </button>

@@ -18,7 +18,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, set
         </h1>
         
         {/* Nickname Input */}
-        <div className="mt-2 lg:mt-4 flex flex-col items-center bg-black/60 p-2 sm:p-4 border border-zinc-800 rounded">
+        <div className="mt-2 lg:mt-4 flex flex-col items-center bg-black/60 p-2 sm:p-4 border border-zinc-800">
           <label className="text-zinc-400 font-bold uppercase tracking-widest text-[10px] lg:text-sm mb-1 lg:mb-2">
             Ваш Позывной
           </label>
@@ -27,7 +27,7 @@ export const MainMenu: React.FC<MainMenuProps> = ({ setAppState, playerName, set
             type="text" 
             value={playerName}
             onChange={(e) => setPlayerName(e.target.value)}
-            className="w-32 sm:w-48 lg:w-64 bg-zinc-900 border-2 border-zinc-700 focus:border-red-500 text-white text-center font-bold text-sm lg:text-xl py-1 lg:py-2 px-2 lg:px-4 rounded outline-none transition-colors"
+            className="w-32 sm:w-48 lg:w-64 bg-zinc-900 border-2 border-zinc-700 focus:border-red-500 text-white text-center font-bold text-sm lg:text-xl py-1 lg:py-2 px-2 lg:px-4 outline-none transition-colors"
             placeholder="Командир"
             maxLength={15}
           />

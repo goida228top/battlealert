@@ -35,13 +35,13 @@ export default function App() {
       const docElm = document.documentElement as any;
       const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
       
-      if (requestMethod) {
-        requestMethod.call(docElm).catch((err: any) => {
-          console.error(`Error attempting to enable fullscreen: ${err.message}`);
+      if (typeof requestMethod === 'function') {
+        requestMethod.call(docElm).catch(() => {
+          // Silent catch for iOS or browsers requiring user gesture
         });
       }
-    } else if (document.exitFullscreen) {
-        document.exitFullscreen();
+    } else if (typeof document.exitFullscreen === 'function') {
+        document.exitFullscreen().catch(() => {});
     }
   };
 
@@ -63,7 +63,7 @@ export default function App() {
       if (!portrait && isTouchDevice && !document.fullscreenElement) {
         const docElm = document.documentElement as any;
         const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
-        if (requestMethod) {
+        if (typeof requestMethod === 'function') {
           requestMethod.call(docElm).catch(() => {});
         }
       }
@@ -73,7 +73,7 @@ export default function App() {
     if (!isPortrait && isTouchDevice && !document.fullscreenElement) {
       const docElm = document.documentElement as any;
       const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
-      if (requestMethod) {
+      if (typeof requestMethod === 'function') {
         requestMethod.call(docElm).catch(() => {});
       }
     }

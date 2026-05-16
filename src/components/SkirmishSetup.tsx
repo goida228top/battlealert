@@ -29,7 +29,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
     <div className="absolute inset-0 z-[200] flex flex-col bg-[url('/assets/soviet_base.png')] bg-cover bg-center overflow-hidden">
       <div className="absolute inset-0 bg-black/80 backdrop-blur-sm" />
       
-      <div className="relative z-10 flex-1 flex flex-col p-2 md:p-4 lg:p-8 min-h-0">
+      <div className={`relative z-10 flex-1 flex flex-col p-2 md:p-4 lg:p-8 min-h-0 ${typeof window !== 'undefined' && (('ontouchstart' in window) || navigator.maxTouchPoints > 0) ? 'scale-[0.8] origin-top' : ''}`}>
         <div className="flex-1 overflow-y-auto pr-1">
           <h1 className="text-xl md:text-3xl lg:text-4xl font-black text-red-600 mb-2 md:mb-4 uppercase tracking-tighter font-display text-center md:text-left">
             Настройка Сражения
@@ -81,7 +81,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
                   </div>
                 </div>
 
-                <div className="md:mt-2 p-2 md:p-3 bg-black/40 border border-zinc-800 rounded">
+                <div className="md:mt-2 p-2 md:p-3 bg-black/40 border border-zinc-800">
                   <div className="text-[10px] text-zinc-500 uppercase font-bold mb-1">Особое оружие:</div>
                   <div className="text-xs md:text-sm font-bold text-zinc-200 italic">
                     {selectedCountry === 'RUSSIA' && 'Тесла-танк: Эффективен против пехоты и легкой техники.'}
@@ -118,7 +118,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
                 <label className="block text-zinc-400 text-xs md:text-sm font-bold uppercase tracking-wider">Сложность противника</label>
                 <select 
                   id="skirmish-bot-difficulty"
-                  className="bg-black border border-zinc-700 text-xs md:text-sm p-2 md:p-3 rounded text-white font-bold tracking-widest outline-none focus:border-red-500 transition-colors"
+                  className="bg-black border border-zinc-700 text-xs md:text-sm p-2 md:p-3 text-white font-bold tracking-widest outline-none focus:border-red-500 transition-colors"
                   defaultValue="NORMAL"
                 >
                   <option value="EASY">Легкий</option>
@@ -138,7 +138,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-2 md:mt-8 flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-2 md:pb-4 border-t border-zinc-800 pt-2 lg:pt-4">
+        <div className="flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-2 md:pb-4 border-zinc-800 pt-2 lg:pt-4">
           <button 
             onClick={() => setAppState('MENU')}
             className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all"
@@ -154,7 +154,7 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
               const docElm = document.documentElement as any;
               const requestMethod = docElm.requestFullscreen || docElm.webkitRequestFullScreen || docElm.mozRequestFullScreen || docElm.msRequestFullscreen;
               
-              if (isTouchDevice && !document.fullscreenElement && requestMethod) {
+              if (isTouchDevice && !document.fullscreenElement && typeof requestMethod === 'function') {
                 try {
                   requestMethod.call(docElm).catch(() => {});
                 } catch (e) {}

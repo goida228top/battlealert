@@ -105,7 +105,7 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
                   </div>
                 </div>
 
-                <div className="mt-1 md:mt-2 p-2 bg-black/40 border border-zinc-800 rounded">
+                <div className="mt-1 md:mt-2 p-2 bg-black/40 border border-zinc-800">
                   <div className="text-[10px] text-zinc-500 uppercase font-bold mb-1">Особое оружие:</div>
                   <div className="text-xs md:text-sm font-bold text-zinc-200 italic">
                     {selectedCountry === 'RUSSIA' && 'Тесла-танк: Эффективен против пехоты и легкой техники.'}
@@ -152,13 +152,13 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
         <div className="mt-2 md:mt-4 flex flex-col md:flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-1 md:pb-2 border-t border-zinc-800 pt-2 lg:pt-4">
           <button 
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
-            className="flex-1 md:flex-none w-full md:w-auto py-2 px-6 md:px-12 text-sm md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all"
+            className="flex-1 md:flex-none w-full md:w-auto py-2 px-6 md:px-12 text-sm md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all rounded-none"
           >
             Отмена
           </button>
           <button 
             onClick={handleCreate}
-            className={`flex-1 md:flex-none w-full md:w-auto py-2 px-8 md:px-16 text-sm md:text-base font-black uppercase tracking-widest border-2 transition-all ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
+            className={`flex-1 md:flex-none w-full md:w-auto py-2 px-8 md:px-16 text-sm md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
           >
             Создать
           </button>
