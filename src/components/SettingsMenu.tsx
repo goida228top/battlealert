@@ -64,16 +64,16 @@ export const SettingsMenu: React.FC<SettingsMenuProps> = ({ setAppState, setting
       </div>
 
       {/* Bottom Bar */}
-      <div className="p-4 md:p-8 border-t border-zinc-800 bg-zinc-950 flex gap-4 shrink-0">
+      <div className="p-2 lg:p-8 border-t border-zinc-800 bg-zinc-950 flex gap-4 shrink-0">
         <button 
           onClick={handleCancel}
-          className="flex-1 py-3 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all cursor-pointer rounded-none"
+          className="flex-1 py-1 lg:py-4 px-3 lg:px-12 text-[10px] lg:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all cursor-pointer rounded-none"
         >
           Назад
         </button>
         <button 
           onClick={handleSave}
-          className="flex-1 py-3 md:py-4 px-4 md:px-16 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-red-700 hover:bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all cursor-pointer rounded-none"
+          className="flex-1 py-1 lg:py-4 px-3 lg:px-16 text-[10px] lg:text-base font-black uppercase tracking-widest border-2 bg-red-700 hover:bg-red-600 text-white border-red-500 shadow-[0_0_20px_rgba(220,38,38,0.3)] transition-all cursor-pointer rounded-none"
         >
           Сохранить
         </button>

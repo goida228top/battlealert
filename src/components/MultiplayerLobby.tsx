@@ -143,10 +143,10 @@ export const MultiplayerLobby: React.FC<MultiplayerLobbyProps> = ({ setAppState,
           </div>
         </div>
 
-        <div className="shrink-0 flex justify-between pb-6 md:pb-4 pt-2">
+        <div className="shrink-0 flex justify-between pb-6 lg:pb-4 pt-2">
           <button
             onClick={() => setAppState('MENU')}
-            className="flex w-full md:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-4 md:px-6 py-2 rounded-none text-sm md:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700"
+            className="flex w-full lg:w-auto justify-center items-center gap-2 bg-zinc-800 hover:bg-zinc-700 px-3 lg:px-6 py-1 lg:py-2 rounded-none text-xs lg:text-base font-bold uppercase tracking-widest transition-colors border border-zinc-700"
           >
             <ArrowLeft size={16} /> Назад
           </button>

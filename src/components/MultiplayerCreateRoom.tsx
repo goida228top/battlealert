@@ -149,16 +149,16 @@ export const MultiplayerCreateRoom: React.FC<MultiplayerCreateRoomProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-2 md:mt-4 flex flex-col md:flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-6 md:pb-2 pt-2 lg:pt-4">
+        <div className="mt-2 lg:mt-4 flex flex-row justify-between items-center w-full gap-2 lg:gap-4 shrink-0 pb-1 lg:pb-2 pt-1 lg:pt-4">
           <button 
             onClick={() => setAppState('MULTIPLAYER_LOBBY')}
-            className="flex-1 md:flex-none w-full md:w-auto py-2 px-6 md:px-12 text-sm md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all rounded-none"
+            className="flex-1 lg:flex-none py-1 px-4 lg:px-12 text-xs lg:text-base font-black uppercase tracking-widest border lg:border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all rounded-none cursor-pointer"
           >
             Отмена
           </button>
           <button 
             onClick={handleCreate}
-            className={`flex-1 md:flex-none w-full md:w-auto py-2 px-8 md:px-16 text-sm md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
+            className={`flex-1 lg:flex-none py-1 px-4 lg:px-16 text-xs lg:text-base font-black uppercase tracking-widest border lg:border-2 transition-all rounded-none cursor-pointer ${selectedFaction === 'FEDERATION' ? 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)]' : 'bg-blue-700 hover:bg-blue-600 text-white border-blue-500/50 hover:border-blue-400 shadow-[0_0_20px_rgba(37,99,235,0.4)]'}`}
           >
             Создать
           </button>

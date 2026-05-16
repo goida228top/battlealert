@@ -273,21 +273,21 @@ export const MultiplayerRoom: React.FC<MultiplayerRoomProps> = ({
         </div>
 
         {/* Bottom Bar */}
-        <div className="mt-4 md:mt-8 flex flex-row justify-between items-center w-full gap-2 md:gap-4 shrink-0 pb-2 md:pb-4 border-t border-zinc-800 pt-2 lg:pt-4">
+        <div className="mt-4 lg:mt-8 flex flex-row justify-between items-center w-full gap-2 lg:gap-4 shrink-0 pb-1 lg:pb-4 border-t border-zinc-800 pt-1 lg:pt-4">
           <button 
             onClick={() => {
               setAppState('MULTIPLAYER_LOBBY');
               socket.emit('get_rooms');
             }}
-            className="flex-1 md:flex-none py-2 md:py-4 px-4 md:px-12 text-xs md:text-base font-black uppercase tracking-widest border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none"
+            className="flex-1 lg:flex-none py-1 lg:py-4 px-3 lg:px-12 text-[10px] lg:text-base font-black uppercase tracking-widest border lg:border-2 bg-zinc-800 text-zinc-400 border-zinc-700 hover:bg-zinc-700 transition-all flex items-center justify-center gap-2 cursor-pointer rounded-none"
           >
-            <ArrowLeft size={18} className="md:w-6 md:h-6" /> Покинуть
+            <ArrowLeft size={16} className="lg:w-6 lg:h-6" /> Покинуть
           </button>
           
           <button 
             onClick={handleStart}
             disabled={players.length < 2 || !isHost}
-            className={`flex-1 md:flex-none py-2 md:py-4 px-4 md:px-16 text-xs md:text-base font-black uppercase tracking-widest border-2 transition-all rounded-none ${
+            className={`flex-1 lg:flex-none py-1 lg:py-4 px-3 lg:px-16 text-[10px] lg:text-base font-black uppercase tracking-widest border lg:border-2 transition-all rounded-none ${
               players.length < 2 || !isHost
                 ? 'bg-zinc-800 text-zinc-600 border-zinc-700 cursor-not-allowed' 
                 : 'bg-red-700 hover:bg-red-600 text-white border-red-500/50 hover:border-red-400 shadow-[0_0_20px_rgba(220,38,38,0.4)] cursor-pointer'
