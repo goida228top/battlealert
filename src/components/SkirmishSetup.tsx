@@ -147,6 +147,12 @@ export const SkirmishSetup: React.FC<SkirmishSetupProps> = ({
             onClick={() => {
               const botDiff = (document.getElementById('skirmish-bot-difficulty') as HTMLSelectElement)?.value || 'NORMAL';
               engineRef.current.resetGame(selectedFaction, selectedCountry, selectedMap, botDiff);
+              
+              const isTouchDevice = ('ontouchstart' in window) || navigator.maxTouchPoints > 0;
+              if (isTouchDevice && !document.fullscreenElement) {
+                document.documentElement.requestFullscreen().catch(() => {});
+              }
+              
               setGameState(engineRef.current.state);
               setAppState('PLAYING');
             }}

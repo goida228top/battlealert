@@ -4,7 +4,8 @@ import { GameEngine } from '../../game/GameEngine';
 export function useTouchControls(
   canvasRef: React.RefObject<HTMLCanvasElement>,
   engineRef: React.MutableRefObject<GameEngine | null>,
-  isCommandMode: boolean = false
+  isCommandMode: boolean = false,
+  appState: string = 'MAIN_MENU'
 ) {
   const touchState = useRef({
     initialPinchDistance: 0,
@@ -93,16 +94,10 @@ export function useTouchControls(
       if (!engine) return;
 
       if (e.touches.length === 2) {
-        // Handle Pinch Zoom and Pan
-        const dist = getDistance(e.touches[0], e.touches[1]);
+        // Handle Pan
         const center = getCenter(e.touches[0], e.touches[1]);
         
-        const scale = dist / touchState.current.initialPinchDistance;
-        let newZoom = touchState.current.initialZoom * scale;
-        newZoom = Math.max(0.5, Math.min(2.5, newZoom));
-
         const { camera } = engine.state;
-        const oldZoom = camera.zoom;
 
         const panX = center.x - touchState.current.lastPanX;
         const panY = center.y - touchState.current.lastPanY;
@@ -110,14 +105,6 @@ export function useTouchControls(
         // Pan
         camera.x += panX;
         camera.y += panY;
-
-        // Zoom relative to center
-        const mouseX = center.x - rect.left;
-        const mouseY = center.y - rect.top;
-        
-        camera.x = mouseX - (mouseX - camera.x) * (newZoom / oldZoom);
-        camera.y = mouseY - (mouseY - camera.y) * (newZoom / oldZoom);
-        camera.zoom = newZoom;
 
         touchState.current.lastPanX = center.x;
         touchState.current.lastPanY = center.y;
@@ -202,5 +189,5 @@ export function useTouchControls(
       canvas.removeEventListener('touchend', handleTouchEnd);
       canvas.removeEventListener('touchcancel', handleTouchEnd);
     };
-  }, [canvasRef, engineRef, isCommandMode]);
+  }, [canvasRef, engineRef, isCommandMode, appState]);
 }

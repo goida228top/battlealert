@@ -24,7 +24,7 @@ export default function App() {
   const [isFullscreen, setIsFullscreen] = useState(false);
 
   const [isCommandMode, setIsCommandMode] = useState(false);
-  useTouchControls(canvasRef, engineRef, isCommandMode);
+  useTouchControls(canvasRef, engineRef, isCommandMode, appState);
 
   const toggleFullScreen = () => {
     if (!document.fullscreenElement) {
@@ -76,11 +76,16 @@ export default function App() {
     const handleGlobalMouseLeave = () => {
       globalMousePosRef.current = null;
     };
+    const handleGlobalTouchStart = () => {
+      globalMousePosRef.current = null; // Clear on touch to aggressively prevent edge pan drift on mobile
+    };
     window.addEventListener('mousemove', handleGlobalMouseMove);
+    window.addEventListener('touchstart', handleGlobalTouchStart, { passive: true });
     document.addEventListener('mouseleave', handleGlobalMouseLeave);
     
     return () => {
       window.removeEventListener('mousemove', handleGlobalMouseMove);
+      window.removeEventListener('touchstart', handleGlobalTouchStart);
       document.removeEventListener('mouseleave', handleGlobalMouseLeave);
     };
   }, []);
@@ -1719,7 +1724,7 @@ export default function App() {
           <div className="relative flex-1 bg-zinc-900 cursor-crosshair overflow-hidden">
         <canvas
           ref={canvasRef}
-          width={Math.max(100, windowSize.width - (windowSize.width >= 1024 ? 160 : 110))}
+          width={Math.max(100, windowSize.width - (windowSize.width >= 1024 ? 280 : 220))}
           height={windowSize.height}
           onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
@@ -1752,14 +1757,7 @@ export default function App() {
       {/* Mobile Controls */}
       <div className="lg:hidden absolute bottom-4 left-4 z-50 flex flex-col gap-2">
         <button
-          className="px-2.5 py-1.5 text-xs font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-2 border-zinc-600"
-          onClick={toggleFullScreen}
-          onPointerDown={(e) => e.stopPropagation()}
-        >
-          {isFullscreen ? 'ВЫЙТИ ИЗ ПОЛНОГО' : 'ПОЛНЫЙ ЭКРАН'}
-        </button>
-        <button
-          className={`px-2.5 py-1.5 text-xs font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 ${
+          className={`px-3 py-2 text-sm font-bold shadow-[0_0_10px_rgba(0,0,0,0.5)] uppercase tracking-wider transition-colors duration-200 ${
             isCommandMode 
               ? 'bg-red-600 hover:bg-red-500 text-white border-2 border-red-400' 
               : 'bg-zinc-800 hover:bg-zinc-700 text-zinc-300 border-2 border-zinc-600'
