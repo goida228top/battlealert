@@ -19,8 +19,13 @@ import { useTouchControls } from './components/mobile/useTouchControls';
 
 import { OrientationWarning } from './components/OrientationWarning';
 import { FullscreenPrompt } from './components/FullscreenPrompt';
+import { AuthScreen } from './components/AuthScreen';
+import { useAuthState } from 'react-firebase-hooks/auth';
+import { auth } from './firebase';
 
 export default function App() {
+  const [user, authLoading] = useAuthState(auth);
+  const [isLocalGuest, setIsLocalGuest] = useState(false);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const engineRef = useRef<GameEngine>(new GameEngine());
   const [gameState, setGameState] = useState<GameState>(engineRef.current.state);
@@ -1732,7 +1737,16 @@ export default function App() {
       onContextMenu={(e) => e.preventDefault()}
     >
       {appState === 'MENU' && (
-        <MainMenu setAppState={setAppState} playerName={playerName} setPlayerName={setPlayerName} />
+        (authLoading && !user && !isLocalGuest) ? (
+          <div className="absolute inset-0 bg-black flex flex-col items-center justify-center p-8 text-center z-[400]">
+            <div className="w-12 h-12 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4" />
+            <div className="text-red-500 font-black uppercase tracking-[0.2em] animate-pulse">Загрузка данных...</div>
+          </div>
+        ) : (!user && !isLocalGuest) ? (
+          <AuthScreen onLoginSuccess={() => {}} onGuestLogin={() => setIsLocalGuest(true)} />
+        ) : (
+          <MainMenu setAppState={setAppState} playerName={playerName} setPlayerName={setPlayerName} isLocalGuest={isLocalGuest} />
+        )
       )}
 
       {appState === 'MULTIPLAYER_LOBBY' && (
